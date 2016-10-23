@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="377.0" prefWidth="505.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Controller.ConfigManager.DetailConfigManagerController">
+  <children>
+    <Label id="databaseConfigTitle" fx:id="configTitle" layoutX="14.0" layoutY="14.0" prefHeight="38.0" prefWidth="477.0" text="fiscalPrinterSettings">
+      <font>
+        <Font name="System Bold" size="15.0" />
+      </font>
+    </Label>
+    <TextArea id="databaseConfigText" fx:id="configText" editable="false" mouseTransparent="true" prefHeight="129.0" prefWidth="477.0" text="fiscalPrinterText" wrapText="true" AnchorPane.bottomAnchor="196.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="52.0" />
+    <Pane layoutX="14.0" prefHeight="173.0" prefWidth="477.0" AnchorPane.bottomAnchor="15.0">
+      <children>
+        <Label id="server" fx:id="idLabel" layoutX="14.0" layoutY="11.0" prefHeight="21.9609375" prefWidth="218.0" text="ID" />
+        <TextField id="serverTextField" fx:id="idTextField" layoutX="239.0" layoutY="11.0" prefWidth="224.0" text="ID" />
+        <Label id="server" fx:id="comLabel" layoutX="14.0" layoutY="43.0" prefHeight="21.9609375" prefWidth="218.0" text="comPort" />
+        <TextField id="serverTextField" fx:id="comTextField" layoutX="239.0" layoutY="43.0" prefWidth="224.0" text="comPort" />
+        <Label id="server" fx:id="fiscalPrinterModelLabel" layoutX="14.0" layoutY="76.0" prefHeight="21.9609375" prefWidth="218.0" text="fiscalPrinterModel" />
+        <ChoiceBox fx:id="comboFiscalPrinterModel" layoutX="239.0" layoutY="76.0" prefWidth="224.0">
+          <items>
+            <FXCollections fx:factory="observableArrayList">
+              <String fx:value="Item 1" />
+              <String fx:value="Item 2" />
+              <String fx:value="Item 3" />
+            </FXCollections>
+          </items>
+        </ChoiceBox>
+      </children>
+    </Pane>
+  </children>
+</AnchorPane>

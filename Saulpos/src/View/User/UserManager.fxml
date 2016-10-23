@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.collections.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="547.0" prefWidth="762.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Controller.User.UserController">
+  <children>
+    <Pane prefHeight="100.0" prefWidth="762.0" />
+    <Separator layoutX="323.0" orientation="VERTICAL" prefHeight="448.0" prefWidth="19.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="99.0" />
+    <AnchorPane maxWidth="341.0" minHeight="0.0" minWidth="244.0" prefHeight="444.9998779296875" prefWidth="332.0000999999975" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="102.0">
+      <children>
+        <AnchorPane prefHeight="493.0" prefWidth="251.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+          <children>
+            <TableView id="profileView" minWidth="223.0" prefHeight="330.0" prefWidth="279.0" AnchorPane.bottomAnchor="44.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="43.0">
+              <columns>
+                <TableColumn prefWidth="275.0" text="ID" />
+              </columns>
+            </TableView>
+            <Pane id="searchPane" layoutX="14.0" layoutY="14.0" prefHeight="21.0" prefWidth="276.0" />
+            <TextField id="idTextField" layoutX="14.0" prefWidth="93.0" text="ID" AnchorPane.bottomAnchor="14.0" />
+            <TextField id="nameTextBox" layoutX="114.0" prefWidth="93.0" text="Name" AnchorPane.bottomAnchor="14.0" />
+            <Button id="AddButton" layoutX="215.0" mnemonicParsing="false" onAction="#addButtonAction" prefWidth="78.0" text="add" AnchorPane.bottomAnchor="14.0" />
+          </children>
+        </AnchorPane>
+      </children>
+    </AnchorPane>
+    <AnchorPane prefHeight="445.0" prefWidth="420.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="342.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="102.0">
+      <children>
+        <AnchorPane layoutX="14.0" layoutY="14.0" prefHeight="417.0" prefWidth="394.0">
+          <children>
+            <Label id="UserNameLabel" fx:id="userNameLabel" layoutX="14.0" layoutY="22.0" prefWidth="157.0" text="userNameLabel" />
+            <Label layoutX="197.0" layoutY="22.0" prefWidth="182.99990000000253" text="Label" />
+            <Label fx:id="passwordLabel" layoutX="14.0" layoutY="50.0" prefWidth="157.0" text="passwordLabel" />
+            <Label fx:id="passwordLabelAgain" layoutX="14.0" layoutY="76.0" prefWidth="157.0" text="passwordLabelAgain" />
+            <Label fx:id="nameLabel" layoutX="14.0" layoutY="103.0" prefWidth="157.0" text="nameLabel" />
+            <TextField fx:id="userNameField" layoutX="197.0" layoutY="100.0" prefWidth="183.0" text="nameLabel" />
+            <Label fx:id="profileLabel" layoutX="14.0" layoutY="130.0" prefWidth="157.0" text="profileLabel" />
+            <CheckBox fx:id="useSamePasswordCheckBox" layoutX="14.0" layoutY="163.0" mnemonicParsing="false" prefWidth="366.0" text="useSamePasswordCheckBox" />
+            <CheckBox id="changePasswordAfterLogin" fx:id="changePasswordAfterLoginCheckBox" layoutX="14.0" layoutY="193.0" mnemonicParsing="false" prefWidth="366.0" text="changePasswordAfterLoginCheckBox" />
+            <CheckBox fx:id="lockedCheckBox" layoutX="14.0" layoutY="224.0" mnemonicParsing="false" prefWidth="366.0" text="lockedCheckBox" />
+            <Button fx:id="exitButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="96.0" text="Exit" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+            <PasswordField fx:id="passwordField" layoutX="197.0" layoutY="47.0" prefWidth="183.0" text="passwordLabel" />
+            <ComboBox fx:id="profileChoiceBox" layoutX="197.0" layoutY="131.0" prefHeight="21.0" prefWidth="183.0">
+              <items>
+                <FXCollections fx:factory="observableArrayList">
+                  <String fx:value="Item 1" />
+                  <String fx:value="Item 2" />
+                  <String fx:value="Item 3" />
+                </FXCollections>
+              </items>
+            </ComboBox>
+            <Button id="exitButton" fx:id="saveButton" mnemonicParsing="false" prefHeight="30.0" prefWidth="96.0" text="saveButton" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="120.0" />
+            <PasswordField fx:id="passwordFieldAgain" layoutX="197.0" layoutY="73.0" prefWidth="183.0" text="passwordLabelAgain" />
+          </children>
+        </AnchorPane>
+      </children>
+    </AnchorPane>
+  </children>
+</AnchorPane>

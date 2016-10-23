@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="root" minHeight="450.0" minWidth="450.0" prefHeight="547.0" prefWidth="850.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Controller.Profile.ProfileController">
+  <children>
+    <Pane prefHeight="100.0" prefWidth="850.0" />
+    <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="444.0" prefWidth="498.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="351.0" AnchorPane.rightAnchor="1.0" AnchorPane.topAnchor="103.0">
+      <children>
+        <AnchorPane fx:id="treeViewPane" prefHeight="417.0" prefWidth="479.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+          <children>
+            <TreeView id="treeview" fx:id="treeView" prefHeight="360.0" prefWidth="451.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="43.0" />
+            <Label fx:id="profileTreeLabel" layoutX="14.0" layoutY="14.0" prefHeight="21.0" prefWidth="451.0" text="profileTree" />
+          </children>
+        </AnchorPane>
+      </children>
+    </AnchorPane>
+    <AnchorPane maxWidth="341.0" minHeight="0.0" minWidth="244.0" prefHeight="445.0" prefWidth="332.0" AnchorPane.bottomAnchor="-1.0" AnchorPane.leftAnchor="0.0" AnchorPane.topAnchor="103.0">
+      <children>
+        <AnchorPane prefHeight="493.0" prefWidth="251.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0">
+          <children>
+            <TableView fx:id="profileView" minWidth="223.0" prefHeight="330.0" prefWidth="279.0" AnchorPane.bottomAnchor="44.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="43.0">
+              <columns>
+                <TableColumn prefWidth="100.0" text="ID" fx:id="idColumn" />
+                <TableColumn prefWidth="177.0" text="Name" fx:id="nameColumn" />
+              </columns>
+            </TableView>
+            <Pane fx:id="searchPane" layoutX="14.0" layoutY="14.0" prefHeight="21.0" prefWidth="276.0" />
+            <TextField fx:id="idTextField" layoutX="14.0" prefWidth="93.0" text="ID" AnchorPane.bottomAnchor="14.0" />
+            <TextField id="nameTextBox" fx:id="nameTextField" layoutX="114.0" prefWidth="93.0" text="Name" AnchorPane.bottomAnchor="14.0" />
+            <Button fx:id="AddButton" layoutX="215.0" mnemonicParsing="false" onAction="#addButtonAction" prefWidth="78.0" text="add" AnchorPane.bottomAnchor="14.0" />
+          </children>
+        </AnchorPane>
+      </children>
+    </AnchorPane>
+    <Separator layoutX="332.0" orientation="VERTICAL" prefHeight="448.0" prefWidth="19.0" AnchorPane.bottomAnchor="0.0" AnchorPane.topAnchor="99.0" />
+  </children>
+</AnchorPane>

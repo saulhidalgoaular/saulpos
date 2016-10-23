@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="AnchorPane" prefHeight="377.0" prefWidth="505.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Controller.ConfigManager.DetailConfigManagerController">
+  <children>
+    <Label id="databaseConfigTitle" fx:id="configTitle" layoutX="14.0" layoutY="14.0" prefHeight="38.0" prefWidth="477.0" text="databaseConfigTitle">
+      <font>
+        <Font name="System Bold" size="15.0" />
+      </font>
+    </Label>
+    <TextArea id="databaseConfigText" fx:id="configText" editable="false" mouseTransparent="true" prefHeight="129.0" prefWidth="477.0" text="databaseConfigText" wrapText="true" AnchorPane.bottomAnchor="196.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="52.0" />
+    <Pane layoutX="14.0" prefHeight="173.0" prefWidth="477.0" AnchorPane.bottomAnchor="15.0">
+      <children>
+        <Label id="server" fx:id="serverUrlLabel" layoutX="14.0" layoutY="11.0" prefHeight="21.9609375" prefWidth="218.0" text="serverUrlLabel" />
+        <TextField id="serverTextField" fx:id="serverUrlTextField" layoutX="239.0" layoutY="11.0" prefWidth="224.0" text="serverUrlLabel" />
+        <Label id="server" fx:id="userNameLabel" layoutX="14.0" layoutY="49.0" prefHeight="21.9609375" prefWidth="218.0" text="userNameLabel" />
+        <TextField id="serverTextField" fx:id="userNameTextField" layoutX="239.0" layoutY="49.0" prefWidth="224.0" text="userNameLabel" />
+        <Label id="server" fx:id="passwordLabel" layoutX="14.0" layoutY="74.0" prefHeight="21.9609375" prefWidth="218.0" text="passwordLabel" />
+        <PasswordField fx:id="passwordText" layoutX="239.0" layoutY="74.0" prefWidth="224.0" text="passwordLabel" />
+        <Button fx:id="testDatabaseConnectionButton" layoutX="239.0" layoutY="107.0" mnemonicParsing="false" onAction="#testConnectionAction" prefWidth="224.0" text="testDatabaseConnectionButton" />
+      </children>
+    </Pane>
+  </children>
+</AnchorPane>

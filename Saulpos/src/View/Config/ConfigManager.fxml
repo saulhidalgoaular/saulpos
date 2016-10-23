@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" maxHeight="550.0" maxWidth="800.0" minHeight="550.0" minWidth="800.0" prefHeight="550.0" prefWidth="800.0" xmlns:fx="http://javafx.com/fxml" fx:controller="Controller.ConfigManager.ConfigManagerController">
+  <children>
+    <Pane id="" layoutX="14.0" layoutY="116.0" prefHeight="115.0" prefWidth="267.0">
+      <children>
+        <Label fx:id="setupProgress" layoutX="14.0" layoutY="14.0" prefWidth="179.0" text="setupProgress" />
+        <VBox id="VBox" alignment="CENTER" layoutX="14.0" layoutY="39.0" prefWidth="229.0" spacing="5.0">
+          <children>
+            <HBox id="HBox" alignment="CENTER" prefWidth="179.0" spacing="5.0">
+              <children>
+                <ImageView id="databaseConnection" fx:id="checkImg0" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" />
+                <Label fx:id="dataBaseConnection" prefWidth="201.0" text="dataBaseConnection" />
+              </children>
+            </HBox>
+            <HBox id="HBox" alignment="CENTER" prefWidth="179.0" spacing="5.0">
+              <children>
+                <ImageView id="dboffConChkImg" fx:id="checkImg1" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" />
+                <Label fx:id="dataBaseOfflineConnection" prefWidth="200.00009999999747" text="dataBaseOfflineConnection" />
+              </children>
+            </HBox>
+            <HBox id="HBox" alignment="CENTER" prefWidth="179.0" spacing="5.0">
+              <children>
+                <ImageView id="fpImg" fx:id="checkImg2" fitHeight="16.0" fitWidth="16.0" pickOnBounds="true" preserveRatio="true" />
+                <Label fx:id="fiscalPrinterSetting" prefWidth="201.0" text="fiscalPrinterSetting" />
+              </children>
+            </HBox>
+          </children>
+        </VBox>
+      </children>
+    </Pane>
+    <Pane layoutX="14.0" layoutY="239.0" prefHeight="73.0" prefWidth="267.0">
+      <children>
+        <ProgressBar fx:id="progressBar" layoutX="14.0" layoutY="40.0" prefHeight="16.0" prefWidth="237.0" progress="0.0" />
+        <Label id="setupProgress" fx:id="setupProgressBar" layoutX="12.0" layoutY="14.0" prefWidth="237.0" text="setupProgressBar" />
+      </children>
+    </Pane>
+    <HBox id="HBox" alignment="CENTER" layoutX="420.0" layoutY="501.0" prefWidth="354.0" spacing="5.0">
+      <children>
+        <Button id="Continue" fx:id="continueButton" mnemonicParsing="false" onAction="#continueButtonAction" prefHeight="33.0" prefWidth="116.0" text="continueispos" />
+        <Button id="finish" fx:id="saveButton" mnemonicParsing="false" onAction="#saveButtonAction" prefHeight="33.0" prefWidth="116.0" text="save" />
+        <Button id="Close" fx:id="closeButton" mnemonicParsing="false" onAction="#closeButtonAction" prefHeight="33.0" prefWidth="116.0" text="Exit" />
+      </children>
+    </HBox>
+    <StackPane fx:id="mainPane" layoutX="281.0" layoutY="114.0" prefHeight="377.0" prefWidth="505.0" />
+    <ImageView fx:id="imageView" fitHeight="100.0" fitWidth="800.0" pickOnBounds="true" preserveRatio="true" />
+  </children>
+</AnchorPane>
