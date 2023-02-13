@@ -1,9 +1,34 @@
 package com.saulpos.model.bean;
 
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import javafx.beans.DefaultProperty;
+import org.hibernate.annotations.ColumnDefault;
+import org.jetbrains.annotations.NotNull;
+
+import javax.persistence.Column;
+
+@Entity
+@Table(name = "configuration")
 public class Configuration {
+    @Id @GeneratedValue
+    @Column(name = "id")
     private int id;
+
+    @NotNull @GeneratedValue
+    @Column(name = "Key")
     private String key;
+
+    @NotNull
+    @Column(name = "Value")
     private String value;
+
+    //todo check the column default value
+//    @ColumnDefault(value = null)
+    @Column(name = "Name")
     private String name;
 
     public Configuration(int id, String key, String value, String name) {
@@ -11,6 +36,10 @@ public class Configuration {
         this.key = key;
         this.value = value;
         this.name = name;
+    }
+
+    public Configuration() {
+
     }
 
     public int getId() {

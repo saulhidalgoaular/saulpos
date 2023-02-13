@@ -1,19 +1,42 @@
 package com.saulpos.model.bean;
 
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
+import javax.persistence.Column;
+
+@Entity
+@Table(name = "discount")
 public class Discount {
+    @Id @GeneratedValue
+    @Column(name = "id")
     private int id;
+
+
+    @Column(name = "description")
     private String description;
-    private String starting_date;
-    private String ending_date;
+
+    @Column(name = "starting_date")
+    private String startingDate;
+
+    @Column(name = "ending_date")
+    private String endingDate;
+
+    @Column(name = "percentage")
     private double percentage;
 
-    public Discount(int id, String description, String starting_date, String ending_date, double percentage) {
+    public Discount(int id, String description, String startingDate, String endingDate, double percentage) {
         this.id = id;
         this.description = description;
-        this.starting_date = starting_date;
-        this.ending_date = ending_date;
+        this.startingDate = startingDate;
+        this.endingDate = endingDate;
         this.percentage = percentage;
+    }
+
+    public Discount() {
+
     }
 
     public int getId() {
@@ -32,20 +55,20 @@ public class Discount {
         this.description = description;
     }
 
-    public String getStarting_date() {
-        return starting_date;
+    public String getStartingDate() {
+        return startingDate;
     }
 
-    public void setStarting_date(String starting_date) {
-        this.starting_date = starting_date;
+    public void setStartingDate(String starting_date) {
+        this.startingDate = starting_date;
     }
 
-    public String getEnding_date() {
-        return ending_date;
+    public String getEndingDate() {
+        return endingDate;
     }
 
-    public void setEnding_date(String ending_date) {
-        this.ending_date = ending_date;
+    public void setEndingDate(String endingDate) {
+        this.endingDate = endingDate;
     }
 
     public double getPercentage() {

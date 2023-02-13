@@ -1,19 +1,39 @@
 package com.saulpos.model.bean;
 
-import java.util.Date;
+import org.jetbrains.annotations.NotNull;
 
+import java.util.Date;
+import javax.persistence.*;
+
+@Entity
+@Table(name="assignment")
 public class Assignment {
+    @Id @GeneratedValue
+    @Column(name = "id")
     private int id;
-    private String shift_id;
-    private String cashier_id;
-    private Date datetime;
+
+    @NotNull
+    @Column(name = "shift_id")
+    private String shiftId;
+
+    @NotNull
+    @Column(name = "cashier_id")
+    private String cashierId;
+
+    @NotNull
+    @Column(name = "datetime")
+    private Date dateTime;
+
+    //todo check the data type
+    @NotNull
+    @Column(name = "status")
     private int status;
 
-    public Assignment(int id, String shift_id, String cashier_id, Date datetime, int status) {
+    public Assignment(int id, String shiftId, String cashierId, Date dateTime, int status) {
         this.id = id;
-        this.shift_id = shift_id;
-        this.cashier_id = cashier_id;
-        this.datetime = datetime;
+        this.shiftId = shiftId;
+        this.cashierId = cashierId;
+        this.dateTime = dateTime;
         this.status = status;
     }
 
@@ -25,28 +45,28 @@ public class Assignment {
         this.id = id;
     }
 
-    public String getShift_id() {
-        return shift_id;
+    public String getShiftId() {
+        return shiftId;
     }
 
-    public void setShift_id(String shift_id) {
-        this.shift_id = shift_id;
+    public void setShiftId(String shiftId) {
+        this.shiftId = shiftId;
     }
 
-    public String getCashier_id() {
-        return cashier_id;
+    public String getCashierId() {
+        return cashierId;
     }
 
-    public void setCashier_id(String cashier_id) {
-        this.cashier_id = cashier_id;
+    public void setCashierId(String cashierId) {
+        this.cashierId = cashierId;
     }
 
-    public Date getDatetime() {
-        return datetime;
+    public Date getDateTime() {
+        return dateTime;
     }
 
-    public void setDatetime(Date datetime) {
-        this.datetime = datetime;
+    public void setDateTime(Date dateTime) {
+        this.dateTime = dateTime;
     }
 
     public int getStatus() {
