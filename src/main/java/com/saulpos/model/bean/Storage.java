@@ -2,28 +2,22 @@ package com.saulpos.model.bean;
 
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javax.persistence.*;
 
-@Entity(name="Storage") // TODO
-@Table(name="Storage") // TODO Research
-public class Storage implements AbstractBean {
+@Entity
+@Table(name="storage")
+public class Storage/* implements AbstractBean*/ {
 
-    @Id // TODO Confirm
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
+    @Id @GeneratedValue
+    @Column(name = "id")
+    private int id;
 
+    @Column(name="description")
     private SimpleStringProperty description = new SimpleStringProperty();
 
     public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
         return id;
     }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
     public String getDescription() {
         return description.get();
     }
