@@ -1,70 +1,93 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.*;
+
+import java.time.LocalDate;
 
 
 @Entity
 @Access(AccessType.PROPERTY)
-@Table(name = "discount")
-public class Discount {
-    private int id;
+@Table
+public class Discount extends AbstractBeanImplementation {
 
+    private SimpleIntegerProperty id=new SimpleIntegerProperty();
 
-    @Column(name = "description")
-    private String description;
+    private SimpleStringProperty description=new SimpleStringProperty();
 
-    @Column(name = "starting_date")
-    private String startingDate;
+    private ObjectProperty<LocalDate> startingDate=new SimpleObjectProperty<>();
 
-    @Column(name = "ending_date")
-    private String endingDate;
+    private ObjectProperty<LocalDate> endingDate = new SimpleObjectProperty<>();
 
-    @Column(name = "percentage")
-    private double percentage;
+    private SimpleDoubleProperty percentage=new SimpleDoubleProperty();
 
     public Discount() {
 
     }
-
-    @Id @GeneratedValue
-    @Column(name = "id")
+    @Id
+    @GeneratedValue
     public int getId() {
+        return id.get();
+    }
+
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
     }
 
-    public String getDescription() {
+    public String getDescription(){
+        return description.get();
+    }
+    public void setDescription(String description){
+        this.description.set(description);
+    }
+    public SimpleStringProperty descriptionProperty() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public LocalDate getStartingDate(){
+        return startingDate.get();
     }
 
-    public String getStartingDate() {
+    public void setStartingDate(LocalDate startingDate){
+        this.startingDate.set(startingDate);
+    }
+    public ObjectProperty<LocalDate> startingDateProperty() {
         return startingDate;
     }
-
-    public void setStartingDate(String starting_date) {
-        this.startingDate = starting_date;
+    public LocalDate getEndingDate(){
+        return endingDate.get();
     }
 
-    public String getEndingDate() {
+    public void setEndingDate(LocalDate endingDate){
+        this.endingDate.set(endingDate);
+    }
+    public ObjectProperty<LocalDate> endingDateProperty() {
         return endingDate;
     }
 
-    public void setEndingDate(String endingDate) {
-        this.endingDate = endingDate;
+    public Double getPercentage(){
+        return this.percentage.get();
     }
-
-    public double getPercentage() {
+    public void setPercentage(Double percentage){
+        this.percentage.set(percentage);
+    }
+    public SimpleDoubleProperty percentageProperty(){
         return percentage;
     }
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+    }
 
-    public void setPercentage(double percentage) {
-        this.percentage = percentage;
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
