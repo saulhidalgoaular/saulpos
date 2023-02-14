@@ -1,14 +1,16 @@
 package com.saulpos.model.bean;
 
-import org.jetbrains.annotations.NotNull;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
-import javax.persistence.*;
 
 @Entity
 @Table(name="assignment")
 public class Assignment {
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     @Column(name = "id")
     private int id;
 

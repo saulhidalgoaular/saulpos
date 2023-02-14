@@ -1,185 +1,239 @@
 package com.saulpos.model.bean;
 
-import javafx.beans.property.SimpleIntegerProperty;
-import org.jetbrains.annotations.NotNull;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.*;
 
-import java.util.Date;
-import javax.persistence.*;
-//Todo: check the constraints again
-//Todo: check the primary key
+import java.time.LocalDate;
 
 
 @Entity
-@Table(name = "product")
-public class Product {
-    @Id // TODO Confirm, I think it should be int
+@Access(AccessType.PROPERTY)
+@Table
+public class Product extends AbstractBeanImplementation {
+
+    public Product() {
+    }
+
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
+    private SimpleStringProperty description = new SimpleStringProperty();
+
+    private ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
+
+    private SimpleStringProperty brand = new SimpleStringProperty();
+
+    private SimpleStringProperty area = new SimpleStringProperty();
+
+    private SimpleStringProperty barcode = new SimpleStringProperty();
+
+    private SimpleStringProperty model = new SimpleStringProperty();
+
+    private ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
+
+    private ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
+
+    private SimpleIntegerProperty existence = new SimpleIntegerProperty();
+
+    private SimpleBooleanProperty blocked = new SimpleBooleanProperty();
+
+    private SimpleStringProperty imagePath = new SimpleStringProperty();
+
+    private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<>();
+
+    private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<>();
+
+    @Id
     @GeneratedValue
-    @Column(name = "id")
-    private int id;
-
-    @NotNull
-    @Column(name = "description")
-    private String description;
-
-    @NotNull
-    @Column(name = "register_date")
-    private Date registerDate;
-
-    //Todo check the not null default
-    @NotNull
-    @Column(name = "brand",nullable = false)
-    private String brand;
-
-    //Todo check the not null default
-    @NotNull
-    @Column(name = "area",nullable = false)
-    private String area;
-
-    @NotNull
-    @Column(name = "barcode_id",nullable = false)
-    private String barcodeId;
-
-    @NotNull
-    @Column(name = "model")
-    private String model;
-
-    @NotNull
-    @Column(name = "sell_unit")
-    private String sellUnit;
-
-    @NotNull
-    @Column(name = "purchase_unit",nullable = false)
-    private String purchaseUnit;
-
-    @NotNull
-    @Column(name = "existence")
-    private int existence;
-
-    //Todo: check the data type "tiny int "
-    @NotNull
-    @Column(name = "blocked")
-    private byte blocked;
-
-    //Todo: check the default null
-    @Column(name = "picture",nullable = true)
-    private String picture;
-
-    @NotNull
-    @Column(name = "discount_id")
-    private String discountId;
-
-    @Column(name = "storage_id")
-    private int storageId;
-
     public int getId() {
+        return id.get();
+    }
+
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
     }
 
     public String getDescription() {
+        return description.get();
+    }
+
+    public @NotNull SimpleStringProperty descriptionProperty() {
         return description;
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        this.description.set(description);
     }
 
-    public Date getRegisterDate() {
-        return registerDate;
+    @NotNull
+    public LocalDate getRegistrationDate() {
+        return registrationDate.get();
     }
 
-    public void setRegisterDate(Date registerDate) {
-        this.registerDate = registerDate;
+    public @NotNull ObjectProperty<LocalDate> registrationDateProperty() {
+        return registrationDate;
+    }
+
+    public void setRegistrationDate(LocalDate registrationDate) {
+        this.registrationDate.set(registrationDate);
     }
 
     public String getBrand() {
+        return brand.get();
+    }
+
+    public SimpleStringProperty brandProperty() {
         return brand;
     }
 
     public void setBrand(String brand) {
-        this.brand = brand;
+        this.brand.set(brand);
     }
 
     public String getArea() {
+        return area.get();
+    }
+
+    public SimpleStringProperty areaProperty() {
         return area;
     }
 
     public void setArea(String area) {
-        this.area = area;
+        this.area.set(area);
     }
 
-    public String getBarcodeId() {
-        return barcodeId;
+    @NotNull
+    @Column(nullable = false)
+    public String getBarcode() {
+        return barcode.get();
     }
 
-    public void setBarcodeId(String barcodeId) {
-        this.barcodeId = barcodeId;
+    public @NotNull SimpleStringProperty barcodeProperty() {
+        return barcode;
+    }
+
+    public void setBarcode(String barcode) {
+        this.barcode.set(barcode);
     }
 
     public String getModel() {
+        return model.get();
+    }
+
+    public SimpleStringProperty modelProperty() {
         return model;
     }
 
     public void setModel(String model) {
-        this.model = model;
+        this.model.set(model);
+    }
+    @NotNull
+    @OneToOne
+    public Unit getSellUnit() {
+        return sellUnit.get();
     }
 
-    public String getSellUnit() {
+    public ObjectProperty<Unit> sellUnitProperty() {
         return sellUnit;
     }
 
-    public void setSellUnit(String sellUnit) {
-        this.sellUnit = sellUnit;
+    public void setSellUnit(Unit sellUnit) {
+        this.sellUnit.set(sellUnit);
     }
 
-    public String getPurchaseUnit() {
+    @NotNull
+    @OneToOne
+    public Unit getPurchaseUnit() {
+        return purchaseUnit.get();
+    }
+
+    public @NotNull ObjectProperty<Unit> purchaseUnitProperty() {
         return purchaseUnit;
     }
 
-    public void setPurchaseUnit(String purchaseUnit) {
-        this.purchaseUnit = purchaseUnit;
+    public void setPurchaseUnit(Unit purchaseUnit) {
+        this.purchaseUnit.set(purchaseUnit);
     }
 
+    @NotNull
     public int getExistence() {
+        return existence.get();
+    }
+
+    public @NotNull SimpleIntegerProperty existenceProperty() {
         return existence;
     }
 
     public void setExistence(int existence) {
-        this.existence = existence;
+        this.existence.set(existence);
     }
 
-    public byte getBlocked() {
+    @NotNull
+    public boolean isBlocked() {
+        return blocked.get();
+    }
+
+    public @NotNull SimpleBooleanProperty blockedProperty() {
         return blocked;
     }
 
-    public void setBlocked(byte blocked) {
-        this.blocked = blocked;
+    public void setBlocked(boolean blocked) {
+        this.blocked.set(blocked);
     }
 
-    public String getPicture() {
-        return picture;
+    public String getImagePath() {
+        return imagePath.get();
     }
 
-    public void setPicture(String picture) {
-        this.picture = picture;
+    public SimpleStringProperty imagePathProperty() {
+        return imagePath;
     }
 
-    public String getDiscountId() {
-        return discountId;
+    public void setImagePath(String imagePath) {
+        this.imagePath.set(imagePath);
     }
 
-    public void setDiscountId(String discountId) {
-        this.discountId = discountId;
+    @NotNull
+    @OneToOne
+    public Discount getDiscount() {
+        return discount.get();
     }
 
-    public int getStorageId() {
-        return storageId;
+    public @NotNull SimpleObjectProperty<Discount> discountProperty() {
+        return discount;
     }
 
-    public void setStorageId(int storageId) {
-        this.storageId = storageId;
+    public void setDiscount(Discount discount) {
+        this.discount.set(discount);
+    }
+
+    @NotNull
+    @OneToOne
+    public Storage getStorage() {
+        return storage.get();
+    }
+
+    public SimpleObjectProperty<Storage> storageProperty() {
+        return storage;
+    }
+
+    public void setStorage(Storage storage) {
+        this.storage.set(storage);
+    }
+
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        // TODO
+    }
+
+    @Override
+    public AbstractBeanImplementation clone() {
+        // TODO
+        return null;
     }
 }

@@ -1,10 +1,8 @@
 package com.saulpos.model.bean;
 
 import jakarta.persistence.*;
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 
-import javax.xml.crypto.Data;
-import java.security.PublicKey;
 import java.util.Date;
 
 @Entity

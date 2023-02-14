@@ -2,7 +2,7 @@ package com.saulpos.model.bean;
 
 
 import jakarta.persistence.*;
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 import java.util.Date;
 

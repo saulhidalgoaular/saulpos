@@ -1,13 +1,6 @@
 package com.saulpos.model.bean;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.ColumnDefault;
-
-import javax.annotation.processing.Generated;
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
+import jakarta.persistence.*;
 
 //todo check the primray key of the table
 

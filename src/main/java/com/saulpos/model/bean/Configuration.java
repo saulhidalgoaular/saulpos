@@ -1,15 +1,9 @@
 package com.saulpos.model.bean;
 
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import javafx.beans.DefaultProperty;
-import org.hibernate.annotations.ColumnDefault;
-import org.jetbrains.annotations.NotNull;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 
-import javax.persistence.Column;
 
 @Entity
 @Table(name = "configuration")
@@ -18,7 +12,8 @@ public class Configuration {
     @Column(name = "id")
     private int id;
 
-    @NotNull @GeneratedValue
+    @NotNull
+    @GeneratedValue
     @Column(name = "Key")
     private String key;
 

@@ -5,13 +5,14 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import org.jetbrains.annotations.NotNull;
+import jakarta.validation.constraints.NotNull;
 //TODO check the keys
 
 @Entity
 @Table(name = "product_movements")
 public class ProductMovement {
-    @NotNull @Id
+    @NotNull
+    @Id
     @Column(name = "id")
     private String id;
 
