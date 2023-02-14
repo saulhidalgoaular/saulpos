@@ -16,7 +16,7 @@ import java.util.Date;
 @Table
 public class Assignment extends AbstractBeanImplementation {
 
-    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private final SimpleStringProperty shiftId = new SimpleStringProperty();
 
