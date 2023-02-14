@@ -1,68 +1,87 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import javafx.beans.property.SimpleStringProperty;
 
-//todo check the primray key of the table
 
 @Entity
-@Table(name = "client")
-public class Client {
-    @Id @GeneratedValue
-    @Column(name = "id")
-    private String id;
+@Access(AccessType.PROPERTY)
+@Table
+public class Client extends AbstractBeanImplementation {
 
-    //todo check default null value
-//    @ColumnDefault(value = null)
-    @Column(name = "name")
-    private String name;
+    private SimpleStringProperty id = new SimpleStringProperty();
 
-    //todo check default null value
-    @Column(name = "address")
-    private String address;
+    private SimpleStringProperty name = new SimpleStringProperty();
 
-    @Column(name = "phone")
-    private String phone;
+    private SimpleStringProperty address = new SimpleStringProperty();
 
-    public Client(String id, String name, String address, String phone) {
-        this.id = id;
-        this.name = name;
-        this.address = address;
-        this.phone = phone;
-    }
+    private SimpleStringProperty phone = new SimpleStringProperty();
 
     public Client() {
 
     }
 
+    @Id
+    @GeneratedValue
     public String getId() {
-        return id;
+        return id.get();
     }
 
     public void setId(String id) {
-        this.id = id;
+        this.id.set(id);
+    }
+
+    public SimpleStringProperty idProperty() {
+        return id;
     }
 
     public String getName() {
+        return name.get();
+    }
+
+    public SimpleStringProperty nameProperty() {
         return name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name.set(name);
     }
 
     public String getAddress() {
+        return address.get();
+    }
+
+    public SimpleStringProperty addressProperty() {
         return address;
     }
 
     public void setAddress(String address) {
-        this.address = address;
+        this.address.set(address);
     }
 
     public String getPhone() {
+        return phone.get();
+    }
+
+    public SimpleStringProperty phoneProperty() {
         return phone;
     }
 
     public void setPhone(String phone) {
-        this.phone = phone;
+        this.phone.set(phone);
+    }
+
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+
+    }
+
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+
+        return null;
     }
 }
