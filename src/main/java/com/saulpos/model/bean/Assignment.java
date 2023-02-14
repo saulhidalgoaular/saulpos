@@ -1,81 +1,108 @@
 package com.saulpos.model.bean;
 
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 import java.util.Date;
 
 @Entity
-@Table(name="assignment")
-public class Assignment {
-    @Id
-    @GeneratedValue
-    @Column(name = "id")
-    private int id;
+@Access(AccessType.PROPERTY)
+@Table
+public class Assignment extends AbstractBeanImplementation {
 
-    @NotNull
-    @Column(name = "shift_id")
-    private String shiftId;
+    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
 
-    @NotNull
-    @Column(name = "cashier_id")
-    private String cashierId;
+    private final SimpleStringProperty shiftId = new SimpleStringProperty();
 
-    @NotNull
-    @Column(name = "datetime")
-    private Date dateTime;
+    private final SimpleStringProperty cashierId = new SimpleStringProperty();
 
-    //todo check the data type
-    @NotNull
-    @Column(name = "status")
-    private int status;
+    //Todo check the data type
+    private final ObjectProperty<Date> dateTime = new SimpleObjectProperty<>();
 
-    public Assignment(int id, String shiftId, String cashierId, Date dateTime, int status) {
-        this.id = id;
-        this.shiftId = shiftId;
-        this.cashierId = cashierId;
-        this.dateTime = dateTime;
-        this.status = status;
+    //Todo check the data type
+    private SimpleIntegerProperty status=new SimpleIntegerProperty();
+
+    public Assignment() {
+
     }
 
+    @Id
+    @GeneratedValue
     public int getId() {
-        return id;
+        return id.get();
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
+    }
+
+    public SimpleIntegerProperty idProperty() {
+        return id;
     }
 
     public String getShiftId() {
-        return shiftId;
+        return shiftId.get();
     }
 
     public void setShiftId(String shiftId) {
-        this.shiftId = shiftId;
+        this.shiftId.set(shiftId);
+    }
+
+    public @NotNull SimpleStringProperty shiftIdProperty() {
+        return shiftId;
     }
 
     public String getCashierId() {
-        return cashierId;
+        return cashierId.get();
     }
 
     public void setCashierId(String cashierId) {
-        this.cashierId = cashierId;
+        this.cashierId.set(cashierId);
     }
 
+    public @NotNull SimpleStringProperty cashierIdProperty() {
+        return cashierId;
+    }
+
+    @NotNull
     public Date getDateTime() {
-        return dateTime;
+        return this.dateTime.get();
     }
 
     public void setDateTime(Date dateTime) {
-        this.dateTime = dateTime;
+        this.dateTime.set(dateTime);
     }
 
-    public int getStatus() {
-        return status;
+    public @NotNull ObjectProperty<Date> dateTimeProperty() {
+        return dateTime;
+    }
+
+    public @NotNull int getStatus() {
+        return status.get();
     }
 
     public void setStatus(int status) {
-        this.status = status;
+        this.status.set(status);
+    }
+
+    public SimpleIntegerProperty statusProperty() {
+        return id;
+    }
+
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+    }
+
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
