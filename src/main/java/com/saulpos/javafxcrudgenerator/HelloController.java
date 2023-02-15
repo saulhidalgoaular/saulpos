@@ -6,13 +6,6 @@ import javafx.scene.layout.VBox;
 
 public class HelloController {
     @FXML
-    private Label welcomeText;
-
-    @FXML
     public VBox mainVBox;
 
-    @FXML
-    protected void onHelloButtonClick() {
-        welcomeText.setText("Welcome to JavaFX Application!");
-    }
 }
