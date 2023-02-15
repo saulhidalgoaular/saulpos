@@ -17,21 +17,23 @@
 package com.saulpos.javafxcrudgenerator.model.dao;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * Created by Saul on 11/16/2016.
  */
 public interface AbstractBean < S extends AbstractBean > {
 
-    Integer save() throws PropertyVetoException;
+    Integer save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException;
 
-    void update() throws PropertyVetoException;
+    void update() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException;
 
-    void saveOrUpdate() throws PropertyVetoException;
+    void saveOrUpdate() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException;
 
     void receiveChanges(S currentBean);
 
     S clone();
 
-    void delete() throws PropertyVetoException;
+    void delete() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException;
 }

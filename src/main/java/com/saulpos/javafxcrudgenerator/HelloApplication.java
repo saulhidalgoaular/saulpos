@@ -8,11 +8,12 @@ import javafx.stage.Stage;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.List;
 
 public class HelloApplication extends Application {
     @Override
-    public void start(Stage stage) throws IOException, PropertyVetoException {
+    public void start(Stage stage) throws IOException, PropertyVetoException, URISyntaxException, ClassNotFoundException {
         DatabaseConnection.getInstance().initialize();
 
         Product product = new Product();
