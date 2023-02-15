@@ -1,67 +1,90 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 
 import java.util.Date;
 
 @Entity
-@Table(name = "price")
-public class Price {
-    @Id @GeneratedValue
-    @Column(name = "id")
-    private int id;
+@Access(AccessType.PROPERTY)
+@Table
+public class Price extends AbstractBeanImplementation {
 
-    @NotNull
-    @Column(name = "product_id")
-    private String productID;
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
-    @NotNull
-    @Column(name = "price")
-    private double price;
+    private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
 
-    @NotNull
-    @Column(name = "date")
-    private Date data;
+    private SimpleDoubleProperty price = new SimpleDoubleProperty();
 
-    public Price(@NotNull String productID, @NotNull double price, @NotNull Date data) {
-        this.productID = productID;
-        this.price = price;
-        this.data = data;
-    }
-    public Price() {
+    //Todo check the data type
+    private final ObjectProperty<Date> date = new SimpleObjectProperty<>();
 
-    }
-
+    @Id
+    @GeneratedValue
     public int getId() {
-        return id;
+        return id.get();
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
     }
 
-    public String getProductID() {
-        return productID;
+    public SimpleIntegerProperty idProperty() {
+        return id;
     }
 
-    public void setProductID(String productID) {
-        this.productID = productID;
+    @NotNull
+    @OneToOne
+    public Product getProduct() {
+        return product.get();
     }
 
-    public double getPrice() {
+    public @NotNull SimpleObjectProperty<Product> productProperty() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product.set(product);
+    }
+
+    public Double getPrice() {
+        return price.get();
+    }
+
+    public void setPrice(Double price) {
+        this.price.set(price);
+    }
+
+    public @NotNull SimpleDoubleProperty priceProperty() {
         return price;
     }
 
-    public void setPrice(double price) {
-        this.price = price;
+    @NotNull
+    public Date getDate() {
+        return this.date.get();
     }
 
-    public Date getData() {
-        return data;
+    public void setDate(Date date) {
+        this.date.set(date);
     }
 
-    public void setData(Date data) {
-        this.data = data;
+    public @NotNull ObjectProperty<Date> dateProperty() {
+        return date;
+    }
+
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+    }
+
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
