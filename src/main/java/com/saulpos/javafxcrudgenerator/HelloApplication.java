@@ -1,5 +1,9 @@
 package com.saulpos.javafxcrudgenerator;
 
+import com.dlsc.formsfx.model.structure.Field;
+import com.dlsc.formsfx.model.structure.Form;
+import com.dlsc.formsfx.model.structure.Group;
+import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.model.bean.Product;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -14,6 +18,18 @@ import java.util.List;
 public class HelloApplication extends Application {
     @Override
     public void start(Stage stage) throws IOException, PropertyVetoException, URISyntaxException, ClassNotFoundException {
+        Form form = Form.of(
+                Group.of(
+                        Field.ofStringType("")
+                                .label("Username"),
+                        Field.ofPasswordType("")
+                                .label("Password")
+                                .required("This field can’t be empty")
+                )
+
+        ).title("Login");
+
+
         DatabaseConnection.getInstance().initialize();
 
         Product product = new Product();
@@ -30,6 +46,11 @@ public class HelloApplication extends Application {
 
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 320, 240);
+
+        HelloController controller = fxmlLoader.<HelloController>getController();
+        controller.mainVBox.getChildren().add(
+                new FormRenderer(form)
+        );
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();
