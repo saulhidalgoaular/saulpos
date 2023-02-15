@@ -1,81 +1,79 @@
 package com.saulpos.model.bean;
 
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.*;
 
 import java.util.Date;
-
-//TODO CHECK THE CONSTRAINTS primay key
+//Todo check the bank attribute
+//Todo check the PRIMARY KEY (fecha,banco,numero)
 @Entity
-@Table(name = "deposit")
-public class Deposit {
+@Access(AccessType.PROPERTY)
+@Table
+public class Deposit extends AbstractBeanImplementation {
+
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
+    private ObjectProperty<Date> date = new SimpleObjectProperty<>();
+
+    private SimpleStringProperty number =new SimpleStringProperty();
+
+    private SimpleDoubleProperty amount=new SimpleDoubleProperty();
+
     @Id
     @GeneratedValue
-    @Column(name = "id")
-    private int id;
-
-    @NotNull
-    @Column(name = "data")
-    private Date date;
-
-    @NotNull
-    @Column(name = "bank")
-    private String bank;
-
-    @NotNull
-    @Column(name = "numero")
-    private String number;
-
-    @NotNull
-    @Column(name = "amount")
-    private double amount;
-
-    public Deposit(int id, @NotNull Date date, @NotNull String bank, @NotNull String number, @NotNull double amount) {
-        this.id = id;
-        this.date = date;
-        this.bank = bank;
-        this.number = number;
-        this.amount = amount;
-    }
-
     public int getId() {
-        return id;
+        return id.get();
     }
 
     public void setId(int id) {
-        this.id = id;
+        this.id.set(id);
     }
 
-    public Date getDate() {
-        return date;
+    public SimpleIntegerProperty idProperty() {
+        return id;
+    }
+
+    public  @NotNull Date getDate() {
+        return date.get();
     }
 
     public void setDate(Date date) {
-        this.date = date;
+        this.date.set(date);
     }
 
-    public String getBank() {
-        return bank;
+    public @NotNull ObjectProperty<Date> dateProperty() {
+        return date;
     }
 
-    public void setBank(String bank) {
-        this.bank = bank;
+    public String getNumber(){
+        return number.get();
     }
-
-    public String getNumber() {
+    public void setNumber(String number){
+        this.number.set(number);
+    }
+    public @NotNull SimpleStringProperty numberProperty(){
         return number;
     }
-
-    public void setNumber(String number) {
-        this.number = number;
+    public Double getAmount(){
+        return amount.get();
     }
-
-    public double getAmount() {
+    public void setAmount(Double amount){
+        this.amount.set(amount);
+    }
+    public @NotNull SimpleDoubleProperty amountProperty(){
         return amount;
     }
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+    }
 
-    public void setAmount(double amount) {
-        this.amount = amount;
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
