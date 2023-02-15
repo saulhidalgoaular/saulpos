@@ -1,74 +1,92 @@
 package com.saulpos.model.bean;
 
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
 //TODO check the keys
+//Todo check the not null default for amount & type
 
 @Entity
-@Table(name = "product_movements")
-public class ProductMovement {
-    @NotNull
+@Access(AccessType.PROPERTY)
+@Table
+public class ProductMovement extends AbstractBeanImplementation {
+
+    private SimpleStringProperty id = new SimpleStringProperty();
+
+    private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
+
+    private SimpleIntegerProperty amount = new SimpleIntegerProperty();
+
+    private SimpleStringProperty type = new SimpleStringProperty();
+
     @Id
-    @Column(name = "id")
-    private String id;
+    @GeneratedValue
+    public String getId() {
+        return id.get();
+    }
 
-    @NotNull
-    @Column(name = "product_id")
-    private String productId;
+    public void setId(String id) {
+        this.id.set(id);
+    }
 
-    @NotNull
-    @Column(name = "amount")
-    private int amount;
+    public @NotNull SimpleStringProperty idProperty() {
+        return id;
+    }
 
-    //Todo check the not null default
-    @NotNull
-    @Column(name = "type",nullable = false)
-    private String type;
 
-    public ProductMovement(@NotNull String id, @NotNull String productId, @NotNull int amount, @NotNull String type) {
-        this.id = id;
-        this.productId = productId;
-        this.amount = amount;
-        this.type = type;
+    @OneToOne
+    public Product getProduct() {
+        return product.get();
+    }
+
+    public @NotNull SimpleObjectProperty<Product> productProperty() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product.set(product);
+    }
+
+    public @NotNull int getAmount() {
+        return amount.get();
+    }
+
+    public void setAmount(int amount) {
+        this.amount.set(amount);
+    }
+
+    public SimpleIntegerProperty amountProperty() {
+        return amount;
+    }
+
+    public String getType() {
+        return type.get();
+    }
+
+    public void setType(String type) {
+        this.type.set(type);
+    }
+
+    public SimpleStringProperty typeProperty() {
+        return type;
     }
 
     public ProductMovement() {
 
     }
 
-    public String getId() {
-        return id;
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getProductId() {
-        return productId;
-    }
-
-    public void setProductId(String productId) {
-        this.productId = productId;
-    }
-
-    public int getAmount() {
-        return amount;
-    }
-
-    public void setAmount(int amount) {
-        this.amount = amount;
-    }
-
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
