@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
@@ -12,7 +13,7 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 //Todo check the primary is generated or not
-public class MovementInventory {
+public class MovementInventory extends AbstractBeanImplementation {
 
     private SimpleStringProperty identifier= new SimpleStringProperty();
 
@@ -83,5 +84,16 @@ public class MovementInventory {
 
     public void setStore(String store) {
         this.store.set(store);
+    }
+
+    @Override
+    public void receiveChanges(AbstractBeanImplementation currentBean) {
+        //Todo
+    }
+
+    @Override
+    public AbstractBeanImplementation clone() {
+        //Todo
+        return null;
     }
 }
