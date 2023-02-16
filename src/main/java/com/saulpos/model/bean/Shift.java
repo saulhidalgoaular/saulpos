@@ -26,11 +26,11 @@ public class Shift extends AbstractBeanImplementation {
     @Id
     //@GeneratedValue
     //Todo: this primary key will be generatedValue or not
-    public String getIdentifier(){
+    public String getIdentifier() {
         return identifier.get();
     }
 
-    public SimpleStringProperty identifierProperty(){
+    public SimpleStringProperty identifierProperty() {
         return identifier;
     }
 
@@ -38,11 +38,11 @@ public class Shift extends AbstractBeanImplementation {
         this.identifier.set(identifier);
     }
 
-    public String getName(){
+    public String getName() {
         return name.get();
     }
 
-    public SimpleStringProperty nameProperty(){
+    public SimpleStringProperty nameProperty() {
         return name;
     }
 
@@ -50,15 +50,15 @@ public class Shift extends AbstractBeanImplementation {
         this.name.set(name);
     }
 
-    public @NotNull LocalTime getStart(){
+    public @NotNull LocalTime getStart() {
         return start.get();
     }
 
-    public ObjectProperty<LocalTime> startProperty(){
+    public ObjectProperty<LocalTime> startProperty() {
         return start;
     }
 
-    public void setStart(LocalTime start){
+    public void setStart(LocalTime start) {
         this.start.set(start);
     }
 
@@ -81,7 +81,7 @@ public class Shift extends AbstractBeanImplementation {
 
     @Override
     public AbstractBeanImplementation clone() {
-        //Todo 
+        //Todo
         return null;
     }
 }
