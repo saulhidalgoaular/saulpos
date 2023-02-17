@@ -7,16 +7,15 @@ import jakarta.validation.constraints.NotNull;
 
 
 @Entity
-@Table(name = "configuration")
+@Access(AccessType.PROPERTY)
+@Table
 public class Configuration extends AbstractBeanImplementation<Configuration> {
-    @Id @GeneratedValue
-    @Column(name = "id")
+
     private int id;
 
     @NotNull
     private String key;
 
-    @Column(name = "Value")
     private String value;
 
     private String name;
@@ -24,7 +23,7 @@ public class Configuration extends AbstractBeanImplementation<Configuration> {
     public Configuration() {
 
     }
-
+    @Id @GeneratedValue
     public int getId() {
         return id;
     }

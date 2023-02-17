@@ -7,7 +7,6 @@ import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 
-//Todo check the keys again
 
 @Entity
 @Access(AccessType.PROPERTY)
@@ -107,6 +106,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.printingDate.set(printingDate);
     }
 
+    @OneToOne
     public Client getClient() {
         return client.get();
     }
@@ -203,6 +203,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.zReportNumber.set(zReportNumber);
     }
 
+    @OneToOne
     public User getUser() {
         return user.get();
     }
@@ -215,6 +216,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.user.set(user);
     }
 
+    @OneToOne
     public Product getArticlesQuantity() {
         return articlesQuantity.get();
     }
@@ -227,6 +229,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.articlesQuantity.set(articlesQuantity);
     }
 
+    @OneToOne
     public Shift getShiftIdentifier() {
         return shiftIdentifier.get();
     }
@@ -239,6 +242,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.shiftIdentifier.set(shiftIdentifier);
     }
 
+    @OneToOne
     public Cashier getPosIdentifier() {
         return posIdentifier.get();
     }

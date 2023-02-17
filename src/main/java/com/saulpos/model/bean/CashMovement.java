@@ -15,6 +15,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     //identificador_punto_de_venta
+    @OneToOne
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
     //fecha
@@ -39,6 +40,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
         this.id.set(id);
     }
 
+    @OneToOne
     public Cashier getCashier() {
         return cashier.get();
     }

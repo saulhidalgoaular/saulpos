@@ -29,4 +29,7 @@ public abstract class AbstractBeanImplementation<I extends AbstractBeanImplement
     public void delete() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         DatabaseConnection.getInstance().delete(this);
     }
+
+    @Override
+    public abstract I clone();
 }

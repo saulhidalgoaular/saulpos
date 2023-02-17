@@ -217,15 +217,7 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
         return creditNotePrinter;
     }
 
-    public @NotNull Boolean isUpdatedValues(){
-        return updateValues.get();
-    }
-
-    public void setUpdateValues(Boolean updateValues){
-        this.updateValues.set(updateValues);
-    }
-
-    public SimpleBooleanProperty updateValuesProperty(){
+    public SimpleBooleanProperty updateValuesProperty() {
         return updateValues;
     }
 

@@ -74,6 +74,7 @@ public class ProductMovement extends AbstractBeanImplementation<ProductMovement>
         this.code.set(code);
     }
 
+    @OneToOne
     public Storage getStore() {
         return store.get();
     }

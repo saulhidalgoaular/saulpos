@@ -23,7 +23,7 @@ import java.net.URISyntaxException;
 /**
  * Created by Saul on 11/16/2016.
  */
-public interface AbstractBean < S extends AbstractBean > {
+public interface AbstractBean < S extends AbstractBean > extends Cloneable {
 
     Integer save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException;
 

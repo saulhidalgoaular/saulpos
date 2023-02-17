@@ -45,6 +45,7 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
         return id;
     }
 
+    @OneToOne
     public Shift getShift() {
         return shift.get();
     }
@@ -57,6 +58,7 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
         this.shift.set(shift);
     }
 
+    @OneToOne
     public Cashier getCashier() {
         return cashier.get();
     }

@@ -77,6 +77,7 @@ public class ProductMovementDetail extends AbstractBeanImplementation<ProductMov
         return type;
     }
 
+    @OneToOne
     public ProductMovement getProductMovement() {
         return productMovement.get();
     }

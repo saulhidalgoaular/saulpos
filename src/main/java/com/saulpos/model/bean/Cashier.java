@@ -1,12 +1,14 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+@Entity
+@Access(AccessType.PROPERTY)
+@Table
 public class Cashier extends AbstractBeanImplementation<Cashier> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
