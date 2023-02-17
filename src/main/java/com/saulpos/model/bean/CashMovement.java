@@ -2,7 +2,6 @@ package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -11,12 +10,12 @@ import java.time.LocalDateTime;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class CashMovement extends AbstractBeanImplementation {
+public class CashMovement extends AbstractBeanImplementation<CashMovement> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     //identificador_punto_de_venta
-    private SimpleStringProperty pointOfSaleIdentifier = new SimpleStringProperty();
+    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
     //fecha
     private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
@@ -40,19 +39,19 @@ public class CashMovement extends AbstractBeanImplementation {
         this.id.set(id);
     }
 
-    public @NotNull String getPointOfSaleIdentifier() {
-        return pointOfSaleIdentifier.get();
+    public Cashier getCashier() {
+        return cashier.get();
     }
 
-    public SimpleStringProperty pointOfSaleIdentifierProperty() {
-        return pointOfSaleIdentifier;
+    public SimpleObjectProperty<Cashier> cashierProperty() {
+        return cashier;
     }
 
-    public void setPointOfSaleIdentifier(String pointOfSaleIdentifier) {
-        this.pointOfSaleIdentifier.set(pointOfSaleIdentifier);
+    public void setCashier(Cashier cashier) {
+        this.cashier.set(cashier);
     }
 
-    public @NotNull LocalDateTime getDate() {
+    public LocalDateTime getDate() {
         return date.get();
     }
 
@@ -64,7 +63,7 @@ public class CashMovement extends AbstractBeanImplementation {
         this.date.set(date);
     }
 
-    public @NotNull Double getAmount() {
+    public double getAmount() {
         return amount.get();
     }
 
@@ -72,17 +71,17 @@ public class CashMovement extends AbstractBeanImplementation {
         return amount;
     }
 
-    public void setAmount(Double amount) {
+    public void setAmount(double amount) {
         this.amount.set(amount);
     }
 
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(CashMovement currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public CashMovement clone() {
         //Todo
 
         return null;

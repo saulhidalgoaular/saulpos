@@ -7,7 +7,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Unit extends AbstractBeanImplementation {
+public class Unit extends AbstractBeanImplementation<Unit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -25,13 +25,14 @@ public class Unit extends AbstractBeanImplementation {
         this.id.set(id);
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(Unit currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Unit clone() {
         return null;
     }
 }

@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Client extends AbstractBeanImplementation {
+public class Client extends AbstractBeanImplementation<Client> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
@@ -73,13 +73,12 @@ public class Client extends AbstractBeanImplementation {
     }
 
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Client currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Client clone() {
         //Todo
 
         return null;

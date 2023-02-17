@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class BankSalePoint extends AbstractBeanImplementation {
+public class BankPOS extends AbstractBeanImplementation<BankPOS> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
@@ -16,12 +16,7 @@ public class BankSalePoint extends AbstractBeanImplementation {
 
     private SimpleStringProperty batch = new SimpleStringProperty();
 
-    //tipo
-    //Todo: check the type of the attribute
-    private SimpleStringProperty guy = new SimpleStringProperty();
-
-    //identificador pos
-    private SimpleStringProperty identifierPos = new SimpleStringProperty();
+    private SimpleStringProperty type = new SimpleStringProperty();
 
     @Id
     public String getId() {
@@ -60,37 +55,25 @@ public class BankSalePoint extends AbstractBeanImplementation {
         this.batch.set(batch);
     }
 
-    public String getIdentifierPos() {
-        return identifierPos.get();
+    public String getType() {
+        return type.get();
     }
 
-    public SimpleStringProperty identifierPosProperty() {
-        return identifierPos;
+    public SimpleStringProperty typeProperty() {
+        return type;
     }
 
-    public void setIdentifierPos(String identifierPos) {
-        this.identifierPos.set(identifierPos);
-    }
-
-    public String getGuy() {
-        return guy.get();
-    }
-
-    public SimpleStringProperty guyProperty() {
-        return guy;
-    }
-
-    public void setGuy(String guy) {
-        this.guy.set(guy);
+    public void setType(String type) {
+        this.type.set(type);
     }
 
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(BankPOS currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public BankPOS clone() {
         //Todo
         return null;
     }

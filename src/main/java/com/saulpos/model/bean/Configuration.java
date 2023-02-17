@@ -1,37 +1,25 @@
 package com.saulpos.model.bean;
 
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
 
 @Entity
 @Table(name = "configuration")
-public class Configuration {
+public class Configuration extends AbstractBeanImplementation<Configuration> {
     @Id @GeneratedValue
     @Column(name = "id")
     private int id;
 
     @NotNull
-    @GeneratedValue
-    @Column(name = "Key")
     private String key;
 
-    @NotNull
     @Column(name = "Value")
     private String value;
 
-    //todo check the column default value
-//    @ColumnDefault(value = null)
-    @Column(name = "Name")
     private String name;
-
-    public Configuration(int id, String key, String value, String name) {
-        this.id = id;
-        this.key = key;
-        this.value = value;
-        this.name = name;
-    }
 
     public Configuration() {
 
@@ -67,5 +55,15 @@ public class Configuration {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public void receiveChanges(Configuration currentBean) {
+
+    }
+
+    @Override
+    public Configuration clone() {
+        return null;
     }
 }

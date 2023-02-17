@@ -8,15 +8,14 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class UserType extends AbstractBeanImplementation {
+public class UserType extends AbstractBeanImplementation<UserType> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
     private SimpleStringProperty description = new SimpleStringProperty();
 
     @Id
-    //Todo: the primary key will be Generated or not
-    //@GeneratedValue
+    @GeneratedValue
     public String getId() {
         return id.get();
     }
@@ -42,12 +41,12 @@ public class UserType extends AbstractBeanImplementation {
     }
 
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(UserType currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public UserType clone() {
         return null;
     }
 }

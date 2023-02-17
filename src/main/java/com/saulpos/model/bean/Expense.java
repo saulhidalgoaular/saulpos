@@ -10,7 +10,7 @@ import java.time.LocalDate;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Expense extends AbstractBeanImplementation{
+public class Expense extends AbstractBeanImplementation<Expense> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -89,12 +89,12 @@ public class Expense extends AbstractBeanImplementation{
 
 
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Expense currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Expense clone() {
         //Todo
         return null;
     }

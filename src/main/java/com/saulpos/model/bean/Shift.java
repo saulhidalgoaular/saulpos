@@ -12,9 +12,9 @@ import java.time.LocalTime;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Shift extends AbstractBeanImplementation {
+public class Shift extends AbstractBeanImplementation<Shift> {
 
-    private SimpleStringProperty identifier = new SimpleStringProperty();
+    private SimpleStringProperty id = new SimpleStringProperty();
 
     private SimpleStringProperty name = new SimpleStringProperty();
 
@@ -22,20 +22,18 @@ public class Shift extends AbstractBeanImplementation {
 
     private ObjectProperty<LocalTime> end = new SimpleObjectProperty<>();
 
-
     @Id
-    //@GeneratedValue
-    //Todo: this primary key will be generatedValue or not
-    public String getIdentifier() {
-        return identifier.get();
+    @GeneratedValue
+    public String getId() {
+        return id.get();
     }
 
-    public SimpleStringProperty identifierProperty() {
-        return identifier;
+    public SimpleStringProperty idProperty() {
+        return id;
     }
 
-    public void setIdentifier(String identifier) {
-        this.identifier.set(identifier);
+    public void setId(String id) {
+        this.id.set(id);
     }
 
     public String getName() {
@@ -74,13 +72,14 @@ public class Shift extends AbstractBeanImplementation {
         this.end.set(end);
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Shift currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Shift clone() {
         //Todo
         return null;
     }

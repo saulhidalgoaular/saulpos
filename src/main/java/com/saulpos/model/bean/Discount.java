@@ -2,7 +2,6 @@ package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -11,7 +10,7 @@ import java.time.LocalDate;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Discount extends AbstractBeanImplementation {
+public class Discount extends AbstractBeanImplementation<Discount> {
 
     private SimpleIntegerProperty id=new SimpleIntegerProperty();
 
@@ -80,13 +79,14 @@ public class Discount extends AbstractBeanImplementation {
     public SimpleDoubleProperty percentageProperty(){
         return percentage;
     }
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Discount currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Discount clone() {
         //Todo
         return null;
     }

@@ -2,7 +2,6 @@ package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -13,63 +12,49 @@ import java.time.LocalDateTime;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Invoice extends AbstractBeanImplementation {
+public class Invoice extends AbstractBeanImplementation<Invoice> {
+
+    public enum Status{
+        Pedido, Anulada, Espera, Facturada
+    }
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     //codigo_interno
     private SimpleStringProperty internalCode = new SimpleStringProperty();
 
-    //estado enum('Pedido','Anulada','Espera','Facturada') NOT NULL,
-    //Todo the enum will be stored as string or not ?
-    //I search for this I saw string is better than enum
-    //https://stackoverflow.com/questions/229856/ways-to-save-enums-in-database
+    private SimpleObjectProperty<Status> status = new SimpleObjectProperty<>();
 
-
-    //fecha_creacion
     private ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
 
-    //fecha_impresion
     private ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
-    //codigo_de_cliente
-    private SimpleStringProperty clientCode = new SimpleStringProperty();
+    private SimpleObjectProperty<Client> client = new SimpleObjectProperty();
 
-    //total_sin_iva
     private SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
 
-    //total_con_iva
     private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
 
-    //descuento_global
     @ColumnDefault("0.0000")
     private SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
 
     //iva
     private SimpleDoubleProperty vat = new SimpleDoubleProperty();
 
-    //impresora
     private SimpleStringProperty printer = new SimpleStringProperty();
 
-    //numero_fiscal
     private SimpleStringProperty taxNumber = new SimpleStringProperty();
 
-    //numero_reporte_z
-    private SimpleStringProperty reportzNumber = new SimpleStringProperty();
+    private SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
-    //codigo_de_usuario
-    private SimpleStringProperty userCode = new SimpleStringProperty();
+    private SimpleObjectProperty<User> user = new SimpleObjectProperty<>();
 
-    //cantidad_de_articulos
-    private SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
+    private SimpleObjectProperty<Product> articlesQuantity = new SimpleObjectProperty<>();
 
-    //identificador_turno
-    private SimpleStringProperty shiftIdentifier = new SimpleStringProperty();
+    private SimpleObjectProperty<Shift> shiftIdentifier = new SimpleObjectProperty();
 
-    //identificador_pos
-    private SimpleStringProperty posIdentifier = new SimpleStringProperty();
+    private SimpleObjectProperty<Cashier> posIdentifier = new SimpleObjectProperty();
 
-    //codigo_interno_alternativo
     private SimpleStringProperty alternativeInternalCode = new SimpleStringProperty();
 
     @Id
@@ -86,100 +71,100 @@ public class Invoice extends AbstractBeanImplementation {
         this.id.set(id);
     }
 
-    public @NotNull String getInternalCode() {
+    public String getInternalCode() {
         return internalCode.get();
-    }
-
-    public void setInternalCode(String internalCode) {
-        this.internalCode.set(internalCode);
     }
 
     public SimpleStringProperty internalCodeProperty() {
         return internalCode;
     }
 
-    public @NotNull LocalDateTime getCreationDate() {
-        return creationDate.get();
+    public void setInternalCode(String internalCode) {
+        this.internalCode.set(internalCode);
     }
 
-    public void setCreationDate(LocalDateTime creationDate) {
-        this.creationDate.set(creationDate);
+    public LocalDateTime getCreationDate() {
+        return creationDate.get();
     }
 
     public ObjectProperty<LocalDateTime> creationDateProperty() {
         return creationDate;
     }
 
-    public LocalDateTime getPrintingDate() {
-        return printingDate.get();
+    public void setCreationDate(LocalDateTime creationDate) {
+        this.creationDate.set(creationDate);
     }
 
-    public void setPrintingDate(LocalDateTime printingDate) {
-        this.printingDate.set(printingDate);
+    public LocalDateTime getPrintingDate() {
+        return printingDate.get();
     }
 
     public ObjectProperty<LocalDateTime> printingDateProperty() {
         return printingDate;
     }
 
-    public String getClientCode() {
-        return clientCode.get();
+    public void setPrintingDate(LocalDateTime printingDate) {
+        this.printingDate.set(printingDate);
     }
 
-    public void setClientCode(String clientCode) {
-        this.clientCode.set(clientCode);
+    public Client getClient() {
+        return client.get();
     }
 
-    public SimpleStringProperty clientCodeProperty() {
-        return clientCode;
+    public SimpleObjectProperty<Client> clientProperty() {
+        return client;
     }
 
-    public @NotNull Double getTotalWithOutVat() {
+    public void setClient(Client client) {
+        this.client.set(client);
+    }
+
+    public double getTotalWithoutVat() {
         return totalWithoutVat.get();
     }
 
-    public void setTotalWithOutVat(Double totalWithoutVat) {
-        this.totalWithoutVat.set(totalWithoutVat);
-    }
-
-    public SimpleDoubleProperty totalWithOutVatProperty() {
+    public SimpleDoubleProperty totalWithoutVatProperty() {
         return totalWithoutVat;
     }
 
-    public @NotNull Double getTotalWithVat() {
-        return totalWithVat.get();
+    public void setTotalWithoutVat(double totalWithoutVat) {
+        this.totalWithoutVat.set(totalWithoutVat);
     }
 
-    public void setTotalWithVat(Double totalWithVat) {
-        this.totalWithVat.set(totalWithVat);
+    public double getTotalWithVat() {
+        return totalWithVat.get();
     }
 
     public SimpleDoubleProperty totalWithVatProperty() {
         return totalWithVat;
     }
 
-    public @NotNull Double getGlobalDiscount() {
-        return globalDiscount.get();
+    public void setTotalWithVat(double totalWithVat) {
+        this.totalWithVat.set(totalWithVat);
     }
 
-    public void setGlobalDiscount(Double globalDiscount) {
-        this.globalDiscount.set(globalDiscount);
+    public double getGlobalDiscount() {
+        return globalDiscount.get();
     }
 
     public SimpleDoubleProperty globalDiscountProperty() {
         return globalDiscount;
     }
 
-    public @NotNull Double getVat() {
-        return vat.get();
+    public void setGlobalDiscount(double globalDiscount) {
+        this.globalDiscount.set(globalDiscount);
     }
 
-    public void setVat(Double vat) {
-        this.vat.set(vat);
+    public double getVat() {
+        return vat.get();
     }
 
     public SimpleDoubleProperty vatProperty() {
         return vat;
+    }
+
+    public void setVat(double vat) {
+        this.vat.set(vat);
     }
 
     public String getPrinter() {
@@ -206,67 +191,67 @@ public class Invoice extends AbstractBeanImplementation {
         this.taxNumber.set(taxNumber);
     }
 
-    public String getReportzNumber() {
-        return reportzNumber.get();
+    public String getzReportNumber() {
+        return zReportNumber.get();
     }
 
-    public SimpleStringProperty reportzNumberProperty() {
-        return reportzNumber;
+    public SimpleStringProperty zReportNumberProperty() {
+        return zReportNumber;
     }
 
-    public void setReportzNumber(String reportzNumber) {
-        this.reportzNumber.set(reportzNumber);
+    public void setzReportNumber(String zReportNumber) {
+        this.zReportNumber.set(zReportNumber);
     }
 
-    public @NotNull String getUserCode() {
-        return userCode.get();
+    public User getUser() {
+        return user.get();
     }
 
-    public SimpleStringProperty userCodeProperty() {
-        return userCode;
+    public SimpleObjectProperty<User> userProperty() {
+        return user;
     }
 
-    public void setUserCode(String userCode) {
-        this.userCode.set(userCode);
+    public void setUser(User user) {
+        this.user.set(user);
     }
 
-    public @NotNull int getArticlesQuantity() {
+    public Product getArticlesQuantity() {
         return articlesQuantity.get();
     }
 
-    public SimpleIntegerProperty articlesQuantityProperty() {
+    public SimpleObjectProperty<Product> articlesQuantityProperty() {
         return articlesQuantity;
     }
 
-    public void setArticlesQuantity(int articlesQuantity) {
+    public void setArticlesQuantity(Product articlesQuantity) {
         this.articlesQuantity.set(articlesQuantity);
     }
 
-    public @NotNull String getShiftIdentifier() {
+    public Shift getShiftIdentifier() {
         return shiftIdentifier.get();
     }
 
-    public SimpleStringProperty shiftIdentifierProperty() {
+    public SimpleObjectProperty<Shift> shiftIdentifierProperty() {
         return shiftIdentifier;
     }
 
-    public void setShiftIdentifier(String shiftIdentifier) {
+    public void setShiftIdentifier(Shift shiftIdentifier) {
         this.shiftIdentifier.set(shiftIdentifier);
     }
 
-    public @NotNull String getPosIdentifier() {
+    public Cashier getPosIdentifier() {
         return posIdentifier.get();
     }
 
-    public SimpleStringProperty posIdentifierProperty() {
+    public SimpleObjectProperty<Cashier> posIdentifierProperty() {
         return posIdentifier;
     }
 
-    public void setPosIdentifier(String posIdentifier) {
+    public void setPosIdentifier(Cashier posIdentifier) {
         this.posIdentifier.set(posIdentifier);
     }
 
-    public @NotNull String getAlternativeInternalCode() {
+    public String getAlternativeInternalCode() {
         return alternativeInternalCode.get();
     }
 
@@ -278,13 +263,27 @@ public class Invoice extends AbstractBeanImplementation {
         this.alternativeInternalCode.set(alternativeInternalCode);
     }
 
+    @Enumerated(EnumType.STRING)
+    public Status getStatus() {
+        return status.get();
+    }
+
+    public SimpleObjectProperty<Status> statusProperty() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status.set(status);
+    }
+
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Invoice currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Invoice clone() {
         //Todo
         return null;
     }
