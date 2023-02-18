@@ -22,6 +22,8 @@ public class ProductMovementDetail extends AbstractBeanImplementation<ProductMov
 
     private SimpleStringProperty type = new SimpleStringProperty();
 
+    // TODO: FIX ME. This is wrong. Join and the correct relation is needed.
+    // https://www.baeldung.com/hibernate-one-to-many
     @OneToMany
     private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<>();
 

@@ -37,11 +37,28 @@ public class HelloApplication extends Application {
         product.setBarcode("123123");
         product.save();
 
+        product = new Product();
+        product.setArea("Test Salah");
+        product.setBarcode("Te");
+        product.save();
+
         List allProducts = DatabaseConnection.getInstance().listAll("Product");
         for (Object p :
                 allProducts) {
             Product pr = (Product)p;
-            System.out.println(pr.getId() + " " + pr.getArea());
+            System.out.println(pr.getId() + " " + pr.getArea() + " "  + pr.getBarcode());
+        }
+
+        product.setArea("Test Georgy");
+        product.saveOrUpdate();
+
+        System.out.println("----------------");
+
+        allProducts = DatabaseConnection.getInstance().listAll("Product");
+        for (Object p :
+                allProducts) {
+            Product pr = (Product)p;
+            System.out.println(pr.getId() + " " + pr.getArea() + " "  + pr.getBarcode());
         }
 
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
