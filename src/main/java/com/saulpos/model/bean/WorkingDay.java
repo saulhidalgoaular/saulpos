@@ -6,13 +6,14 @@ import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 import org.hibernate.annotations.ColumnDefault;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class WorkingDay extends AbstractBeanImplementation {
+public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
 
     private SimpleStringProperty id =new SimpleStringProperty();
 
@@ -37,9 +38,8 @@ public class WorkingDay extends AbstractBeanImplementation {
     @ColumnDefault("0.00")
     private SimpleDoubleProperty creditNote=new SimpleDoubleProperty();
 
-    //Todo check the name of the attribute & add getter , setter for it
     @ColumnDefault("0")
-    private SimpleIntegerProperty reporteZ=new SimpleIntegerProperty();
+    private SimpleIntegerProperty ZReport =new SimpleIntegerProperty();
 
     //dinero_efectivo_impresora
     @ColumnDefault("0.00")
@@ -47,11 +47,11 @@ public class WorkingDay extends AbstractBeanImplementation {
 
     //dinero_tarjeta_credito_impresora
     @ColumnDefault("0.00")
-    private SimpleDoubleProperty moneyCreditCardPrinter= new SimpleDoubleProperty();
+    private SimpleDoubleProperty creditCardMoneyPrinter = new SimpleDoubleProperty();
 
     //dinero_tarjeta_debito_impresora
     @ColumnDefault("0.00")
-    private SimpleDoubleProperty moneyDebitCardPrinter = new SimpleDoubleProperty();
+    private SimpleDoubleProperty debitCardMoneyPrinter = new SimpleDoubleProperty();
 
     //nota_de_credito_impresora
     @ColumnDefault("0.00")
@@ -61,29 +61,28 @@ public class WorkingDay extends AbstractBeanImplementation {
     private SimpleBooleanProperty updateValues = new SimpleBooleanProperty();
 
     //ultima_actualizacion
-    private ObjectProperty<Date> dateTime = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDateTime> dateTime = new SimpleObjectProperty<>();
 
     //total_ventas
-    //Todo make the default value to be null
     private SimpleDoubleProperty totalSales = new SimpleDoubleProperty();
 
     //numero_reporte_z
-    private SimpleStringProperty reportzNumber = new SimpleStringProperty();
+    private SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
     //impresora
     private SimpleStringProperty printer = new SimpleStringProperty();
 
     //codigo_ultima_factura
-    private SimpleStringProperty lastInvoiceCall = new SimpleStringProperty();
+    private SimpleStringProperty lastInvoice = new SimpleStringProperty();
 
     //num_facturas
-    private SimpleDoubleProperty invoicesNumber = new SimpleDoubleProperty();
+    private SimpleIntegerProperty amountInvoices = new SimpleIntegerProperty();
 
     //codigo_ultima_nota_credito
-    private SimpleIntegerProperty codeLastCreditNote = new SimpleIntegerProperty();
+    private SimpleStringProperty codeLastCreditNote = new SimpleStringProperty();
 
     //numero_notas_credito
-    private SimpleDoubleProperty creditNotesNumber = new SimpleDoubleProperty();
+    private SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
 
     //cerrado
     private SimpleBooleanProperty closed = new SimpleBooleanProperty();
@@ -182,32 +181,28 @@ public class WorkingDay extends AbstractBeanImplementation {
         this.cashMoneyPrinter.set(cashMoneyPrinter);
     }
 
-    public SimpleDoubleProperty cachMoneyPrinterProperty(){
-        return cashMoneyPrinter;
+    public @NotNull double getCreditCardMoneyPrinter(){
+        return creditCardMoneyPrinter.get();
     }
 
-    public @NotNull double getMoneyCreditCardPrinter(){
-        return moneyCreditCardPrinter.get();
+    public void setCreditCardMoneyPrinter(Double creditCardMoneyPrinter){
+        this.creditCardMoneyPrinter.set(creditCardMoneyPrinter);
     }
 
-    public void setMoneyCreditCardPrinter(Double moneyCreditCardPrinter){
-        this.moneyCreditCardPrinter.set(moneyCreditCardPrinter);
+    public SimpleDoubleProperty creditCardMoneyPrinterProperty(){
+        return creditCardMoneyPrinter;
     }
 
-    public SimpleDoubleProperty moneyCreditCardPrinterProperty(){
-        return moneyCreditCardPrinter;
+    public @NotNull double getDebitCardMoneyPrinter(){
+        return debitCardMoneyPrinter.get();
     }
 
-    public @NotNull double getMoneyDebitCardPrinter(){
-        return moneyDebitCardPrinter.get();
+    public void setDebitCardMoneyPrinter(Double debitCardMoneyPrinter){
+        this.debitCardMoneyPrinter.set(debitCardMoneyPrinter);
     }
 
-    public void setMoneyDebitCardPrinter(Double moneyDebitCardPrinter){
-        this.moneyDebitCardPrinter.set(moneyDebitCardPrinter);
-    }
-
-    public SimpleDoubleProperty moneyDebitCardPrinterProperty(){
-        return moneyDebitCardPrinter;
+    public SimpleDoubleProperty debitCardMoneyPrinterProperty(){
+        return debitCardMoneyPrinter;
     }
 
     public @NotNull double getCreditNotePrinter(){
@@ -222,28 +217,8 @@ public class WorkingDay extends AbstractBeanImplementation {
         return creditNotePrinter;
     }
 
-    public @NotNull Boolean isUpdatedValues(){
-        return updateValues.get();
-    }
-
-    public void setUpdateValues(Boolean updateValues){
-        this.updateValues.set(updateValues);
-    }
-
-    public SimpleBooleanProperty updateValuesProperty(){
+    public SimpleBooleanProperty updateValuesProperty() {
         return updateValues;
-    }
-
-    public Date getDateTime() {
-        return this.dateTime.get();
-    }
-
-    public void setDateTime(Date dateTime) {
-        this.dateTime.set(dateTime);
-    }
-
-    public ObjectProperty<Date> dateTimeProperty() {
-        return dateTime;
     }
 
     public Double getTotalSales(){
@@ -258,16 +233,16 @@ public class WorkingDay extends AbstractBeanImplementation {
         return totalSales;
     }
 
-    public String getReportzNumber(){
-        return reportzNumber.get();
+    public String getzReportNumber(){
+        return zReportNumber.get();
     }
 
-    public void setReportzNumber(String reportzNumber){
-        this.reportzNumber.set(reportzNumber);
+    public void setzReportNumber(String zReportNumber){
+        this.zReportNumber.set(zReportNumber);
     }
 
-    public SimpleStringProperty reportzNumberProperty(){
-        return reportzNumber;
+    public SimpleStringProperty zReportNumberProperty(){
+        return zReportNumber;
     }
 
     public String getPrinter(){
@@ -282,52 +257,136 @@ public class WorkingDay extends AbstractBeanImplementation {
         return printer;
     }
 
-    public String getLastInvoiceCall(){
-        return lastInvoiceCall.get();
+    public String getLastInvoice(){
+        return lastInvoice.get();
     }
 
-    public void setLastInvoiceCall(String lastInvoiceCall){
-        this.lastInvoiceCall.set(lastInvoiceCall);
+    public void setLastInvoice(String lastInvoice){
+        this.lastInvoice.set(lastInvoice);
     }
 
     public SimpleStringProperty lastInvoiceCall(){
-        return lastInvoiceCall;
+        return lastInvoice;
     }
 
-    public Double getInvoicesNumber(){
-        return invoicesNumber.get();
-    }
-
-    public void setInvoicesNumber(Double invoicesNumber){
-        this.invoicesNumber.set(invoicesNumber);
-    }
-
-    public SimpleDoubleProperty invoicesNumberProperty(){
-        return invoicesNumber;
-    }
-
-    public int getCodeLastCreditNote(){
-        return codeLastCreditNote.get();
-    }
-
-    public void setCodeLastCreditNote(int codeLastCreditNote){
-        this.codeLastCreditNote.set(codeLastCreditNote);
-    }
-
-    public SimpleIntegerProperty codeLastCreditNoteProperty(){
+    public SimpleStringProperty codeLastCreditNoteProperty(){
         return codeLastCreditNote;
     }
 
-    public Double getCreditNotesNumber(){
-        return creditNotesNumber.get();
+    public SimpleDoubleProperty moneyCreditCardProperty() {
+        return moneyCreditCard;
     }
 
-    public void setCreditNotesNumber(Double creditNotesNumber){
-        this.creditNotesNumber.set(creditNotesNumber);
+    public void setMoneyCreditCard(double moneyCreditCard) {
+        this.moneyCreditCard.set(moneyCreditCard);
     }
 
-    public SimpleDoubleProperty creditNotesNumberProperty(){
-        return creditNotesNumber;
+    public void setCash(double cash) {
+        this.cash.set(cash);
+    }
+
+    public void setMoneyDebitCard(double moneyDebitCard) {
+        this.moneyDebitCard.set(moneyDebitCard);
+    }
+
+    public void setCreditNote(double creditNote) {
+        this.creditNote.set(creditNote);
+    }
+
+    public int getZReport() {
+        return ZReport.get();
+    }
+
+    public SimpleIntegerProperty ZReportProperty() {
+        return ZReport;
+    }
+
+    public void setZReport(int ZReport) {
+        this.ZReport.set(ZReport);
+    }
+
+    public SimpleDoubleProperty cashMoneyPrinterProperty() {
+        return cashMoneyPrinter;
+    }
+
+    public void setCashMoneyPrinter(double cashMoneyPrinter) {
+        this.cashMoneyPrinter.set(cashMoneyPrinter);
+    }
+
+    public void setCreditCardMoneyPrinter(double creditCardMoneyPrinter) {
+        this.creditCardMoneyPrinter.set(creditCardMoneyPrinter);
+    }
+
+    public void setDebitCardMoneyPrinter(double debitCardMoneyPrinter) {
+        this.debitCardMoneyPrinter.set(debitCardMoneyPrinter);
+    }
+
+    public void setCreditNotePrinter(double creditNotePrinter) {
+        this.creditNotePrinter.set(creditNotePrinter);
+    }
+
+    public boolean isUpdateValues() {
+        return updateValues.get();
+    }
+
+    public void setUpdateValues(boolean updateValues) {
+        this.updateValues.set(updateValues);
+    }
+
+    public LocalDateTime getDateTime() {
+        return dateTime.get();
+    }
+
+    public ObjectProperty<LocalDateTime> dateTimeProperty() {
+        return dateTime;
+    }
+
+    public void setDateTime(LocalDateTime dateTime) {
+        this.dateTime.set(dateTime);
+    }
+
+    public void setTotalSales(double totalSales) {
+        this.totalSales.set(totalSales);
+    }
+
+    public SimpleStringProperty lastInvoiceProperty() {
+        return lastInvoice;
+    }
+
+    public int getAmountInvoices() {
+        return amountInvoices.get();
+    }
+
+    public SimpleIntegerProperty amountInvoicesProperty() {
+        return amountInvoices;
+    }
+
+    public void setAmountInvoices(int amountInvoices) {
+        this.amountInvoices.set(amountInvoices);
+    }
+
+    public String getCodeLastCreditNote() {
+        return codeLastCreditNote.get();
+    }
+
+    public void setCodeLastCreditNote(String codeLastCreditNote) {
+        this.codeLastCreditNote.set(codeLastCreditNote);
+    }
+
+    public int getAmountCreditNotes() {
+        return amountCreditNotes.get();
+    }
+
+    public SimpleIntegerProperty amountCreditNotesProperty() {
+        return amountCreditNotes;
+    }
+
+    public void setAmountCreditNotes(int amountCreditNotes) {
+        this.amountCreditNotes.set(amountCreditNotes);
+    }
+
+    public void setClosed(boolean closed) {
+        this.closed.set(closed);
     }
 
     @NotNull
@@ -342,13 +401,14 @@ public class WorkingDay extends AbstractBeanImplementation {
     public @NotNull SimpleBooleanProperty closedProperty(){
         return closed;
     }
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(WorkingDay currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public WorkingDay clone() {
         //Todo
         return null;
     }

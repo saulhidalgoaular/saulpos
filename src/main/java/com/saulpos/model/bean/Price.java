@@ -8,12 +8,12 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Price extends AbstractBeanImplementation {
+public class Price extends AbstractBeanImplementation<Price> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -21,8 +21,7 @@ public class Price extends AbstractBeanImplementation {
 
     private SimpleDoubleProperty price = new SimpleDoubleProperty();
 
-    //Todo check the data type
-    private final ObjectProperty<Date> date = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
 
     @Id
     @GeneratedValue
@@ -64,26 +63,29 @@ public class Price extends AbstractBeanImplementation {
         return price;
     }
 
-    @NotNull
-    public Date getDate() {
-        return this.date.get();
+    public void setPrice(double price) {
+        this.price.set(price);
     }
 
-    public void setDate(Date date) {
-        this.date.set(date);
+    public LocalDate getDate() {
+        return date.get();
     }
 
-    public @NotNull ObjectProperty<Date> dateProperty() {
+    public ObjectProperty<LocalDate> dateProperty() {
         return date;
     }
 
-    @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void setDate(LocalDate date) {
+        this.date.set(date);
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public void receiveChanges(Price currentBean) {
+
+    }
+
+    @Override
+    public Price clone() {
         //Todo
         return null;
     }

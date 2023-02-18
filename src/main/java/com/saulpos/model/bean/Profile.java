@@ -3,13 +3,16 @@ package com.saulpos.model.bean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Profile  extends AbstractBeanImplementation {
+public class Profile  extends AbstractBeanImplementation<Profile> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
+    private SimpleStringProperty description = new SimpleStringProperty();
 
     @Id
     @GeneratedValue
@@ -25,13 +28,26 @@ public class Profile  extends AbstractBeanImplementation {
         this.id.set(id);
     }
 
+    public String getDescription() {
+        return description.get();
+    }
+
+    public SimpleStringProperty descriptionProperty() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description.set(description);
+    }
+
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(Profile currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Profile clone() {
         return null;
     }
 }

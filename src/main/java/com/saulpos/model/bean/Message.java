@@ -10,12 +10,10 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Message extends AbstractBeanImplementation{
+public class Message extends AbstractBeanImplementation<Message> {
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
-    //mensaje
-    //todo: rename this attribute to be different from the entity name
-    private SimpleStringProperty message= new SimpleStringProperty();
+    private SimpleStringProperty userMessage = new SimpleStringProperty();
 
     @Id
     @GeneratedValue
@@ -31,25 +29,25 @@ public class Message extends AbstractBeanImplementation{
         this.id.set(id);
     }
 
-    public @NotNull String getMessage(){
-        return this.message.get();
+    public @NotNull String getUserMessage(){
+        return this.userMessage.get();
     }
 
-    public SimpleStringProperty messageProperty(){
-        return message;
+    public SimpleStringProperty userMessageProperty(){
+        return userMessage;
     }
 
-    public void setMessage(String message){
-        this.message.set(message);
-    }
-
-    @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void setUserMessage(String userMessage){
+        this.userMessage.set(userMessage);
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public void receiveChanges(Message currentBean) {
+
+    }
+
+    @Override
+    public Message clone() {
         //Todo
         return null;
     }

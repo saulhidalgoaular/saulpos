@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Table(name="storage")
 @Access(AccessType.PROPERTY)
-public class Storage extends AbstractBeanImplementation {
+public class Storage extends AbstractBeanImplementation<Storage> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -43,13 +43,14 @@ public class Storage extends AbstractBeanImplementation {
         this.description.set(description);
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(Storage currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Storage clone() {
         return null;
     }
 }

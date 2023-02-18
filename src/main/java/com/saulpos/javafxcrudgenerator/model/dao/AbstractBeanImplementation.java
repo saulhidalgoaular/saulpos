@@ -6,7 +6,7 @@ import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public abstract class AbstractBeanImplementation implements AbstractBean<AbstractBeanImplementation>{
+public abstract class AbstractBeanImplementation<I extends AbstractBeanImplementation> implements AbstractBean<I>{
 
     private static final long serialVersionUID = 1L;
 
@@ -26,13 +26,10 @@ public abstract class AbstractBeanImplementation implements AbstractBean<Abstrac
     }
 
     @Override
-    public abstract void receiveChanges(AbstractBeanImplementation currentBean);
-
-    @Override
-    public abstract AbstractBeanImplementation clone();
-
-    @Override
     public void delete() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         DatabaseConnection.getInstance().delete(this);
     }
+
+    @Override
+    public abstract I clone();
 }

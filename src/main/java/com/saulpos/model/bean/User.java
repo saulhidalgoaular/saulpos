@@ -10,7 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class User extends AbstractBeanImplementation {
+public class User extends AbstractBeanImplementation<User> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -128,13 +128,14 @@ public class User extends AbstractBeanImplementation {
         this.canChangePassword.set(canChangePassword);
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(User currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public User clone() {
         return null;
     }
 }

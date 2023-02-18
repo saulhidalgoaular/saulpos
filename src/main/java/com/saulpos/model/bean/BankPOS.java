@@ -8,15 +8,17 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class UserType extends AbstractBeanImplementation {
+public class BankPOS extends AbstractBeanImplementation<BankPOS> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
     private SimpleStringProperty description = new SimpleStringProperty();
 
+    private SimpleStringProperty batch = new SimpleStringProperty();
+
+    private SimpleStringProperty type = new SimpleStringProperty();
+
     @Id
-    //Todo: the primary key will be Generated or not
-    //@GeneratedValue
     public String getId() {
         return id.get();
     }
@@ -41,13 +43,38 @@ public class UserType extends AbstractBeanImplementation {
         this.description.set(description);
     }
 
+    public @NotNull String getBatch() {
+        return batch.get();
+    }
+
+    public SimpleStringProperty batchProperty() {
+        return batch;
+    }
+
+    public void setBatch(String batch) {
+        this.batch.set(batch);
+    }
+
+    public String getType() {
+        return type.get();
+    }
+
+    public SimpleStringProperty typeProperty() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type.set(type);
+    }
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(BankPOS currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public BankPOS clone() {
+        //Todo
         return null;
     }
 }

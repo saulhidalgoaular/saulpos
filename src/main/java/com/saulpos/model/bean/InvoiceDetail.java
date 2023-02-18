@@ -9,12 +9,13 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class InvoiceDetail extends AbstractBeanImplementation {
+public class InvoiceDetail extends AbstractBeanImplementation<InvoiceDetail> {
 
     private final SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     //codigo_de_articulo : internal invoice code
     //Todo: check this please
+    @OneToMany
     private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
 
     //codigo_de_articulo
@@ -109,13 +110,14 @@ public class InvoiceDetail extends AbstractBeanImplementation {
         return discount;
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
+    public void receiveChanges(InvoiceDetail currentBean) {
 
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public InvoiceDetail clone() {
         return null;
     }
 }

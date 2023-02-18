@@ -11,7 +11,7 @@ import java.time.LocalDate;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Product extends AbstractBeanImplementation {
+public class Product extends AbstractBeanImplementation<Product> {
 
     public Product() {
     }
@@ -226,13 +226,14 @@ public class Product extends AbstractBeanImplementation {
         this.storage.set(storage);
     }
 
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        // TODO
+    public void receiveChanges(Product currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Product clone() {
         // TODO
         return null;
     }

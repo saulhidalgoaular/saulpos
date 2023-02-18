@@ -6,18 +6,18 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 
-import java.util.Date;
-//Todo check the bank attribute
-//Todo check the PRIMARY KEY (fecha,banco,numero)
+import java.time.LocalDate;
+
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Deposit extends AbstractBeanImplementation {
+public class Deposit extends AbstractBeanImplementation<Deposit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
-    private ObjectProperty<Date> date = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
 
+    // TODO Verify
     private SimpleStringProperty number =new SimpleStringProperty();
 
     private SimpleDoubleProperty amount=new SimpleDoubleProperty();
@@ -36,16 +36,20 @@ public class Deposit extends AbstractBeanImplementation {
         return id;
     }
 
-    public  @NotNull Date getDate() {
+    public LocalDate getDate() {
         return date.get();
     }
 
-    public void setDate(Date date) {
+    public void setDate(LocalDate date) {
         this.date.set(date);
     }
 
-    public @NotNull ObjectProperty<Date> dateProperty() {
+    public ObjectProperty<LocalDate> dateProperty() {
         return date;
+    }
+
+    public void setAmount(double amount) {
+        this.amount.set(amount);
     }
 
     public String getNumber(){
@@ -66,13 +70,14 @@ public class Deposit extends AbstractBeanImplementation {
     public @NotNull SimpleDoubleProperty amountProperty(){
         return amount;
     }
+
     @Override
-    public void receiveChanges(AbstractBeanImplementation currentBean) {
-        //Todo
+    public void receiveChanges(Deposit currentBean) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public Deposit clone() {
         //Todo
         return null;
     }
