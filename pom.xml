@@ -18,27 +18,22 @@
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
     </properties>
 
-    <repositories>
+    <distributionManagement>
         <repository>
-            <id>maven.nuvalence.repo</id>
+            <id>saulpos.s3.release</id>
             <url>s3://saulpos-maven/release</url>
         </repository>
-        <repository>
-            <id>maven.nuvalence.repo</id>
+        <snapshotRepository>
+            <id>saulpos.s3.snapshot</id>
             <url>https://saulpos-maven.s3.amazonaws.com/snapshot</url>
-        </repository>
-    </repositories>
+        </snapshotRepository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>${javafx.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-controls</artifactId>
-            <version>19</version>
         </dependency>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -93,9 +88,9 @@
             <artifactId>c3p0</artifactId>
             <version>0.9.5.5</version>
         </dependency>
-        <!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-c3p0 -->
+        <!-- https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-c3p0 -->
         <dependency>
-            <groupId>org.hibernate</groupId>
+            <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-c3p0</artifactId>
             <version>6.2.0.CR2</version>
         </dependency>
@@ -153,7 +148,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                com.saulpos.javafxcrudgenerator.HelloApplication
+                                com.saulpos.HelloApplication
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>

@@ -1,7 +1,9 @@
-package com.saulpos.javafxcrudgenerator;
+package com.saulpos.model.dao;
 
 import jakarta.persistence.Entity;
-import org.hibernate.*;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
 
 import java.beans.PropertyVetoException;
@@ -31,17 +33,18 @@ public class DatabaseConnection {
         return INSTANCE;
     }
 
-    protected void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Configuration configuration = new Configuration().configure();
         for (Class cls : getEntityClassesFromPackage("com.saulpos.model.bean")) {
             configuration.addAnnotatedClass(cls);
         }
         sessionFactory = configuration.buildSessionFactory();
     }
+
     public void runHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Session session = getInstance().sessionFactory.openSession();
         Transaction tx = null;
-        try{
+        try {
             tx = session.beginTransaction();
 
             org.hibernate.query.Query sessionQuery = session.createQuery(query);

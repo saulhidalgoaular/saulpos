@@ -1,10 +1,8 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,7 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 //tipo_de_usuario_puede
-public class TypeOfUserCan extends AbstractBeanImplementation {
+public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
     //id_tipo_usuario
     @Max(20)
     private SimpleStringProperty userTypeId = new SimpleStringProperty();
@@ -22,8 +20,8 @@ public class TypeOfUserCan extends AbstractBeanImplementation {
     @OneToOne
     @JoinColumn(name = "nodeId")
     /*
-    *  Todo: fix this
-    *  the error:'One To One' attribute type should not be 'ObjectProperty'
+     *  Todo: fix this
+     *  the error:'One To One' attribute type should not be 'ObjectProperty'
     * */
     private ObjectProperty<Node> node = new SimpleObjectProperty<>();
 
@@ -56,12 +54,12 @@ public class TypeOfUserCan extends AbstractBeanImplementation {
     }
 
     @Override
-    public void receiveChanges(AbstractBean currentBean) {
-        //Todo
+    public void receiveChanges(TypeOfUserCan typeOfUserCan) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public TypeOfUserCan clone() {
         //Todo
         return null;
     }

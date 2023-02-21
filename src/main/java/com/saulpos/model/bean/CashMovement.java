@@ -1,8 +1,11 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
-import javafx.beans.property.*;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;

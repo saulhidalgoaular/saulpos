@@ -1,12 +1,12 @@
-package com.saulpos.javafxcrudgenerator.model.dao;
+package com.saulpos.model.dao;
 
-import com.saulpos.javafxcrudgenerator.DatabaseConnection;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
 
-public abstract class AbstractBeanImplementation<I extends AbstractBeanImplementation> implements AbstractBean<I>{
+public abstract class AbstractBeanImplementation<I extends AbstractBeanImplementation> implements AbstractBean<I> {
 
     private static final long serialVersionUID = 1L;
 

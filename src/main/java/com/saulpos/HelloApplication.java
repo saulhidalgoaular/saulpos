@@ -1,10 +1,11 @@
-package com.saulpos.javafxcrudgenerator;
+package com.saulpos;
 
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.model.bean.Product;
+import com.saulpos.model.dao.DatabaseConnection;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;

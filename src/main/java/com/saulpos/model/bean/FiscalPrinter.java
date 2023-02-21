@@ -1,7 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotNull;
@@ -12,7 +11,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class FiscalPrinter extends AbstractBeanImplementation {
+public class FiscalPrinter extends AbstractBeanImplementation<FiscalPrinter> {
 
     @Max(10)
     private SimpleStringProperty identifier = new SimpleStringProperty();
@@ -108,12 +107,12 @@ public class FiscalPrinter extends AbstractBeanImplementation {
     }
 
     @Override
-    public void receiveChanges(AbstractBean currentBean) {
-        //Todo
+    public void receiveChanges(FiscalPrinter fiscalPrinter) {
+
     }
 
     @Override
-    public AbstractBeanImplementation clone() {
+    public FiscalPrinter clone() {
         //Todo
         return null;
     }

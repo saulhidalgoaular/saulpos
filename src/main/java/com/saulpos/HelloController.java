@@ -1,7 +1,6 @@
-package com.saulpos.javafxcrudgenerator;
+package com.saulpos;
 
 import javafx.fxml.FXML;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 
 public class HelloController {

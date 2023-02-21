@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.*;
 
