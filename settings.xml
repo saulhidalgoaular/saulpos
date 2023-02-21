@@ -1,0 +1,9 @@
+<settings>
+    <servers>
+        <server>
+            <id>maven.nuvalence.repo</id>
+            <username></username>
+            <password></password>
+        </server>
+    </servers>
+</settings>

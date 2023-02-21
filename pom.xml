@@ -18,6 +18,17 @@
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
     </properties>
 
+    <repositories>
+        <repository>
+            <id>maven.nuvalence.repo</id>
+            <url>s3://saulpos-maven/release</url>
+        </repository>
+        <repository>
+            <id>maven.nuvalence.repo</id>
+            <url>https://saulpos-maven.s3.amazonaws.com/snapshot</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -106,11 +117,22 @@
             <artifactId>formsfx-core</artifactId>
             <version>11.6.0</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.saulpos</groupId>
+            <artifactId>javafx-crud-generator</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>com.github.seahen</groupId>
+                <artifactId>maven-s3-wagon</artifactId>
+                <version>1.3.3</version>
+            </extension>
+        </extensions>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
