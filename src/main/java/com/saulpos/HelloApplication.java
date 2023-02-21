@@ -89,7 +89,7 @@ public class HelloApplication extends Application {
         menuMock[8] = new MenuItem("8", "Profile", "7");
         menuMock[9] = new MenuItem("9", "User", "7");
 
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 640, 640);
 
         HelloController controller = fxmlLoader.<HelloController>getController();
