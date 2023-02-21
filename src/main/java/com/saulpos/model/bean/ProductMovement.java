@@ -24,6 +24,10 @@ public class ProductMovement extends AbstractBeanImplementation<ProductMovement>
 
     private SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
 
+    // TODO We need a set of Product Movement details
+    // Please, take a look at this.
+    // https://www.baeldung.com/hibernate-one-to-many
+
     @Id
     @GeneratedValue
     public String getId(){

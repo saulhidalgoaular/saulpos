@@ -14,12 +14,12 @@ public class InvoiceDetail extends AbstractBeanImplementation<InvoiceDetail> {
     private final SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     //codigo_de_articulo : internal invoice code
-    //Todo: check this please
+    //Todo: check this please. This is wrong. Please fix me.
     @OneToMany
     private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
 
     //codigo_de_articulo
-    private final SimpleStringProperty itemCode = new SimpleStringProperty();
+    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
 
     //cantidad
     @ColumnDefault("1")
@@ -50,16 +50,17 @@ public class InvoiceDetail extends AbstractBeanImplementation<InvoiceDetail> {
         return id;
     }
 
-    public @NotNull String getItemCode() {
-        return itemCode.get();
+    @OneToOne
+    public Product getProduct() {
+        return product.get();
     }
 
-    public void setItemCode(String itemCode) {
-        this.itemCode.set(itemCode);
+    public SimpleObjectProperty<Product> productProperty() {
+        return product;
     }
 
-    public SimpleStringProperty itemCodeProperty() {
-        return itemCode;
+    public void setProduct(Product product) {
+        this.product.set(product);
     }
 
     public @NotNull int getAmount() {

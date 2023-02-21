@@ -21,11 +21,10 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
 
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
-    //Todo check the data type
     private final ObjectProperty<LocalDate> dateTime = new SimpleObjectProperty<>();
 
     //Todo check the data type
-    private SimpleIntegerProperty status=new SimpleIntegerProperty();
+    private SimpleIntegerProperty status = new SimpleIntegerProperty();
 
     public Assignment() {
 
