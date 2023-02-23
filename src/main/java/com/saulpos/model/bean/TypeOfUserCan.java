@@ -41,6 +41,7 @@ public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
         this.userTypeId.set(userTypeId);
     }
 
+    @OneToOne
     public Node getNode() {
         return node.get();
     }
