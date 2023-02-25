@@ -1,4 +1,4 @@
-package com.saulpos.model;
+package com.saulpos.model.menu;
 
 public interface MenuAction {
 

@@ -1,38 +1,42 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.menu.MenuAction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Node extends AbstractBeanImplementation<Node> {
+public class MenuModel extends AbstractBeanImplementation<MenuModel> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private SimpleStringProperty name = new SimpleStringProperty();
 
-    private SimpleStringProperty predecessor = new SimpleStringProperty();
+    private SimpleObjectProperty<MenuModel> predecessor = new SimpleObjectProperty();
 
     private SimpleStringProperty icon = new SimpleStringProperty();
 
-    private SimpleStringProperty function = new SimpleStringProperty();
+    private SimpleStringProperty action = new SimpleStringProperty();
 
     private SimpleBooleanProperty administrative = new SimpleBooleanProperty();
 
     private SimpleBooleanProperty pointOfSale = new SimpleBooleanProperty();
 
+    private MenuAction menuAction;
+
     @Id
     @GeneratedValue
-    public int getId(){
+    public int getId() {
         return id.get();
     }
 
-    public SimpleIntegerProperty idProperty(){
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 
@@ -52,47 +56,48 @@ public class Node extends AbstractBeanImplementation<Node> {
         this.name.set(name);
     }
 
-    public String getPredecessor(){
+    @OneToOne
+    public MenuModel getPredecessor() {
         return predecessor.get();
     }
 
-    public SimpleStringProperty predecessorProperty() {
-        return predecessor;
+    public void setPredecessor(MenuModel predecessor) {
+        this.predecessor.set(predecessor);
     }
 
-    public void setPredecessor(String predecessor) {
-        this.predecessor.set(predecessor);
+    public SimpleObjectProperty<MenuModel> predecessorProperty() {
+        return predecessor;
     }
 
     public String getIcon(){
         return icon.get();
     }
 
-    public SimpleStringProperty iconProperty(){
+    public SimpleStringProperty iconProperty() {
         return icon;
     }
 
-    public void setIcon(String icon){
+    public void setIcon(String icon) {
         this.icon.set(icon);
     }
 
-    public @NotNull String getFunction(){
-        return function.get();
+    public @NotNull String getAction() {
+        return action.get();
     }
 
-    public SimpleStringProperty functionProperty(){
-        return function;
+    public void setAction(String action) {
+        this.action.set(action);
     }
 
-    public void setFunction(String function){
-        this.function.set(function);
+    public SimpleStringProperty actionProperty() {
+        return action;
     }
 
-    public @NotNull Boolean isAdministrative(){
+    public @NotNull Boolean isAdministrative() {
         return administrative.get();
     }
 
-    public SimpleBooleanProperty administrativeProperty(){
+    public SimpleBooleanProperty administrativeProperty() {
         return administrative;
     }
 
@@ -112,13 +117,25 @@ public class Node extends AbstractBeanImplementation<Node> {
         this.pointOfSale.set(pointOfSale);
     }
 
+    @Transient
+    public MenuAction getMenuAction() {
+        // implement the action.
+        return new MenuAction() {
+            @Override
+            public Object run() {
+                System.out.println("Hello World menu");
+                return null;
+            }
+        };
+    }
+
     @Override
-    public void receiveChanges(Node currentBean) {
+    public void receiveChanges(MenuModel currentBean) {
 
     }
 
     @Override
-    public Node clone() {
+    public MenuModel clone() {
         //Todo
         return null;
     }

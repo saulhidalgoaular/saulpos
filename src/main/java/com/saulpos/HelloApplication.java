@@ -4,9 +4,10 @@ import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
-import com.saulpos.model.MenuModel;
+import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -64,24 +65,25 @@ public class HelloApplication extends Application {
             System.out.println(pr.getId() + " " + pr.getArea() + " " + pr.getBarcode());
         }
 
-        // todo: after finishing initial concept for menu, move it from below
-        MenuModel[] menuMock;
-        menuMock = new MenuModel[10];
-        menuMock[0] = new MenuModel(0, "Main", null);
-        menuMock[1] = new MenuModel(1, "Product", "0");
-        menuMock[2] = new MenuModel(2, "Discount", "0");
-        menuMock[3] = new MenuModel(3, "Price", "0");
-        menuMock[4] = new MenuModel(4, "Storage", "0");
-        menuMock[5] = new MenuModel(5, "Unit", "0");
-        menuMock[6] = new MenuModel(6, "Cashier", "0");
-        menuMock[7] = new MenuModel(7, "Administration", null);
-        menuMock[8] = new MenuModel(8, "Profile", "7");
-        menuMock[9] = new MenuModel(9, "User", "7");
+        MenuModel[] allMenu = new MenuModel[3];
+        allMenu[0] = new MenuModel();
+        allMenu[0].setName("Main");
+        allMenu[0].setAdministrative(true);
+        allMenu[1] = new MenuModel();
+        allMenu[1].setPredecessor(allMenu[0]);
+        allMenu[1].setName("SubMenu Here");
+        allMenu[1].setAdministrative(true);
+        allMenu[2] = new MenuModel();
+        allMenu[2].setPredecessor(allMenu[1]);
+        allMenu[2].setName("Menu with Action");
+        allMenu[2].setAdministrative(true);
+        allMenu[2].setAction("Action here");
 
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 640, 640);
 
         HelloController controller = fxmlLoader.<HelloController>getController();
+        controller.mainVBox.getChildren().add(MenuBarGenerator.generateMenuNode(allMenu));
         controller.mainVBox.getChildren().add(
                 new FormRenderer(form)
         );
