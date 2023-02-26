@@ -63,6 +63,8 @@ public class DatabaseConnection {
         }
     }
 
+    //public List listFromSample()
+
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         List ans = null;
         Session session = getInstance().sessionFactory.openSession();

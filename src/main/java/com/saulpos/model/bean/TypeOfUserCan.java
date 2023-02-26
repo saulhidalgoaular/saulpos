@@ -22,8 +22,8 @@ public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
     /*
      *  Todo: fix this
      *  the error:'One To One' attribute type should not be 'ObjectProperty'
-    * */
-    private ObjectProperty<Node> node = new SimpleObjectProperty<>();
+     * */
+    private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
 
 
@@ -42,16 +42,16 @@ public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
     }
 
     @OneToOne
-    public Node getNode() {
+    public MenuModel getNode() {
         return node.get();
     }
 
-    public ObjectProperty<Node> nodeProperty() {
-        return node;
+    public void setNode(MenuModel node) {
+        this.node.set(node);
     }
 
-    public void setNode(Node node) {
-        this.node.set(node);
+    public ObjectProperty<MenuModel> nodeProperty() {
+        return node;
     }
 
     @Override
