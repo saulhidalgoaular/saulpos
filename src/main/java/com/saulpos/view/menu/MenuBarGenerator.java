@@ -1,10 +1,12 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.model.bean.MenuModel;
+import de.jensd.fx.glyphs.GlyphIcons;
+import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
@@ -43,7 +45,8 @@ public class MenuBarGenerator {
                 newMenu = new Menu(menu.getName());
             }
             if (menu.getIcon() != null && !menu.getIcon().isBlank()) {
-                newMenu.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.AMAZON));
+                System.out.println("Menu Icon loaded");
+                newMenu.setGraphic(GlyphsDude.createIconLabel((GlyphIcons) FontAwesomeIcon.AMAZON, "", "20px", "10px", ContentDisplay.LEFT));
             }
             allMenuObjects.put(menu, newMenu);
 
