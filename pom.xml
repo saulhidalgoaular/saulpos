@@ -158,6 +158,15 @@
                             <noHeaderFiles>true</noHeaderFiles>
                         </configuration>
                     </execution>
+                    <execution>
+                        <id>debug</id>
+                        <configuration>
+                            <mainClass>com.saulpos.HelloApplication</mainClass>
+                            <options>
+                                <option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:63342</option>
+                            </options>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>

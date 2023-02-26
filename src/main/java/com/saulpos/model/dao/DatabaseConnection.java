@@ -1,15 +1,21 @@
 package com.saulpos.model.dao;
 
+import com.saulpos.javafxcrudgenerator.annotations.Search;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import jakarta.persistence.Entity;
+import javafx.beans.property.Property;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.persister.collection.mutation.RowMutationOperations;
 
 import java.beans.PropertyVetoException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -117,13 +123,35 @@ public class DatabaseConnection {
             if (tx!=null)
                 tx.rollback();
             throw e;
-        }
-        finally
-        {
+        } finally {
             session.close();
 
         }
         return id;
+    }
+
+    public List listBySample(AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        final Field[] allFields = sample.getClass().getDeclaredFields();
+
+        //Restrictions
+        List<RowMutationOperations.Restrictions> allRestrictions = new ArrayList<>();
+        for (Field field : allFields) {
+            if (field.isAnnotationPresent(Search.class)) {
+                try {
+                    final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                    if (invoke.getValue() != null) {
+                        // add them
+                    }// TODO check the 0 later
+                    //Restrictions.
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    // TODO FIX ME. This should not happen tho.
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+
+        return null;
     }
 
     // https://stackoverflow.com/questions/8122792/add-annotated-class-in-hibernate-by-adding-all-classes-in-some-package-java
