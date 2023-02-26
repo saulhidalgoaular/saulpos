@@ -1,7 +1,8 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
-import com.saulpos.model.menu.MenuAction;
+import com.saulpos.model.menu.action.LogoutMenuAction;
+import com.saulpos.model.menu.action.MenuAction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -115,13 +116,7 @@ public class MenuModel extends AbstractBeanImplementation<MenuModel> {
     public MenuAction getMenuAction() {
         // implement the action.
         //"com.saulpos.model.menu.LogoutMenuAction"
-        return new MenuAction() {
-            @Override
-            public Object run() {
-                System.out.println("Hello World menu");
-                return null;
-            }
-        };
+        return new LogoutMenuAction();
     }
 
     @Override

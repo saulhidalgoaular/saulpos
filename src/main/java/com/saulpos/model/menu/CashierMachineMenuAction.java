@@ -1,5 +1,7 @@
 package com.saulpos.model.menu;
 
+import com.saulpos.model.menu.action.MenuAction;
+
 public class CashierMachineMenuAction implements MenuAction {
 
     @Override
