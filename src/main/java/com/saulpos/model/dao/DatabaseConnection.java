@@ -32,7 +32,6 @@ public class DatabaseConnection {
         }
         return INSTANCE;
     }
-
     public void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Configuration configuration = new Configuration().configure();
         for (Class cls : getEntityClassesFromPackage("com.saulpos.model.bean")) {
