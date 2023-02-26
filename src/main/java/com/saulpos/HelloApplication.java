@@ -7,6 +7,7 @@ import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
@@ -16,6 +17,7 @@ import javafx.stage.Stage;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HelloApplication extends Application {
@@ -65,25 +67,13 @@ public class HelloApplication extends Application {
             System.out.println(pr.getId() + " " + pr.getArea() + " " + pr.getBarcode());
         }
 
-        MenuModel[] allMenu = new MenuModel[3];
-        allMenu[0] = new MenuModel();
-        allMenu[0].setName("Main");
-        allMenu[0].setAdministrative(true);
-        allMenu[1] = new MenuModel();
-        allMenu[1].setPredecessor(allMenu[0]);
-        allMenu[1].setName("SubMenu Here");
-        allMenu[1].setAdministrative(true);
-        allMenu[2] = new MenuModel();
-        allMenu[2].setPredecessor(allMenu[1]);
-        allMenu[2].setName("Menu with Action");
-        allMenu[2].setAdministrative(true);
-        allMenu[2].setAction("Action here");
-
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), 640, 640);
 
         HelloController controller = fxmlLoader.<HelloController>getController();
-        controller.mainVBox.getChildren().add(MenuBarGenerator.generateMenuNode(allMenu));
+        DefaultMenuGenerator defaultMenuGenerator = new DefaultMenuGenerator();
+        final ArrayList<MenuModel> menuModels = defaultMenuGenerator.generateMenu();
+        controller.mainVBox.getChildren().add(MenuBarGenerator.generateMenuNode(menuModels.toArray(new MenuModel[]{})));
         controller.mainVBox.getChildren().add(
                 new FormRenderer(form)
         );

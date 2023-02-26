@@ -4,7 +4,6 @@ import com.saulpos.model.dao.AbstractBeanImplementation;
 import com.saulpos.model.menu.MenuAction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -13,6 +12,8 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 public class MenuModel extends AbstractBeanImplementation<MenuModel> {
+
+    private SimpleObjectProperty<MenuType> type = new SimpleObjectProperty<>();
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
@@ -24,11 +25,20 @@ public class MenuModel extends AbstractBeanImplementation<MenuModel> {
 
     private SimpleStringProperty action = new SimpleStringProperty();
 
-    private SimpleBooleanProperty administrative = new SimpleBooleanProperty();
-
-    private SimpleBooleanProperty pointOfSale = new SimpleBooleanProperty();
+    public MenuModel(String name, MenuModel predecessor, String icon, String action, MenuType type) {
+        this.name = new SimpleStringProperty(name);
+        this.predecessor = new SimpleObjectProperty<>(predecessor);
+        this.icon = new SimpleStringProperty(icon);
+        this.action = new SimpleStringProperty(action);
+        this.type = new SimpleObjectProperty<>(type);
+    }
 
     private MenuAction menuAction;
+
+    @Enumerated(EnumType.STRING)
+    public MenuType getType() {
+        return type.get();
+    }
 
     @Id
     @GeneratedValue
@@ -93,33 +103,18 @@ public class MenuModel extends AbstractBeanImplementation<MenuModel> {
         return action;
     }
 
-    public @NotNull Boolean isAdministrative() {
-        return administrative.get();
+    public void setType(MenuType type) {
+        this.type.set(type);
     }
 
-    public SimpleBooleanProperty administrativeProperty() {
-        return administrative;
-    }
-
-    public void setAdministrative(boolean administrative) {
-        this.administrative.set(administrative);
-    }
-
-    public boolean isPointOfSale() {
-        return pointOfSale.get();
-    }
-
-    public SimpleBooleanProperty pointOfSaleProperty() {
-        return pointOfSale;
-    }
-
-    public void setPointOfSale(boolean pointOfSale) {
-        this.pointOfSale.set(pointOfSale);
+    public SimpleObjectProperty<MenuType> typeProperty() {
+        return type;
     }
 
     @Transient
     public MenuAction getMenuAction() {
         // implement the action.
+        //"com.saulpos.model.menu.LogoutMenuAction"
         return new MenuAction() {
             @Override
             public Object run() {
@@ -131,12 +126,16 @@ public class MenuModel extends AbstractBeanImplementation<MenuModel> {
 
     @Override
     public void receiveChanges(MenuModel currentBean) {
-
+        // Not necessary
     }
 
     @Override
     public MenuModel clone() {
-        //Todo
+        // Not necessary
         return null;
+    }
+
+    public enum MenuType {
+        Administrative, POS
     }
 }

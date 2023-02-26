@@ -1,6 +1,8 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.model.bean.MenuModel;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIconView;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.Menu;
@@ -39,6 +41,9 @@ public class MenuBarGenerator {
                 });
             } else {
                 newMenu = new Menu(menu.getName());
+            }
+            if (menu.getIcon() != null && !menu.getIcon().isBlank()) {
+                newMenu.setGraphic(new FontAwesomeIconView(FontAwesomeIcon.AMAZON));
             }
             allMenuObjects.put(menu, newMenu);
 
