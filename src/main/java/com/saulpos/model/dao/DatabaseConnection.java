@@ -3,6 +3,11 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
 import javafx.beans.property.Property;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -70,8 +75,6 @@ public class DatabaseConnection {
         }
     }
 
-    //public List listFromSample()
-
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         List ans = null;
         Session session = getInstance().sessionFactory.openSession();
@@ -130,28 +133,62 @@ public class DatabaseConnection {
         return id;
     }
 
-    public List listBySample(AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        final Field[] allFields = sample.getClass().getDeclaredFields();
+    public List listBySample(Class clazz, AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        Session session = null;
 
-        //Restrictions
-        List<RowMutationOperations.Restrictions> allRestrictions = new ArrayList<>();
-        for (Field field : allFields) {
-            if (field.isAnnotationPresent(Search.class)) {
+        try
+        {
+            session = getInstance().sessionFactory.openSession();
+            EntityManager entityManager = sessionFactory.createEntityManager();
+            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+            CriteriaQuery criteriaQuery = criteriaBuilder.createQuery(sample.getClass());
+
+            final Field[] allFields = sample.getClass().getDeclaredFields();
+
+            //Restrictions
+            List<Predicate> allRestrictions = new ArrayList<>();
+            for (Field field : allFields) {
+                if (!field.isAnnotationPresent(Search.class)) {
+                    continue;
+                }
                 try {
                     final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                    if (invoke.getValue() != null) {
-                        // add them
-                    }// TODO check the 0 later
+                    if (invoke.getValue() == null) {
+                        continue;
+                    }
+                    // TODO check the 0 later
                     //Restrictions.
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     // TODO FIX ME. This should not happen tho.
                     throw new RuntimeException(e);
                 }
             }
+
+            criteriaQuery.where(
+                    criteriaBuilder.and(
+                            // TODO HERE PREDICATES
+                            // Example
+                            // criteriaBuilder.equal(customer.get("customerID"), pCustomerID))
+                    )
+            );
+            TypedQuery query = entityManager.createQuery(criteriaQuery);
+
+            // TODO ASSIGN PARAMETER
+            //query.setParameter(pStoreID, selectedStore.get().getStoreID());
+
+
+            List result = query.getResultList();
+
+            return result;
+
         }
+        catch (PropertyVetoException | IOException | URISyntaxException | ClassNotFoundException e)
+        {
+            throw e;
+        } finally {
+            session.close();
 
-
-        return null;
+        }
     }
 
     // https://stackoverflow.com/questions/8122792/add-annotated-class-in-hibernate-by-adding-all-classes-in-some-package-java

@@ -21,7 +21,7 @@ public class HibernateDataProvider implements AbstractDataProvider {
 
     @Override
     public List getAllItems(Class aClass, AbstractBean abstractBean) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        return DatabaseConnection.getInstance().listBySample(abstractBean);
+        return DatabaseConnection.getInstance().listBySample(aClass, abstractBean);
     }
 
     @Override
