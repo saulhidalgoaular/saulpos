@@ -94,9 +94,9 @@ public class HelloApplication extends Application {
         );
         CrudGenerator crudGenerator = new CrudGenerator(parameter);
 
-        controller.mainVBox.getChildren().add(
+        /*controller.mainVBox.getChildren().add(
             crudGenerator.generate().getView().getMainView()
-        );
+        );*/
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();

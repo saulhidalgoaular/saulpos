@@ -52,6 +52,7 @@ public class DatabaseConnection {
         sessionFactory = configuration.buildSessionFactory();
     }
 
+    @Deprecated
     public void runHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Session session = getInstance().sessionFactory.openSession();
         Transaction tx = null;
@@ -75,6 +76,7 @@ public class DatabaseConnection {
         }
     }
 
+    @Deprecated
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         List ans = null;
         Session session = getInstance().sessionFactory.openSession();
@@ -108,17 +110,17 @@ public class DatabaseConnection {
         return listHqlQuery("FROM " + entityName, null);
     }
 
-    public Integer createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
 
         Session session = null;
         Transaction tx = null;
-        Integer id = null;
 
         try
         {
             session = getInstance().sessionFactory.openSession();
+            EntityManager entityManager = sessionFactory.createEntityManager();
             tx = session.beginTransaction();
-            id = (Integer) session.save(newEntry);
+            entityManager.persist(newEntry);
             tx.commit();
         }
         catch (Exception e)
@@ -130,7 +132,6 @@ public class DatabaseConnection {
             session.close();
 
         }
-        return id;
     }
 
     public List listBySample(Class clazz, AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
@@ -139,7 +140,9 @@ public class DatabaseConnection {
         try
         {
             session = getInstance().sessionFactory.openSession();
+
             EntityManager entityManager = sessionFactory.createEntityManager();
+            //entityManager.find()
             CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
             CriteriaQuery criteriaQuery = criteriaBuilder.createQuery(sample.getClass());
 
@@ -157,6 +160,7 @@ public class DatabaseConnection {
                         continue;
                     }
                     // TODO check the 0 later
+                    //criteriaBuilder.equal(store.get("storeID"), pStoreID)
                     //Restrictions.
                 } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
                     // TODO FIX ME. This should not happen tho.
@@ -234,7 +238,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.delete(entry);
+            session.remove(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
@@ -264,7 +268,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.saveOrUpdate(entry);
+            session.merge(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
