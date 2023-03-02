@@ -1,6 +1,7 @@
 package com.saulpos.model.dao;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
+import jdk.jshell.spi.ExecutionControl;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
@@ -11,8 +12,14 @@ public abstract class AbstractBeanImplementation<I extends AbstractBeanImplement
     private static final long serialVersionUID = 1L;
 
     @Override
-    public void save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        DatabaseConnection.getInstance().createEntry(this);
+    public Integer save() {
+        try {
+            DatabaseConnection.getInstance().createEntry(this);
+            return 1;
+        }
+        catch (Exception e) {
+            return 0;
+        }
     }
 
     @Override
