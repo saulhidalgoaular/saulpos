@@ -1,6 +1,7 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.model.bean.MenuModel;
+import com.saulpos.model.menu.action.LogoutMenuAction;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.event.ActionEvent;
@@ -10,6 +11,7 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,12 +34,25 @@ public class MenuBarGenerator {
         HashMap<MenuModel, MenuItem> allMenuObjects = new HashMap<>();
         for (MenuModel menu : order) {
             MenuItem newMenu;
+
             if (menu.getAction() != null && !menu.getAction().isBlank()) {
                 newMenu = new MenuItem(menu.getName());
                 newMenu.setOnAction(new EventHandler<ActionEvent>() {
                     @Override
                     public void handle(ActionEvent event) {
-                        menu.getMenuAction().run();
+                        try {
+                            //menu.getMenuAction().run();
+                            String actionClassName = "com.saulpos.model.menu.action." + menu.getAction();
+                            Class<?> dogClass = Class.forName(actionClassName); // convert string classname to class
+                            Object actionContainerClass = dogClass.newInstance(); // invoke empty constructor
+
+                            final String methodName = "run";
+                            Method getNameMethod = actionContainerClass.getClass().getMethod(methodName);
+                            getNameMethod.invoke(actionContainerClass); // explicit cast
+                        }
+                        catch (Exception e){
+                            // TODO: decide what to do if exception occurs: log, throw, etc. . .
+                        }
                     }
                 });
             } else {
