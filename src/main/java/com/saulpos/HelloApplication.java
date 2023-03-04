@@ -4,9 +4,13 @@ import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.saulpos.javafxcrudgenerator.CrudGenerator;
+import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Product;
+import com.saulpos.model.bean.User;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.application.Application;
@@ -19,11 +23,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class HelloApplication extends Application {
 
     @Override
-    public void start(Stage stage) throws IOException, PropertyVetoException, URISyntaxException, ClassNotFoundException {
+    public void start(Stage stage) throws Exception {
         Form form = Form.of(
                 Group.of(
                         Field.ofStringType("")
@@ -77,6 +82,21 @@ public class HelloApplication extends Application {
         controller.mainVBox.getChildren().add(
                 new FormRenderer(form)
         );
+
+        CrudGeneratorParameter parameter = new CrudGeneratorParameter();
+        parameter.setClazz(User.class);
+        parameter.setCurrentLocale(Locale.of("en", "US"));
+
+        HibernateDataProvider dataProvider = new HibernateDataProvider();
+
+        parameter.setDataProvider(
+                dataProvider
+        );
+        CrudGenerator crudGenerator = new CrudGenerator(parameter);
+
+        /*controller.mainVBox.getChildren().add(
+            crudGenerator.generate().getView().getMainView()
+        );*/
         stage.setTitle("Hello!");
         stage.setScene(scene);
         stage.show();

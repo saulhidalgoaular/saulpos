@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -13,6 +14,9 @@ import javafx.beans.property.SimpleStringProperty;
 public class User extends AbstractBeanImplementation<User> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
+    @Search
+    private SimpleStringProperty userName = new SimpleStringProperty();
 
     private SimpleStringProperty password = new SimpleStringProperty();
 
@@ -41,6 +45,18 @@ public class User extends AbstractBeanImplementation<User> {
 
     public void setId(int id) {
         this.id.set(id);
+    }
+
+    public String getUserName() {
+        return userName.get();
+    }
+
+    public SimpleStringProperty userNameProperty() {
+        return userName;
+    }
+
+    public void setUserName(String userName) {
+        this.userName.set(userName);
     }
 
     public String getPassword() {

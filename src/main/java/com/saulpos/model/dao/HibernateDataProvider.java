@@ -15,13 +15,23 @@ public class HibernateDataProvider implements AbstractDataProvider {
     final HashSet<Class> registeredClasses = new HashSet<>();
 
     @Override
-    public List getAllItems(Class aClass) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public List getAllItems(Class aClass) {
         return getAllItems(aClass, null);
     }
 
     @Override
-    public List getAllItems(Class aClass, AbstractBean abstractBean) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        return DatabaseConnection.getInstance().listBySample(abstractBean);
+    public List getAllItems(Class aClass, AbstractBean abstractBean)  {
+        try {
+            return DatabaseConnection.getInstance().listBySample(aClass, abstractBean);
+        } catch (PropertyVetoException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

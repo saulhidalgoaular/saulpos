@@ -3,10 +3,11 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
 import javafx.beans.property.Property;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -42,6 +43,7 @@ public class DatabaseConnection {
         }
         return INSTANCE;
     }
+
     public void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Configuration configuration = new Configuration().configure();
         for (Class cls : getEntityClassesFromPackage("com.saulpos.model.bean")) {
@@ -50,6 +52,7 @@ public class DatabaseConnection {
         sessionFactory = configuration.buildSessionFactory();
     }
 
+    @Deprecated
     public void runHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Session session = getInstance().sessionFactory.openSession();
         Transaction tx = null;
@@ -73,8 +76,7 @@ public class DatabaseConnection {
         }
     }
 
-    //public List listFromSample()
-
+    @Deprecated
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         List ans = null;
         Session session = getInstance().sessionFactory.openSession();
@@ -108,17 +110,17 @@ public class DatabaseConnection {
         return listHqlQuery("FROM " + entityName, null);
     }
 
-    public Integer createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
 
         Session session = null;
         Transaction tx = null;
-        Integer id = null;
 
         try
         {
             session = getInstance().sessionFactory.openSession();
+            EntityManager entityManager = sessionFactory.createEntityManager();
             tx = session.beginTransaction();
-            id = (Integer) session.save(newEntry);
+            entityManager.persist(newEntry);
             tx.commit();
         }
         catch (Exception e)
@@ -130,41 +132,66 @@ public class DatabaseConnection {
             session.close();
 
         }
-        return id;
     }
 
-    public List listBySample(AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = sessionFactory.openSession();
-        try {
-            CriteriaBuilder builder = session.getCriteriaBuilder();
-            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
-            Root<? extends AbstractBean> root = query.from(sample.getClass());
+    public List listBySample(Class clazz, AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        Session session = null;
 
-            // Add restrictions based on annotated fields
+        try
+        {
+            session = getInstance().sessionFactory.openSession();
+
+            EntityManager entityManager = sessionFactory.createEntityManager();
+            //entityManager.find()
+            CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+            CriteriaQuery criteriaQuery = criteriaBuilder.createQuery(sample.getClass());
+
             final Field[] allFields = sample.getClass().getDeclaredFields();
-            List<Predicate> restrictions = new ArrayList<>();
+
+            //Restrictions
+            List<Predicate> allRestrictions = new ArrayList<>();
             for (Field field : allFields) {
-                if (field.isAnnotationPresent(Search.class)) {
-                    try {
-                        final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                        if (invoke.getValue() != null) {
-                            String searchString = (String) invoke.getValue();
-                            restrictions.add(builder.like(root.get("name"), searchString + "%"));
-                        } else {
-                                restrictions.add(builder.equal(root.get(field.getName()), invoke.getValue()));
-                            }
-                    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                        // TODO FIX ME. This should not happen though.
-                        throw new RuntimeException(e);
+                if (!field.isAnnotationPresent(Search.class)) {
+                    continue;
+                }
+                try {
+                    final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                    if (invoke.getValue() == null) {
+                        continue;
                     }
+                    // TODO check the 0 later
+                    //criteriaBuilder.equal(store.get("storeID"), pStoreID)
+                    //Restrictions.
+                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                    // TODO FIX ME. This should not happen tho.
+                    throw new RuntimeException(e);
                 }
             }
 
-            query.where(restrictions.toArray(new Predicate[0]));
-            List results = session.createQuery(query).getResultList();
-            return results;
+            criteriaQuery.where(
+                    criteriaBuilder.and(
+                            // TODO HERE PREDICATES
+                            // Example
+                            // criteriaBuilder.equal(customer.get("customerID"), pCustomerID))
+                    )
+            );
+            TypedQuery query = entityManager.createQuery(criteriaQuery);
+
+            // TODO ASSIGN PARAMETER
+            //query.setParameter(pStoreID, selectedStore.get().getStoreID());
+
+
+            List result = query.getResultList();
+
+            return result;
+
+        }
+        catch (PropertyVetoException | IOException | URISyntaxException | ClassNotFoundException e)
+        {
+            throw e;
         } finally {
             session.close();
+
         }
     }
 
@@ -211,7 +238,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.delete(entry);
+            session.remove(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
@@ -241,7 +268,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.saveOrUpdate(entry);
+            session.merge(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
