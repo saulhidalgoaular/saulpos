@@ -3,6 +3,10 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import jakarta.persistence.Entity;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import javafx.beans.property.Property;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -130,27 +134,38 @@ public class DatabaseConnection {
     }
 
     public List listBySample(AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        final Field[] allFields = sample.getClass().getDeclaredFields();
+        Session session = sessionFactory.openSession();
+        try {
+            CriteriaBuilder builder = session.getCriteriaBuilder();
+            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
+            Root<? extends AbstractBean> root = query.from(sample.getClass());
 
-        //Restrictions
-        List<RowMutationOperations.Restrictions> allRestrictions = new ArrayList<>();
-        for (Field field : allFields) {
-            if (field.isAnnotationPresent(Search.class)) {
-                try {
-                    final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                    if (invoke.getValue() != null) {
-                        // add them
-                    }// TODO check the 0 later
-                    //Restrictions.
-                } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-                    // TODO FIX ME. This should not happen tho.
-                    throw new RuntimeException(e);
+            // Add restrictions based on annotated fields
+            final Field[] allFields = sample.getClass().getDeclaredFields();
+            List<Predicate> restrictions = new ArrayList<>();
+            for (Field field : allFields) {
+                if (field.isAnnotationPresent(Search.class)) {
+                    try {
+                        final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                        if (invoke.getValue() != null) {
+                            String searchString = (String) invoke.getValue();
+                            restrictions.add(builder.like(root.get("name"), searchString + "%"));
+                        } else {
+                                restrictions.add(builder.equal(root.get(field.getName()), invoke.getValue()));
+                            }
+                    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+                        // TODO FIX ME. This should not happen though.
+                        throw new RuntimeException(e);
+                    }
                 }
             }
+
+            query.where(restrictions.toArray(new Predicate[0]));
+            List results = session.createQuery(query).getResultList();
+            return results;
+        } finally {
+            session.close();
         }
-
-
-        return null;
     }
 
     // https://stackoverflow.com/questions/8122792/add-annotated-class-in-hibernate-by-adding-all-classes-in-some-package-java
