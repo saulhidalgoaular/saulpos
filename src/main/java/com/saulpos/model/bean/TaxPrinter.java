@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -11,6 +12,8 @@ import org.hibernate.annotations.ColumnDefault;
 @Access(AccessType.PROPERTY)
 @Table
 public class TaxPrinter /*fiscal_printer*/ {
+
+    private SimpleIntegerProperty Id = new SimpleIntegerProperty();
 
     private SimpleStringProperty identifier = new SimpleStringProperty();
 
@@ -27,8 +30,22 @@ public class TaxPrinter /*fiscal_printer*/ {
     private SimpleStringProperty lastBill = new SimpleStringProperty();
 
     private SimpleStringProperty lastCreditNote = new SimpleStringProperty();
-
     @Id
+    public int getId() {
+        return Id.get();
+    }
+
+    public SimpleIntegerProperty idProperty() {
+        return Id;
+    }
+
+    public void setId(int id) {
+        this.Id.set(id);
+    }
+
+
+
+    //@Id
     //Todo: is the identifier will be generated or not
     //@GeneratedValue
     public String getIdentifier(){

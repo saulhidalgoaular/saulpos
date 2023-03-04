@@ -13,20 +13,37 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Assignment extends AbstractBeanImplementation<Assignment> {
+    public enum AssignmentStatus{
+        Open, Closed, Cancelled
+    }
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
+    @OneToOne
     private final SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
 
-    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+    @OneToOne
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
     private final ObjectProperty<LocalDate> dateTime = new SimpleObjectProperty<>();
 
     //Todo check the data type
-    private SimpleIntegerProperty status = new SimpleIntegerProperty();
+
+    private SimpleObjectProperty<AssignmentStatus> status = new SimpleObjectProperty<>();
 
     public Assignment() {
 
+    }
+    @Enumerated(EnumType.STRING)
+    public AssignmentStatus getStatus() {
+        return status.get();
+    }
+
+    public SimpleObjectProperty<AssignmentStatus> statusProperty() {
+        return status;
+    }
+
+    public void setStatus(AssignmentStatus status) {
+        this.status.set(status);
     }
 
     @Id
@@ -81,17 +98,6 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
         this.dateTime.set(dateTime);
     }
 
-    public int getStatus() {
-        return status.get();
-    }
-
-    public SimpleIntegerProperty statusProperty() {
-        return status;
-    }
-
-    public void setStatus(int status) {
-        this.status.set(status);
-    }
 
     @Override
     public void receiveChanges(Assignment currentBean) {

@@ -2,10 +2,12 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.Set;
 
 
 @Entity
@@ -14,7 +16,7 @@ import java.time.LocalDateTime;
 public class Invoice extends AbstractBeanImplementation<Invoice> {
 
     public enum Status{
-        Pedido, Anulada, Espera, Facturada
+        InProgress, Cancelled, Waiting, Completed
     }
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
@@ -35,26 +37,70 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
     private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
 
     @ColumnDefault("0.0000")
+    @NotNull
     private SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
 
     //iva
     private SimpleDoubleProperty vat = new SimpleDoubleProperty();
-
-    private SimpleStringProperty printer = new SimpleStringProperty();
+    //@OneToOne
+    @OneToOne
+    private SimpleObjectProperty<TaxPrinter> printer = new SimpleObjectProperty<TaxPrinter>();
 
     private SimpleStringProperty taxNumber = new SimpleStringProperty();
 
+    @Column(nullable = false)
     private SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
     private SimpleObjectProperty<User> user = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<Product> articlesQuantity = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<Shift> shiftIdentifier = new SimpleObjectProperty();
+    private SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
+
+    private SimpleObjectProperty<Assignment> assignement = new SimpleObjectProperty();
 
     private SimpleObjectProperty<Cashier> posIdentifier = new SimpleObjectProperty();
 
     private SimpleStringProperty alternativeInternalCode = new SimpleStringProperty();
+
+    @OneToOne
+    public TaxPrinter getPrinter() {
+        return printer.get();
+    }
+
+    public ObjectProperty<TaxPrinter> printerProperty() {
+        return printer;
+    }
+
+    public void setPrinter(TaxPrinter printer) {
+        this.printer.set(printer);
+    }
+    public int getArticlesQuantity() {
+        return articlesQuantity.get();
+    }
+
+    public SimpleIntegerProperty articlesQuantityProperty() {
+        return articlesQuantity;
+    }
+
+    public void setArticlesQuantity(int articlesQuantity) {
+        this.articlesQuantity.set(articlesQuantity);
+    }
+
+    @OneToMany
+    public Set<InvoiceDetail> getInvoiceDetails() {
+        return invoiceDetails.get();
+    }
+
+    public ObjectProperty<Set<InvoiceDetail>> invoiceDetailsProperty() {
+        return invoiceDetails;
+    }
+
+    public void setInvoiceDetails(Set<InvoiceDetail> invoiceDetails) {
+        this.invoiceDetails.set(invoiceDetails);
+    }
+
+    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails;
+
 
     @Id
     @GeneratedValue
@@ -167,18 +213,6 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.vat.set(vat);
     }
 
-    public String getPrinter() {
-        return printer.get();
-    }
-
-    public SimpleStringProperty printerProperty() {
-        return printer;
-    }
-
-    public void setPrinter(String printer) {
-        this.printer.set(printer);
-    }
-
     public String getTaxNumber() {
         return taxNumber.get();
     }
@@ -190,15 +224,15 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
     public void setTaxNumber(String taxNumber) {
         this.taxNumber.set(taxNumber);
     }
-
+    @Column(nullable = false)
     public String getzReportNumber() {
         return zReportNumber.get();
     }
-
+    @Column(nullable = false)
     public SimpleStringProperty zReportNumberProperty() {
         return zReportNumber;
     }
-
+    @Column(nullable = false)
     public void setzReportNumber(String zReportNumber) {
         this.zReportNumber.set(zReportNumber);
     }
@@ -216,30 +250,19 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
         this.user.set(user);
     }
 
-    @OneToOne
-    public Product getArticlesQuantity() {
-        return articlesQuantity.get();
-    }
 
-    public SimpleObjectProperty<Product> articlesQuantityProperty() {
-        return articlesQuantity;
-    }
-
-    public void setArticlesQuantity(Product articlesQuantity) {
-        this.articlesQuantity.set(articlesQuantity);
-    }
 
     @OneToOne
-    public Shift getShiftIdentifier() {
-        return shiftIdentifier.get();
+    public Assignment getAssignement() {
+        return assignement.get();
     }
 
-    public SimpleObjectProperty<Shift> shiftIdentifierProperty() {
-        return shiftIdentifier;
+    public SimpleObjectProperty<Assignment> assignementProperty() {
+        return assignement;
     }
 
-    public void setShiftIdentifier(Shift shiftIdentifier) {
-        this.shiftIdentifier.set(shiftIdentifier);
+    public void setAssignement(Assignment assignement) {
+        this.assignement.set(assignement);
     }
 
     @OneToOne

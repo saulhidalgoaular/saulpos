@@ -4,6 +4,7 @@ import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -14,7 +15,7 @@ import java.time.LocalTime;
 @Table
 public class Shift extends AbstractBeanImplementation<Shift> {
 
-    private SimpleStringProperty id = new SimpleStringProperty();
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private SimpleStringProperty name = new SimpleStringProperty();
 
@@ -24,15 +25,15 @@ public class Shift extends AbstractBeanImplementation<Shift> {
 
     @Id
     @GeneratedValue
-    public String getId() {
+    public int getId() {
         return id.get();
     }
 
-    public SimpleStringProperty idProperty() {
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id.set(id);
     }
 

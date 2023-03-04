@@ -51,7 +51,7 @@ public class MenuBarGenerator {
                             getNameMethod.invoke(actionContainerClass); // explicit cast
                         }
                         catch (Exception e){
-                            // TODO: decide what to do if exception occurs: log, throw, etc. . .
+                            // TODO: call the message library
                         }
                     }
                 });

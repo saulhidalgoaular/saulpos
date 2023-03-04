@@ -18,18 +18,19 @@ public class InvoiceDetail extends AbstractBeanImplementation<InvoiceDetail> {
 
     //codigo_de_articulo : internal invoice code
     //Todo: check this please. This is wrong. Please fix me.
-    @OneToMany
-    private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
+    @ManyToOne
+    private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<Invoice>();
 
     //codigo_de_articulo
-    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
+    @OneToOne
+    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<Product>();
 
     //cantidad
     @ColumnDefault("1")
     private final SimpleIntegerProperty amount = new SimpleIntegerProperty();
 
     //devuelto
-    private final SimpleIntegerProperty returned = new SimpleIntegerProperty();
+    private final SimpleIntegerProperty cancelled = new SimpleIntegerProperty();
 
     //precio_venta
     @ColumnDefault("0.00")
@@ -78,16 +79,16 @@ public class InvoiceDetail extends AbstractBeanImplementation<InvoiceDetail> {
         return amount;
     }
 
-    public @NotNull int getReturned() {
-        return returned.get();
+    public @NotNull int getCancelled() {
+        return cancelled.get();
     }
 
-    public void setReturned(int returned) {
-        this.returned.set(returned);
+    public void setCancelled(int cancelled) {
+        this.cancelled.set(cancelled);
     }
 
-    public SimpleIntegerProperty returnedProperty() {
-        return returned;
+    public SimpleIntegerProperty cancelledProperty() {
+        return cancelled;
     }
 
     public @NotNull Double getSalePrice() {
