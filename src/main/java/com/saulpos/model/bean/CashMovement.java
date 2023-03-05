@@ -14,20 +14,10 @@ import java.time.LocalDateTime;
 @Access(AccessType.PROPERTY)
 @Table
 public class CashMovement extends AbstractBeanImplementation<CashMovement> {
-
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
-    //identificador_punto_de_venta
-    @OneToOne
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
-
-    //fecha
-    private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
-
-    //monto
-    @ColumnDefault("0.00")
+    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
+    private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<LocalDateTime>();
     private SimpleDoubleProperty amount = new SimpleDoubleProperty();
-
 
     @Id
     @GeneratedValue
@@ -44,6 +34,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
     }
 
     @OneToOne
+    @Column(nullable = false)
     public Cashier getCashier() {
         return cashier.get();
     }
@@ -68,6 +59,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
         this.date.set(date);
     }
 
+    @ColumnDefault("0.00")
     public double getAmount() {
         return amount.get();
     }

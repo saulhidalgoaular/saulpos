@@ -44,7 +44,7 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
     private SimpleDoubleProperty vat = new SimpleDoubleProperty();
     //@OneToOne
     @OneToOne
-    private SimpleObjectProperty<TaxPrinter> printer = new SimpleObjectProperty<TaxPrinter>();
+    private SimpleObjectProperty<FiscalPrinter> printer = new SimpleObjectProperty<FiscalPrinter>();
 
     private SimpleStringProperty taxNumber = new SimpleStringProperty();
 
@@ -63,15 +63,15 @@ public class Invoice extends AbstractBeanImplementation<Invoice> {
     private SimpleStringProperty alternativeInternalCode = new SimpleStringProperty();
 
     @OneToOne
-    public TaxPrinter getPrinter() {
+    public FiscalPrinter getPrinter() {
         return printer.get();
     }
 
-    public ObjectProperty<TaxPrinter> printerProperty() {
+    public ObjectProperty<FiscalPrinter> printerProperty() {
         return printer;
     }
 
-    public void setPrinter(TaxPrinter printer) {
+    public void setPrinter(FiscalPrinter printer) {
         this.printer.set(printer);
     }
     public int getArticlesQuantity() {
