@@ -8,6 +8,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import javafx.beans.property.Property;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -134,6 +135,42 @@ public class DatabaseConnection {
         }
     }
 
+    public List listBySample(Class clazz, AbstractBean sample)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        Session session = sessionFactory.openSession();
+        EntityManager entityManager = sessionFactory.createEntityManager();
+        //entityManager.find()
+        try {
+            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
+            Root<? extends AbstractBean> root = query.from(sample.getClass());
+
+            // Add restrictions based on annotated fields
+            final Field[] allFields = sample.getClass().getDeclaredFields();
+            List<Predicate> restrictions = new ArrayList<>();
+            for (Field field : allFields) {
+                if (field.isAnnotationPresent(Search.class)) {
+                    final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                    if (invoke.getValue() != null) {
+                        // Add restriction
+                        String searchString = (String) invoke.getValue();
+                        restrictions.add(builder.like(root.get("name"), "%" + searchString + "%"));
+                    }
+                }
+            }
+
+            query.where(restrictions.toArray(new Predicate[0]));
+            List results = session.createQuery(query).getResultList();
+            return results;
+        }
+        catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
+        {
+            e.printStackTrace();
+        } finally {
+            session.close();
+        }
+        return null;
+    }
+    /*
     public List listBySample(Class clazz, AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Session session = null;
 
@@ -194,6 +231,7 @@ public class DatabaseConnection {
 
         }
     }
+     */
 
     // https://stackoverflow.com/questions/8122792/add-annotated-class-in-hibernate-by-adding-all-classes-in-some-package-java
     public static List<Class<?>> getEntityClassesFromPackage(String packageName) throws ClassNotFoundException, IOException, URISyntaxException {
