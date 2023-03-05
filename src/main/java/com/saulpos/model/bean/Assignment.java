@@ -3,12 +3,14 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.LocalDate;
 
+// 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
@@ -19,14 +21,13 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
     @OneToOne
-    private final SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
+    @Column(nullable = false)
+    private SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
 
     @OneToOne
-    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
+    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
-    private final ObjectProperty<LocalDate> dateTime = new SimpleObjectProperty<>();
-
-    //Todo check the data type
+    private ObjectProperty<LocalDate> day = new SimpleObjectProperty<>();
 
     private SimpleObjectProperty<AssignmentStatus> status = new SimpleObjectProperty<>();
 
@@ -34,6 +35,8 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
 
     }
     @Enumerated(EnumType.STRING)
+    @NotNull
+    @Column(nullable = false)
     public AssignmentStatus getStatus() {
         return status.get();
     }
@@ -61,6 +64,7 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
     }
 
     @OneToOne
+    @JoinColumn(nullable = false)
     public Shift getShift() {
         return shift.get();
     }
@@ -74,6 +78,7 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
     }
 
     @OneToOne
+    @JoinColumn(nullable = false)
     public Cashier getCashier() {
         return cashier.get();
     }
@@ -86,16 +91,18 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
         this.cashier.set(cashier);
     }
 
-    public LocalDate getDateTime() {
-        return dateTime.get();
+    @NotNull
+    @Column(nullable = false)
+    public LocalDate getDay() {
+        return day.get();
     }
 
-    public ObjectProperty<LocalDate> dateTimeProperty() {
-        return dateTime;
+    public ObjectProperty<LocalDate> dayProperty() {
+        return day;
     }
 
-    public void setDateTime(LocalDate dateTime) {
-        this.dateTime.set(dateTime);
+    public void setDay(LocalDate dateTime) {
+        this.day.set(dateTime);
     }
 
 

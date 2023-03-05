@@ -1,0 +1,135 @@
+package com.saulpos.model.bean;
+
+import com.saulpos.model.dao.AbstractBeanImplementation;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.*;
+import org.hibernate.annotations.ColumnDefault;
+
+import java.time.LocalDate;
+
+// 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
+@Entity
+@Access(AccessType.PROPERTY)
+@Table
+public class BankPOSMachine extends AbstractBeanImplementation<BankPOSMachine> {
+    public enum Medium{
+        Debit, Credit, AmericanExpress
+    }
+
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
+    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<LocalDate>();
+    private SimpleObjectProperty<BankPointOfSale> bankPontOfSale = new SimpleObjectProperty<BankPointOfSale>();
+    private SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
+    private SimpleFloatProperty declaration = new SimpleFloatProperty();
+    private SimpleFloatProperty actualAmmount = new SimpleFloatProperty();
+    private SimpleStringProperty batch = new SimpleStringProperty();
+
+    @NotNull
+    @Column(nullable = false)
+    public String getBatch() {
+        return batch.get();
+    }
+
+    public SimpleStringProperty batchProperty() {
+        return batch;
+    }
+
+    public void setBatch(String batch) {
+        this.batch.set(batch);
+    }
+
+    @NotNull
+    @Column(nullable = false)
+    public float getActualAmmount() {
+        return actualAmmount.get();
+    }
+
+    public SimpleFloatProperty actualAmmountProperty() {
+        return actualAmmount;
+    }
+
+    public void setActualAmmount(float actualAmmount) {
+        this.actualAmmount.set(actualAmmount);
+    }
+
+    @NotNull
+    @Column(nullable = false)
+    @ColumnDefault("0.00")
+    public float getDeclaration() {
+        return declaration.get();
+    }
+
+    public SimpleFloatProperty declarationProperty() {
+        return declaration;
+    }
+
+    public void setDeclaration(float declaration) {
+        this.declaration.set(declaration);
+    }
+
+    @NotNull
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    public Medium getMedium() {
+        return medium.get();
+    }
+
+    public SimpleObjectProperty<Medium> mediumProperty() {
+        return medium;
+    }
+
+    public void setMedium(Medium medium) {
+        this.medium.set(medium);
+    }
+
+    @OneToOne
+    @JoinColumn(nullable = false)
+    public BankPointOfSale getBankPontOfSale() {
+        return bankPontOfSale.get();
+    }
+
+    public SimpleObjectProperty<BankPointOfSale> bankPontOfSaleProperty() {
+        return bankPontOfSale;
+    }
+
+    public void setBankPontOfSale(BankPointOfSale bankPontOfSale) {
+        this.bankPontOfSale.set(bankPontOfSale);
+    }
+    public SimpleIntegerProperty idProperty() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id.set(id);
+    }
+
+    @Id
+    @GeneratedValue
+    public int getId() {
+        return id.get();
+    }
+    @NotNull
+    @Column(nullable = false)
+    public LocalDate getDate() {
+        return date.get();
+    }
+
+    public ObjectProperty<LocalDate> dateProperty() {
+        return date;
+    }
+
+    public void setDate(LocalDate date) {
+        this.date.set(date);
+    }
+
+    @Override
+    public BankPOSMachine clone() {
+        //Todo
+        return null;
+    }
+    @Override
+    public void receiveChanges(BankPOSMachine currentBean) {
+
+    }
+}
