@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 
@@ -10,7 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class Client extends AbstractBeanImplementation<Client> {
 
-    private SimpleStringProperty id = new SimpleStringProperty();
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private SimpleStringProperty name = new SimpleStringProperty();
 
@@ -24,15 +25,15 @@ public class Client extends AbstractBeanImplementation<Client> {
 
     @Id
     @GeneratedValue
-    public String getId() {
+    public Integer getId() {
         return id.get();
     }
 
-    public void setId(String id) {
+    public void setId(Integer id) {
         this.id.set(id);
     }
 
-    public SimpleStringProperty idProperty() {
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
 

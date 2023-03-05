@@ -40,9 +40,11 @@ public class Product extends AbstractBeanImplementation<Product> {
 
     private SimpleStringProperty imagePath = new SimpleStringProperty();
 
-    private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<>();
+    @OneToOne
+    private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
 
-    private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<>();
+    @OneToOne
+    private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
 
     @Id
     @GeneratedValue
@@ -62,7 +64,8 @@ public class Product extends AbstractBeanImplementation<Product> {
         return description.get();
     }
 
-    public @NotNull SimpleStringProperty descriptionProperty() {
+    @NotNull
+    public SimpleStringProperty descriptionProperty() {
         return description;
     }
 
@@ -75,7 +78,8 @@ public class Product extends AbstractBeanImplementation<Product> {
         return registrationDate.get();
     }
 
-    public @NotNull ObjectProperty<LocalDate> registrationDateProperty() {
+    @NotNull
+    public ObjectProperty<LocalDate> registrationDateProperty() {
         return registrationDate;
     }
 
