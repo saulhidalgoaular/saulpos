@@ -12,14 +12,8 @@ public abstract class AbstractBeanImplementation<I extends AbstractBeanImplement
     private static final long serialVersionUID = 1L;
 
     @Override
-    public Integer save() {
-        try {
-            DatabaseConnection.getInstance().createEntry(this);
-            return 1;
-        }
-        catch (Exception e) {
-            return 0;
-        }
+    public void save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        DatabaseConnection.getInstance().createEntry(this);
     }
 
     @Override

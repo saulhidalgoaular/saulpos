@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.AbstractBeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -34,7 +35,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
     }
 
     @OneToOne
-    @Column(nullable = false)
+    @NotNull
     public Cashier getCashier() {
         return cashier.get();
     }
