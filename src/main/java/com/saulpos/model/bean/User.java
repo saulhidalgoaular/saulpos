@@ -1,7 +1,7 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.annotations.Search;
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -11,7 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class User extends AbstractBeanImplementation<User> {
+public class User extends BeanImplementation<User> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 

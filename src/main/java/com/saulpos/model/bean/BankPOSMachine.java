@@ -1,18 +1,18 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDate;
-
+// pagos de punto de venta
 // 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class BankPOSMachine extends AbstractBeanImplementation<BankPOSMachine> {
+public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
     public enum Medium{
         Debit, Credit, AmericanExpress
     }
@@ -22,7 +22,7 @@ public class BankPOSMachine extends AbstractBeanImplementation<BankPOSMachine> {
     private SimpleObjectProperty<BankPointOfSale> bankPontOfSale = new SimpleObjectProperty<BankPointOfSale>();
     private SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
     private SimpleFloatProperty declaration = new SimpleFloatProperty();
-    private SimpleFloatProperty actualAmmount = new SimpleFloatProperty();
+    private SimpleFloatProperty actualAmount = new SimpleFloatProperty();
     private SimpleStringProperty batch = new SimpleStringProperty();
 
     @NotNull
@@ -41,16 +41,16 @@ public class BankPOSMachine extends AbstractBeanImplementation<BankPOSMachine> {
 
     @NotNull
     @Column(nullable = false)
-    public float getActualAmmount() {
-        return actualAmmount.get();
+    public float getActualAmount() {
+        return actualAmount.get();
     }
 
-    public SimpleFloatProperty actualAmmountProperty() {
-        return actualAmmount;
+    public SimpleFloatProperty actualAmountProperty() {
+        return actualAmount;
     }
 
-    public void setActualAmmount(float actualAmmount) {
-        this.actualAmmount.set(actualAmmount);
+    public void setActualAmount(float actualAmount) {
+        this.actualAmount.set(actualAmount);
     }
 
     @NotNull

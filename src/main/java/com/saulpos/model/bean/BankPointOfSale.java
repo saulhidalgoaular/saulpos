@@ -1,18 +1,18 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.hibernate.annotations.ColumnDefault;
-
+// punto de venta de banco
 // 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class BankPointOfSale extends AbstractBeanImplementation<BankPointOfSale> {
+public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
     public enum Type{
         Debit, Credit, AmericanExpress, All
     }
@@ -20,7 +20,7 @@ public class BankPointOfSale extends AbstractBeanImplementation<BankPointOfSale>
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty batch = new SimpleStringProperty();
-    private SimpleStringProperty POSIdentificator = new SimpleStringProperty();
+    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
     private SimpleObjectProperty<BankPointOfSale.Type> type = new SimpleObjectProperty<BankPointOfSale.Type>();
 
     @NotNull
@@ -38,18 +38,18 @@ public class BankPointOfSale extends AbstractBeanImplementation<BankPointOfSale>
         this.type.set(type);
     }
 
+    @OneToOne
     @NotNull
-    @Column(nullable = false)
-    public String getPOSIdentificator() {
-        return POSIdentificator.get();
+    public Cashier getCashier() {
+        return cashier.get();
     }
 
-    public SimpleStringProperty POSIdentificatorProperty() {
-        return POSIdentificator;
+    public SimpleObjectProperty<Cashier> cashierProperty() {
+        return cashier;
     }
 
-    public void setPOSIdentificator(String POSIdentificator) {
-        this.POSIdentificator.set(POSIdentificator);
+    public void setCashier(Cashier cashier) {
+        this.cashier.set(cashier);
     }
 
     @NotNull

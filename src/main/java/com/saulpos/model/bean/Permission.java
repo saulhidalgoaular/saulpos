@@ -1,9 +1,9 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -11,10 +11,12 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 //tipo_de_usuario_puede
-public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
+public class Permission extends BeanImplementation<Permission> {
+
+    private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
     //id_tipo_usuario
-    @Max(20)
-    private SimpleStringProperty userTypeId = new SimpleStringProperty();
+    private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
 
     //id_nodo
     @OneToOne
@@ -25,20 +27,31 @@ public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
      * */
     private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
-
-
     @Id
     @GeneratedValue
-    public String getUserTypeId(){
-        return userTypeId.get();
+    public int getId() {
+        return id.get();
     }
 
-    public SimpleStringProperty userTypeIdProperty(){
-        return userTypeId;
+    public SimpleIntegerProperty idProperty() {
+        return id;
     }
 
-    public void setUserTypeId(String userTypeId){
-        this.userTypeId.set(userTypeId);
+    public void setId(int id) {
+        this.id.set(id);
+    }
+
+    @ManyToOne
+    public Profile getProfile(){
+        return profile.get();
+    }
+
+    public SimpleObjectProperty<Profile> profileProperty() {
+        return profile;
+    }
+
+    public void setProfile(Profile profile){
+        this.profile.set(profile);
     }
 
     @OneToOne
@@ -55,12 +68,12 @@ public class TypeOfUserCan extends AbstractBeanImplementation<TypeOfUserCan> {
     }
 
     @Override
-    public void receiveChanges(TypeOfUserCan typeOfUserCan) {
+    public void receiveChanges(Permission typeOfUserCan) {
 
     }
 
     @Override
-    public TypeOfUserCan clone() {
+    public Permission clone() {
         //Todo
         return null;
     }

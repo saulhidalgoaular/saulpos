@@ -1,17 +1,18 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
+import java.util.Set;
 
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Product extends AbstractBeanImplementation<Product> {
+public class Product extends BeanImplementation<Product> {
 
     public Product() {
     }
@@ -40,11 +41,11 @@ public class Product extends AbstractBeanImplementation<Product> {
 
     private SimpleStringProperty imagePath = new SimpleStringProperty();
 
-    @OneToOne
     private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
 
-    @OneToOne
     private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
+
+    private ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
 
     @Id
     @GeneratedValue
@@ -230,6 +231,18 @@ public class Product extends AbstractBeanImplementation<Product> {
         this.storage.set(storage);
     }
 
+    @OneToMany
+    public Set<Price> getPrice() {
+        return price.get();
+    }
+
+    public ObjectProperty<Set<Price>> priceProperty() {
+        return price;
+    }
+
+    public void setPrice(Set<Price> price) {
+        this.price.set(price);
+    }
 
     @Override
     public void receiveChanges(Product currentBean) {

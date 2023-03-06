@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
@@ -8,25 +8,22 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class ProductMovement extends AbstractBeanImplementation<ProductMovement> {
+public class ProductMovement extends BeanImplementation<ProductMovement> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
-    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
 
     private SimpleStringProperty description = new SimpleStringProperty();
 
     private SimpleStringProperty code = new SimpleStringProperty();
 
     private SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
-
-    // TODO We need a set of Product Movement details
-    // Please, take a look at this.
-    // https://www.baeldung.com/hibernate-one-to-many
 
     @Id
     @GeneratedValue
@@ -42,15 +39,15 @@ public class ProductMovement extends AbstractBeanImplementation<ProductMovement>
         this.id.set(id);
     }
 
-    public @NotNull LocalDate getDate(){
+    public @NotNull LocalDateTime getDate(){
         return date.get();
     }
 
-    public ObjectProperty<LocalDate> dateProperty(){
+    public ObjectProperty<LocalDateTime> dateProperty(){
         return date;
     }
 
-    public void setDate(LocalDate date){
+    public void setDate(LocalDateTime date){
         this.date.set(date);
     }
 

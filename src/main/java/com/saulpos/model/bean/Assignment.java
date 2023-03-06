@@ -1,20 +1,21 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.time.LocalDate;
-
+import java.time.LocalDateTime;
+// asigna
 // 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Assignment extends AbstractBeanImplementation<Assignment> {
+public class Assignment extends BeanImplementation<Assignment> {
     public enum AssignmentStatus{
         Open, Closed, Cancelled
     }
@@ -27,7 +28,7 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
     @OneToOne
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
-    private ObjectProperty<LocalDate> day = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDateTime> day = new SimpleObjectProperty<>();
 
     private SimpleObjectProperty<AssignmentStatus> status = new SimpleObjectProperty<>();
 
@@ -93,15 +94,15 @@ public class Assignment extends AbstractBeanImplementation<Assignment> {
 
     @NotNull
     @Column(nullable = false)
-    public LocalDate getDay() {
+    public LocalDateTime getDay() {
         return day.get();
     }
 
-    public ObjectProperty<LocalDate> dayProperty() {
+    public ObjectProperty<LocalDateTime> dayProperty() {
         return day;
     }
 
-    public void setDay(LocalDate dateTime) {
+    public void setDay(LocalDateTime dateTime) {
         this.day.set(dateTime);
     }
 

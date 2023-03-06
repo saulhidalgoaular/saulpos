@@ -1,7 +1,7 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -10,7 +10,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Message extends AbstractBeanImplementation<Message> {
+public class Message extends BeanImplementation<Message> {
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private SimpleStringProperty userMessage = new SimpleStringProperty();

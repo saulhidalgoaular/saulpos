@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
@@ -13,7 +13,7 @@ import java.util.Date;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
+public class WorkingDay extends BeanImplementation<WorkingDay> {
 
     private SimpleStringProperty id =new SimpleStringProperty();
 
@@ -36,7 +36,7 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
 
     //nota_de_credito
     @ColumnDefault("0.00")
-    private SimpleDoubleProperty creditNote=new SimpleDoubleProperty();
+    private SimpleDoubleProperty creditNotesMoney =new SimpleDoubleProperty();
 
     @ColumnDefault("0")
     private SimpleIntegerProperty ZReport =new SimpleIntegerProperty();
@@ -70,16 +70,16 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
     private SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
     //impresora
-    private SimpleStringProperty printer = new SimpleStringProperty();
+    private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty();
 
     //codigo_ultima_factura
-    private SimpleStringProperty lastInvoice = new SimpleStringProperty();
+    private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
 
     //num_facturas
     private SimpleIntegerProperty amountInvoices = new SimpleIntegerProperty();
 
     //codigo_ultima_nota_credito
-    private SimpleStringProperty codeLastCreditNote = new SimpleStringProperty();
+    private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
 
     //numero_notas_credito
     private SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
@@ -161,16 +161,16 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
         return moneyDebitCard;
     }
 
-    public @NotNull Double getCreditNote(){
-        return creditNote.get();
+    public @NotNull Double getCreditNotesMoney(){
+        return creditNotesMoney.get();
     }
 
-    public void setCreditNote(Double creditNote){
-        this.creditNote.set(creditNote);
+    public void setCreditNotesMoney(Double creditNotesMoney){
+        this.creditNotesMoney.set(creditNotesMoney);
     }
 
-    public SimpleDoubleProperty creditNoteProperty(){
-        return creditNote;
+    public SimpleDoubleProperty creditNotesMoneyProperty(){
+        return creditNotesMoney;
     }
 
     public Double getCashMoneyPrinter(){
@@ -245,32 +245,51 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
         return zReportNumber;
     }
 
-    public String getPrinter(){
+    @OneToOne
+    public Cashier getPrinter() {
         return printer.get();
     }
 
-    public void setPrinter(String printer){
-        this.printer.set(printer);
-    }
-
-    public SimpleStringProperty printerProperty(){
+    public SimpleObjectProperty<Cashier> printerProperty() {
         return printer;
     }
 
-    public String getLastInvoice(){
+    public void setPrinter(Cashier printer) {
+        this.printer.set(printer);
+    }
+
+    @OneToOne
+    public Invoice getLastInvoice() {
         return lastInvoice.get();
     }
 
-    public void setLastInvoice(String lastInvoice){
+    public void setLastInvoice(Invoice lastInvoice) {
         this.lastInvoice.set(lastInvoice);
     }
 
-    public SimpleStringProperty lastInvoiceCall(){
+    public SimpleObjectProperty<Invoice> lastInvoiceProperty() {
         return lastInvoice;
     }
 
-    public SimpleStringProperty codeLastCreditNoteProperty(){
-        return codeLastCreditNote;
+    public int getAmountInvoices() {
+        return amountInvoices.get();
+    }
+
+    public SimpleIntegerProperty amountInvoicesProperty() {
+        return amountInvoices;
+    }
+
+    @OneToOne
+    public CreditNote getLastCreditNote() {
+        return lastCreditNote.get();
+    }
+
+    public SimpleObjectProperty<CreditNote> lastCreditNoteProperty() {
+        return lastCreditNote;
+    }
+
+    public void setLastCreditNote(CreditNote lastCreditNote) {
+        this.lastCreditNote.set(lastCreditNote);
     }
 
     public SimpleDoubleProperty moneyCreditCardProperty() {
@@ -290,7 +309,7 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
     }
 
     public void setCreditNote(double creditNote) {
-        this.creditNote.set(creditNote);
+        this.creditNotesMoney.set(creditNote);
     }
 
     public int getZReport() {
@@ -349,29 +368,11 @@ public class WorkingDay extends AbstractBeanImplementation<WorkingDay> {
         this.totalSales.set(totalSales);
     }
 
-    public SimpleStringProperty lastInvoiceProperty() {
-        return lastInvoice;
-    }
-
-    public int getAmountInvoices() {
-        return amountInvoices.get();
-    }
-
-    public SimpleIntegerProperty amountInvoicesProperty() {
-        return amountInvoices;
-    }
 
     public void setAmountInvoices(int amountInvoices) {
         this.amountInvoices.set(amountInvoices);
     }
 
-    public String getCodeLastCreditNote() {
-        return codeLastCreditNote.get();
-    }
-
-    public void setCodeLastCreditNote(String codeLastCreditNote) {
-        this.codeLastCreditNote.set(codeLastCreditNote);
-    }
 
     public int getAmountCreditNotes() {
         return amountCreditNotes.get();

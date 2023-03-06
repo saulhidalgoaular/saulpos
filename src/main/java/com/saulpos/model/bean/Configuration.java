@@ -1,7 +1,7 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 
@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Configuration extends AbstractBeanImplementation<Configuration> {
+public class Configuration extends BeanImplementation<Configuration> {
 
     private int id;
 

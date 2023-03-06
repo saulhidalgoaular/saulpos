@@ -1,7 +1,7 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
@@ -11,13 +11,12 @@ import java.time.LocalDate;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Deposit extends AbstractBeanImplementation<Deposit> {
+public class Deposit extends BeanImplementation<Deposit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
 
-    // TODO Verify
     private SimpleStringProperty number =new SimpleStringProperty();
 
     private SimpleDoubleProperty amount=new SimpleDoubleProperty();

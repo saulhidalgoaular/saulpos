@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -8,7 +8,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Table(name="storage")
 @Access(AccessType.PROPERTY)
-public class Storage extends AbstractBeanImplementation<Storage> {
+public class Storage extends BeanImplementation<Storage> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 

@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import com.saulpos.model.menu.action.LogoutMenuAction;
 import com.saulpos.model.menu.action.MenuAction;
 import jakarta.persistence.*;
@@ -12,7 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class MenuModel extends AbstractBeanImplementation<MenuModel> {
+public class MenuModel extends BeanImplementation<MenuModel> {
 
     private SimpleObjectProperty<MenuType> type = new SimpleObjectProperty<>();
 

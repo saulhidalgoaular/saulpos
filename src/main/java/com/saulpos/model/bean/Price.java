@@ -1,6 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
@@ -13,10 +13,11 @@ import java.time.LocalDate;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Price extends AbstractBeanImplementation<Price> {
+public class Price extends BeanImplementation<Price> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
+    @ManyToOne
     private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
 
     private SimpleDoubleProperty price = new SimpleDoubleProperty();

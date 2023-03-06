@@ -1,15 +1,18 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleStringProperty;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Unit extends AbstractBeanImplementation<Unit> {
+public class Unit extends BeanImplementation<Unit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
+
+    private SimpleStringProperty description = new SimpleStringProperty();
 
     @Id
     @GeneratedValue
@@ -25,6 +28,17 @@ public class Unit extends AbstractBeanImplementation<Unit> {
         this.id.set(id);
     }
 
+    public String getDescription() {
+        return description.get();
+    }
+
+    public SimpleStringProperty descriptionProperty() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description.set(description);
+    }
 
     @Override
     public void receiveChanges(Unit currentBean) {

@@ -1,24 +1,26 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+//
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Cashier extends AbstractBeanImplementation<Cashier> {
+public class Cashier extends BeanImplementation<Cashier> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty printer = new SimpleStringProperty();
     private SimpleBooleanProperty enabled = new SimpleBooleanProperty();
     private SimpleStringProperty ZReport = new SimpleStringProperty();
-    private SimpleStringProperty lastInvoice = new SimpleStringProperty();
-    private SimpleStringProperty lastCreditNote = new SimpleStringProperty();
+    private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
+    private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
 
     @Id
     @GeneratedValue
@@ -48,17 +50,6 @@ public class Cashier extends AbstractBeanImplementation<Cashier> {
         this.description.set(description);
     }
 
-    public String getPrinter() {
-        return printer.get();
-    }
-
-    public SimpleStringProperty printerProperty() {
-        return printer;
-    }
-
-    public void setPrinter(String printer) {
-        this.printer.set(printer);
-    }
 
     public boolean isEnabled() {
         return enabled.get();
@@ -84,27 +75,41 @@ public class Cashier extends AbstractBeanImplementation<Cashier> {
         this.ZReport.set(ZReport);
     }
 
-    public String getLastInvoice() {
+    public String getPrinter() {
+        return printer.get();
+    }
+
+    public SimpleStringProperty printerProperty() {
+        return printer;
+    }
+
+    public void setPrinter(String printer) {
+        this.printer.set(printer);
+    }
+
+    @OneToOne
+    public Invoice getLastInvoice() {
         return lastInvoice.get();
     }
 
-    public SimpleStringProperty lastInvoiceProperty() {
+    public SimpleObjectProperty<Invoice> lastInvoiceProperty() {
         return lastInvoice;
     }
 
-    public void setLastInvoice(String lastInvoice) {
+    public void setLastInvoice(Invoice lastInvoice) {
         this.lastInvoice.set(lastInvoice);
     }
 
-    public String getLastCreditNote() {
+    @OneToOne
+    public CreditNote getLastCreditNote() {
         return lastCreditNote.get();
     }
 
-    public SimpleStringProperty lastCreditNoteProperty() {
+    public SimpleObjectProperty<CreditNote> lastCreditNoteProperty() {
         return lastCreditNote;
     }
 
-    public void setLastCreditNote(String lastCreditNote) {
+    public void setLastCreditNote(CreditNote lastCreditNote) {
         this.lastCreditNote.set(lastCreditNote);
     }
 

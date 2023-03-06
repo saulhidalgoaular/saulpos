@@ -1,7 +1,8 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -13,7 +14,7 @@ import java.time.LocalDateTime;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class CashMovement extends AbstractBeanImplementation<CashMovement> {
+public class CashMovement extends BeanImplementation<CashMovement> {
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
     private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<LocalDateTime>();
@@ -34,7 +35,7 @@ public class CashMovement extends AbstractBeanImplementation<CashMovement> {
     }
 
     @OneToOne
-    @Column(nullable = false)
+    @NotNull
     public Cashier getCashier() {
         return cashier.get();
     }

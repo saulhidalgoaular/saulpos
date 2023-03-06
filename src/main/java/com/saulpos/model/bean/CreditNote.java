@@ -2,44 +2,36 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
-import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.Set;
 
-
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class Invoice extends BeanImplementation<Invoice> {
+public class CreditNote extends BeanImplementation<CreditNote> {
 
-    public enum InvoiceStatus {
-        InProgress, Cancelled, Waiting, Completed
+
+    public enum CreditNoteStatus {
+        InProgress, Completed
     }
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
 
-    private SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
+
+    private SimpleObjectProperty<Invoice.InvoiceStatus> status = new SimpleObjectProperty<>();
 
     private ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
 
     private ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<Client> client = new SimpleObjectProperty();
-
     private SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
 
     private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
-
-    @ColumnDefault("0.0000")
-    @NotNull
-    private SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
-
-    //iva
     private SimpleDoubleProperty vat = new SimpleDoubleProperty();
-    //@OneToOne
+
     @OneToOne
     private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<>();
 
@@ -55,50 +47,12 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
 
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
-
-    @OneToOne
-    public Cashier getPrinter() {
-        return printer.get();
-    }
-
-    public ObjectProperty<Cashier> printerProperty() {
-        return printer;
-    }
-
-    public void setPrinter(Cashier printer) {
-        this.printer.set(printer);
-    }
-    public int getArticlesQuantity() {
-        return articlesQuantity.get();
-    }
-
-    public SimpleIntegerProperty articlesQuantityProperty() {
-        return articlesQuantity;
-    }
-
-    public void setArticlesQuantity(int articlesQuantity) {
-        this.articlesQuantity.set(articlesQuantity);
-    }
-
-    @OneToMany
-    public Set<InvoiceDetail> getInvoiceDetails() {
-        return invoiceDetails.get();
-    }
-
-    public ObjectProperty<Set<InvoiceDetail>> invoiceDetailsProperty() {
-        return invoiceDetails;
-    }
-
-    public void setInvoiceDetails(Set<InvoiceDetail> invoiceDetails) {
-        this.invoiceDetails.set(invoiceDetails);
-    }
-
-    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails;
+    private SimpleObjectProperty<Cashier> posIdentifier = new SimpleObjectProperty();
 
 
-    @Id
-    @GeneratedValue
+    private ObjectProperty<Set<CreditNoteDetails>> creditNoteDetails = new SimpleObjectProperty<>();
+
+    @Id @GeneratedValue
     public int getId() {
         return id.get();
     }
@@ -109,6 +63,31 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     public void setId(int id) {
         this.id.set(id);
+    }
+
+    @OneToOne
+    public Invoice getInvoice() {
+        return invoice.get();
+    }
+
+    public SimpleObjectProperty<Invoice> invoiceProperty() {
+        return invoice;
+    }
+
+    public void setInvoice(Invoice invoice) {
+        this.invoice.set(invoice);
+    }
+
+    public Invoice.InvoiceStatus getStatus() {
+        return status.get();
+    }
+
+    public SimpleObjectProperty<Invoice.InvoiceStatus> statusProperty() {
+        return status;
+    }
+
+    public void setStatus(Invoice.InvoiceStatus status) {
+        this.status.set(status);
     }
 
     public LocalDateTime getCreationDate() {
@@ -135,19 +114,6 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.printingDate.set(printingDate);
     }
 
-    @OneToOne
-    public Client getClient() {
-        return client.get();
-    }
-
-    public SimpleObjectProperty<Client> clientProperty() {
-        return client;
-    }
-
-    public void setClient(Client client) {
-        this.client.set(client);
-    }
-
     public double getTotalWithoutVat() {
         return totalWithoutVat.get();
     }
@@ -172,18 +138,6 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.totalWithVat.set(totalWithVat);
     }
 
-    public double getGlobalDiscount() {
-        return globalDiscount.get();
-    }
-
-    public SimpleDoubleProperty globalDiscountProperty() {
-        return globalDiscount;
-    }
-
-    public void setGlobalDiscount(double globalDiscount) {
-        this.globalDiscount.set(globalDiscount);
-    }
-
     public double getVat() {
         return vat.get();
     }
@@ -194,6 +148,32 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     public void setVat(double vat) {
         this.vat.set(vat);
+    }
+
+    @OneToMany
+    public Set<CreditNoteDetails> getCreditNoteDetails() {
+        return creditNoteDetails.get();
+    }
+
+    public ObjectProperty<Set<CreditNoteDetails>> creditNoteDetailsProperty() {
+        return creditNoteDetails;
+    }
+
+    public void setCreditNoteDetails(Set<CreditNoteDetails> creditNoteDetails) {
+        this.creditNoteDetails.set(creditNoteDetails);
+    }
+
+    @OneToOne
+    public Cashier getPrinter() {
+        return printer.get();
+    }
+
+    public SimpleObjectProperty<Cashier> printerProperty() {
+        return printer;
+    }
+
+    public void setPrinter(Cashier printer) {
+        this.printer.set(printer);
     }
 
     public String getTaxNumber() {
@@ -207,15 +187,15 @@ public class Invoice extends BeanImplementation<Invoice> {
     public void setTaxNumber(String taxNumber) {
         this.taxNumber.set(taxNumber);
     }
-    @Column(nullable = false)
+
     public String getzReportNumber() {
         return zReportNumber.get();
     }
-    @Column(nullable = false)
+
     public SimpleStringProperty zReportNumberProperty() {
         return zReportNumber;
     }
-    @Column(nullable = false)
+
     public void setzReportNumber(String zReportNumber) {
         this.zReportNumber.set(zReportNumber);
     }
@@ -233,7 +213,17 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.user.set(user);
     }
 
+    public int getArticlesQuantity() {
+        return articlesQuantity.get();
+    }
 
+    public SimpleIntegerProperty articlesQuantityProperty() {
+        return articlesQuantity;
+    }
+
+    public void setArticlesQuantity(int articlesQuantity) {
+        this.articlesQuantity.set(articlesQuantity);
+    }
 
     @OneToOne
     public Assignment getAssignment() {
@@ -249,40 +239,25 @@ public class Invoice extends BeanImplementation<Invoice> {
     }
 
     @OneToOne
-    public Cashier getCashier() {
-        return cashier.get();
+    public Cashier getPosIdentifier() {
+        return posIdentifier.get();
     }
 
-    public SimpleObjectProperty<Cashier> cashierProperty() {
-        return cashier;
+    public SimpleObjectProperty<Cashier> posIdentifierProperty() {
+        return posIdentifier;
     }
 
-    public void setCashier(Cashier cashier) {
-        this.cashier.set(cashier);
+    public void setPosIdentifier(Cashier posIdentifier) {
+        this.posIdentifier.set(posIdentifier);
     }
-
-    @Enumerated(EnumType.STRING)
-    public InvoiceStatus getStatus() {
-        return status.get();
-    }
-
-    public SimpleObjectProperty<InvoiceStatus> statusProperty() {
-        return status;
-    }
-
-    public void setStatus(InvoiceStatus status) {
-        this.status.set(status);
-    }
-
 
     @Override
-    public void receiveChanges(Invoice currentBean) {
+    public void receiveChanges(CreditNote creditNote) {
 
     }
 
     @Override
-    public Invoice clone() {
-        //Todo
+    public CreditNote clone() {
         return null;
     }
 }

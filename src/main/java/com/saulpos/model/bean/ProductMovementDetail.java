@@ -1,7 +1,7 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.model.dao.AbstractBeanImplementation;
+import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -12,7 +12,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class ProductMovementDetail extends AbstractBeanImplementation<ProductMovementDetail> {
+public class ProductMovementDetail extends BeanImplementation<ProductMovementDetail> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
 
@@ -22,8 +22,6 @@ public class ProductMovementDetail extends AbstractBeanImplementation<ProductMov
 
     private SimpleStringProperty type = new SimpleStringProperty();
 
-    // TODO: FIX ME. This is wrong. Join and the correct relation is needed.
-    // https://www.baeldung.com/hibernate-one-to-many
     @OneToMany
     private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<>();
 
