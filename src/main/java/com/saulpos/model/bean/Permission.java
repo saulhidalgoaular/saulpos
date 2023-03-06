@@ -14,17 +14,7 @@ import javafx.beans.property.SimpleStringProperty;
 public class Permission extends BeanImplementation<Permission> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
-    //id_tipo_usuario
     private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
-
-    //id_nodo
-    @OneToOne
-    @JoinColumn(name = "nodeId")
-    /*
-     *  Todo: fix this
-     *  the error:'One To One' attribute type should not be 'ObjectProperty'
-     * */
     private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
     @Id

@@ -13,16 +13,9 @@ import java.time.LocalDate;
 public class Expense extends BeanImplementation<Expense> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
-    //fecha
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
-
-    //concepto
     private SimpleStringProperty concept = new SimpleStringProperty();
-
-    //monto
     private SimpleDoubleProperty amount = new SimpleDoubleProperty();
-
     private SimpleStringProperty description = new SimpleStringProperty();
 
     @Id
@@ -39,7 +32,8 @@ public class Expense extends BeanImplementation<Expense> {
         this.id.set(id);
     }
 
-    public @NotNull LocalDate getDate(){
+    @NotNull
+    public LocalDate getDate(){
         return date.get();
     }
 
@@ -51,7 +45,8 @@ public class Expense extends BeanImplementation<Expense> {
         this.date.set(date);
     }
 
-    public @NotNull String getConcept(){
+    @NotNull
+    public String getConcept(){
         return this.concept.get();
     }
 
@@ -63,7 +58,8 @@ public class Expense extends BeanImplementation<Expense> {
         this.concept.set(concept);
     }
 
-    public @NotNull Double getAmount(){
+    @NotNull
+    public Double getAmount(){
         return amount.get();
     }
 
@@ -75,7 +71,8 @@ public class Expense extends BeanImplementation<Expense> {
         this.amount.set(amount);
     }
 
-    public @NotNull String getDescription(){
+    @NotNull
+    public String getDescription(){
         return description.get();
     }
 
@@ -87,10 +84,8 @@ public class Expense extends BeanImplementation<Expense> {
         this.description.set(description);
     }
 
-
     @Override
     public void receiveChanges(Expense currentBean) {
-
     }
 
     @Override

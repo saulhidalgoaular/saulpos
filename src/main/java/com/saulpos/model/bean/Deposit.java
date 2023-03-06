@@ -14,11 +14,9 @@ import java.time.LocalDate;
 public class Deposit extends BeanImplementation<Deposit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
-
+    private SimpleStringProperty bank =new SimpleStringProperty();
     private SimpleStringProperty number =new SimpleStringProperty();
-
     private SimpleDoubleProperty amount=new SimpleDoubleProperty();
 
     @Id
@@ -35,6 +33,20 @@ public class Deposit extends BeanImplementation<Deposit> {
         return id;
     }
 
+    @NotNull
+    public String getBank() {
+        return bank.get();
+    }
+
+    public SimpleStringProperty bankProperty() {
+        return bank;
+    }
+
+    public void setBank(String bank) {
+        this.bank.set(bank);
+    }
+
+    @NotNull
     public LocalDate getDate() {
         return date.get();
     }
@@ -51,22 +63,29 @@ public class Deposit extends BeanImplementation<Deposit> {
         this.amount.set(amount);
     }
 
+    @NotNull
     public String getNumber(){
         return number.get();
     }
+
     public void setNumber(String number){
         this.number.set(number);
     }
-    public @NotNull SimpleStringProperty numberProperty(){
+
+    public SimpleStringProperty numberProperty(){
         return number;
     }
+
+    @NotNull
     public Double getAmount(){
         return amount.get();
     }
+
     public void setAmount(Double amount){
         this.amount.set(amount);
     }
-    public @NotNull SimpleDoubleProperty amountProperty(){
+
+    public SimpleDoubleProperty amountProperty(){
         return amount;
     }
 

@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 
 import java.time.LocalDateTime;
@@ -32,8 +33,8 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
     private SimpleDoubleProperty vat = new SimpleDoubleProperty();
 
-    @OneToOne
-    private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<>();
+    //@OneToOne Damir H. -> removed since we already have cashier, wich has printer.
+    //private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<Cashier>();
 
     private SimpleStringProperty taxNumber = new SimpleStringProperty();
 
@@ -47,7 +48,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
 
     private SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
 
-    private SimpleObjectProperty<Cashier> posIdentifier = new SimpleObjectProperty();
+    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
 
     private ObjectProperty<Set<CreditNoteDetails>> creditNoteDetails = new SimpleObjectProperty<>();
@@ -66,6 +67,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     }
 
     @OneToOne
+    @NotNull
     public Invoice getInvoice() {
         return invoice.get();
     }
@@ -78,6 +80,8 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.invoice.set(invoice);
     }
 
+    @NotNull
+    @Enumerated(EnumType.STRING)
     public Invoice.InvoiceStatus getStatus() {
         return status.get();
     }
@@ -90,6 +94,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.status.set(status);
     }
 
+    @NotNull
     public LocalDateTime getCreationDate() {
         return creationDate.get();
     }
@@ -114,6 +119,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.printingDate.set(printingDate);
     }
 
+    @NotNull
     public double getTotalWithoutVat() {
         return totalWithoutVat.get();
     }
@@ -126,6 +132,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.totalWithoutVat.set(totalWithoutVat);
     }
 
+    @NotNull
     public double getTotalWithVat() {
         return totalWithVat.get();
     }
@@ -138,6 +145,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.totalWithVat.set(totalWithVat);
     }
 
+    @NotNull
     public double getVat() {
         return vat.get();
     }
@@ -162,8 +170,9 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     public void setCreditNoteDetails(Set<CreditNoteDetails> creditNoteDetails) {
         this.creditNoteDetails.set(creditNoteDetails);
     }
-
+/*
     @OneToOne
+    @NotNull
     public Cashier getPrinter() {
         return printer.get();
     }
@@ -175,7 +184,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     public void setPrinter(Cashier printer) {
         this.printer.set(printer);
     }
-
+*/
     public String getTaxNumber() {
         return taxNumber.get();
     }
@@ -201,6 +210,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     }
 
     @OneToOne
+    @NotNull
     public User getUser() {
         return user.get();
     }
@@ -213,6 +223,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.user.set(user);
     }
 
+    @NotNull
     public int getArticlesQuantity() {
         return articlesQuantity.get();
     }
@@ -226,6 +237,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     }
 
     @OneToOne
+    @NotNull
     public Assignment getAssignment() {
         return assignment.get();
     }
@@ -239,16 +251,16 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     }
 
     @OneToOne
-    public Cashier getPosIdentifier() {
-        return posIdentifier.get();
+    public Cashier getCashier() {
+        return cashier.get();
     }
 
-    public SimpleObjectProperty<Cashier> posIdentifierProperty() {
-        return posIdentifier;
+    public SimpleObjectProperty<Cashier> cashierProperty() {
+        return cashier;
     }
 
-    public void setPosIdentifier(Cashier posIdentifier) {
-        this.posIdentifier.set(posIdentifier);
+    public void setCashier(Cashier cashier) {
+        this.cashier.set(cashier);
     }
 
     @Override

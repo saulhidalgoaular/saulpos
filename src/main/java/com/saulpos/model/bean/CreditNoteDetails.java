@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -14,28 +15,15 @@ import org.hibernate.annotations.ColumnDefault;
 public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
 
     private final SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private final ObjectProperty<CreditNote> creditNote = new SimpleObjectProperty<>();
-
-    //codigo_de_articulo
     private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<Product>();
-
-    //cantidad
-    @ColumnDefault("1")
     private final SimpleIntegerProperty amount = new SimpleIntegerProperty();
-
-    //devuelto
     private final SimpleIntegerProperty cancelled = new SimpleIntegerProperty();
-
-    //precio_venta
-    @ColumnDefault("0.00")
     private final SimpleDoubleProperty salePrice = new SimpleDoubleProperty();
-
-    //descuento
-    @ColumnDefault("0.00")
     private final SimpleDoubleProperty discount = new SimpleDoubleProperty();
 
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     public int getId() {
         return id.get();
     }
@@ -49,6 +37,7 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
     }
 
     @ManyToOne
+    @NotNull
     public CreditNote getCreditNote() {
         return creditNote.get();
     }
@@ -62,6 +51,7 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
     }
 
     @OneToOne
+    @NotNull
     public Product getProduct() {
         return product.get();
     }
@@ -73,7 +63,8 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
     public void setProduct(Product product) {
         this.product.set(product);
     }
-
+    @ColumnDefault("1")
+    @NotNull
     public int getAmount() {
         return amount.get();
     }
@@ -85,7 +76,8 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
     public void setAmount(int amount) {
         this.amount.set(amount);
     }
-
+    @ColumnDefault("0")
+    @NotNull
     public int getCancelled() {
         return cancelled.get();
     }
@@ -98,6 +90,8 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
         this.cancelled.set(cancelled);
     }
 
+    @ColumnDefault("0.00")
+    @NotNull
     public double getSalePrice() {
         return salePrice.get();
     }
@@ -109,7 +103,8 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
     public void setSalePrice(double salePrice) {
         this.salePrice.set(salePrice);
     }
-
+    @ColumnDefault("0.00")
+    @NotNull
     public double getDiscount() {
         return discount.get();
     }

@@ -29,7 +29,8 @@ public class Message extends BeanImplementation<Message> {
         this.id.set(id);
     }
 
-    public @NotNull String getUserMessage(){
+    @NotNull
+    public String getUserMessage(){
         return this.userMessage.get();
     }
 

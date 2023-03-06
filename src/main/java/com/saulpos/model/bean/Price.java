@@ -16,12 +16,8 @@ import java.time.LocalDate;
 public class Price extends BeanImplementation<Price> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
-    @ManyToOne
     private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
-
     private SimpleDoubleProperty price = new SimpleDoubleProperty();
-
     private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
 
     @Id
@@ -44,7 +40,7 @@ public class Price extends BeanImplementation<Price> {
         return product.get();
     }
 
-    public @NotNull SimpleObjectProperty<Product> productProperty() {
+    public SimpleObjectProperty<Product> productProperty() {
         return product;
     }
 
@@ -52,6 +48,7 @@ public class Price extends BeanImplementation<Price> {
         this.product.set(product);
     }
 
+    @NotNull
     public Double getPrice() {
         return price.get();
     }
@@ -60,7 +57,7 @@ public class Price extends BeanImplementation<Price> {
         this.price.set(price);
     }
 
-    public @NotNull SimpleDoubleProperty priceProperty() {
+    public SimpleDoubleProperty priceProperty() {
         return price;
     }
 
@@ -68,6 +65,7 @@ public class Price extends BeanImplementation<Price> {
         this.price.set(price);
     }
 
+    @NotNull
     public LocalDate getDate() {
         return date.get();
     }

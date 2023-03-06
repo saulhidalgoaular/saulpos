@@ -12,18 +12,15 @@ import jakarta.validation.constraints.NotNull;
 public class Configuration extends BeanImplementation<Configuration> {
 
     private int id;
-
-    @NotNull
     private String key;
-
     private String value;
-
     private String name;
 
     public Configuration() {
 
     }
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     public int getId() {
         return id;
     }
@@ -32,6 +29,7 @@ public class Configuration extends BeanImplementation<Configuration> {
         this.id = id;
     }
 
+    @NotNull
     public String getKey() {
         return key;
     }
@@ -40,6 +38,7 @@ public class Configuration extends BeanImplementation<Configuration> {
         this.key = key;
     }
 
+    @NotNull
     public String getValue() {
         return value;
     }

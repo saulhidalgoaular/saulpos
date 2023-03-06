@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -37,6 +38,7 @@ public class Client extends BeanImplementation<Client> {
         return id;
     }
 
+    @NotNull
     public String getName() {
         return name.get();
     }
