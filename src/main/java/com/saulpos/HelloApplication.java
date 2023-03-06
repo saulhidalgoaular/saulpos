@@ -1,8 +1,6 @@
 package com.saulpos;
 
-import com.dlsc.formsfx.model.structure.Field;
-import com.dlsc.formsfx.model.structure.Form;
-import com.dlsc.formsfx.model.structure.Group;
+import com.dlsc.formsfx.model.structure.*;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
@@ -15,9 +13,17 @@ import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+import java.awt.*;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
@@ -32,14 +38,51 @@ public class HelloApplication extends Application {
         Form form = Form.of(
                 Group.of(
                         Field.ofStringType("")
-                                .label("Username"),
+                                .label("Username:"),
                         Field.ofPasswordType("")
-                                .label("Password")
+                                .label("Password:")
                                 .required("This field can’t be empty")
                 )
 
         ).title("Login");
 
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/hello-view.fxml"));
+        Scene scene = new Scene(fxmlLoader.load(), 640, 200);
+
+        HelloController controller = fxmlLoader.<HelloController>getController();
+        DefaultMenuGenerator defaultMenuGenerator = new DefaultMenuGenerator();
+        final ArrayList<MenuModel> menuModels = defaultMenuGenerator.generateMenu();
+
+        String exampleUser = "georgy";
+        String examplePass = "chorbov";
+
+        Button enterButton = new Button("Enter");
+        enterButton.setPrefSize(100, 50);
+        enterButton.setOnAction(event -> {
+
+            String username = ((StringField) form.getGroups().get(0).getElements().get(0)).getValue();
+            String password = ((PasswordField) form.getGroups().get(0).getElements().get(1)).getValue();
+
+            if (username.equals(exampleUser) && password.equals(examplePass)) {
+                //Success
+                System.out.println("Welcome " + username + "!");
+                enterButton.setDisable(true);
+                enterButton.setVisible(false);
+                controller.mainVBox.getChildren().remove(0);
+                controller.mainVBox.setAlignment(Pos.TOP_LEFT);
+                Node node = MenuBarGenerator.generateMenuNode(menuModels.toArray(new MenuModel[]{}));
+                VBox.setMargin(node, new Insets(-20, -20, -20, -20));
+                controller.mainVBox.getChildren().add(0,node);
+                stage.setTitle("Main menu");
+            } else {
+                // Display an error message to the user
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Error");
+                alert.setHeaderText("Invalid username or password");
+                alert.setContentText("Please try again.");
+                alert.showAndWait();
+            }
+        });
 
         DatabaseConnection.getInstance().initialize();
 
@@ -64,6 +107,7 @@ public class HelloApplication extends Application {
         product.saveOrUpdate();
 
         System.out.println("----------------");
+        //System.out.println( form.getElements().get(0).getID() );
 
         allProducts = DatabaseConnection.getInstance().listAll("Product");
         for (Object p :
@@ -72,16 +116,13 @@ public class HelloApplication extends Application {
             System.out.println(pr.getId() + " " + pr.getArea() + " " + pr.getBarcode());
         }
 
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("/hello-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 640, 200);
 
-        HelloController controller = fxmlLoader.<HelloController>getController();
-        DefaultMenuGenerator defaultMenuGenerator = new DefaultMenuGenerator();
-        final ArrayList<MenuModel> menuModels = defaultMenuGenerator.generateMenu();
-        controller.mainVBox.getChildren().add(MenuBarGenerator.generateMenuNode(menuModels.toArray(new MenuModel[]{})));
         controller.mainVBox.getChildren().add(
                 new FormRenderer(form)
         );
+        VBox.setMargin(enterButton, new Insets(-30,0,0,0));
+        controller.mainVBox.getChildren().add(enterButton);
+
 
         CrudGeneratorParameter parameter = new CrudGeneratorParameter();
         parameter.setClazz(User.class);
@@ -97,7 +138,7 @@ public class HelloApplication extends Application {
         /*controller.mainVBox.getChildren().add(
             crudGenerator.generate().getView().getMainView()
         );*/
-        stage.setTitle("Hello!");
+        stage.setTitle("Login!");
         stage.setScene(scene);
         stage.show();
     }
