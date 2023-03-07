@@ -16,75 +16,26 @@ import java.util.Date;
 public class WorkingDay extends BeanImplementation<WorkingDay> {
 
     private SimpleStringProperty id =new SimpleStringProperty();
-
     private  ObjectProperty<Date> date = new SimpleObjectProperty<>();
-
-    //codigo_punto_de_venta
     private SimpleStringProperty saleCode =new SimpleStringProperty();
-
-    //dinero_tarjeta_credito
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty moneyCreditCard= new SimpleDoubleProperty();
-
-    //dinero_efectivo
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty cash=new SimpleDoubleProperty();
-
-    //dinero_tarjeta_debito
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty moneyDebitCard = new SimpleDoubleProperty();
-
-    //nota_de_credito
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty creditNotesMoney =new SimpleDoubleProperty();
-
-    @ColumnDefault("0")
     private SimpleIntegerProperty ZReport =new SimpleIntegerProperty();
-
-    //dinero_efectivo_impresora
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty cashMoneyPrinter = new SimpleDoubleProperty();
-
-    //dinero_tarjeta_credito_impresora
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty creditCardMoneyPrinter = new SimpleDoubleProperty();
-
-    //dinero_tarjeta_debito_impresora
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty debitCardMoneyPrinter = new SimpleDoubleProperty();
-
-    //nota_de_credito_impresora
-    @ColumnDefault("0.00")
     private SimpleDoubleProperty creditNotePrinter = new SimpleDoubleProperty();
-
-    //actualizar_valores
     private SimpleBooleanProperty updateValues = new SimpleBooleanProperty();
-
-    //ultima_actualizacion
     private ObjectProperty<LocalDateTime> dateTime = new SimpleObjectProperty<>();
-
-    //total_ventas
     private SimpleDoubleProperty totalSales = new SimpleDoubleProperty();
-
-    //numero_reporte_z
     private SimpleStringProperty zReportNumber = new SimpleStringProperty();
-
-    //impresora
     private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty();
-
-    //codigo_ultima_factura
     private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
-
-    //num_facturas
     private SimpleIntegerProperty amountInvoices = new SimpleIntegerProperty();
-
-    //codigo_ultima_nota_credito
     private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
-
-    //numero_notas_credito
     private SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
-
-    //cerrado
     private SimpleBooleanProperty closed = new SimpleBooleanProperty();
 
     @Id
@@ -125,7 +76,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return saleCode;
     }
 
-    public @NotNull Double getMoneyCreditCard(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public Double getMoneyCreditCard(){
         return moneyCreditCard.get();
     }
 
@@ -137,7 +90,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return moneyCreditCard;
     }
 
-    public @NotNull Double getCash(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public Double getCash(){
         return cash.get();
     }
 
@@ -149,7 +104,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return cash;
     }
 
-    public @NotNull Double getMoneyDebitCard(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public Double getMoneyDebitCard(){
         return moneyDebitCard.get();
     }
 
@@ -161,7 +118,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return moneyDebitCard;
     }
 
-    public @NotNull Double getCreditNotesMoney(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public Double getCreditNotesMoney(){
         return creditNotesMoney.get();
     }
 
@@ -173,6 +132,7 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return creditNotesMoney;
     }
 
+    @ColumnDefault("0.00")
     public Double getCashMoneyPrinter(){
         return cashMoneyPrinter.get();
     }
@@ -181,7 +141,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         this.cashMoneyPrinter.set(cashMoneyPrinter);
     }
 
-    public @NotNull double getCreditCardMoneyPrinter(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public  double getCreditCardMoneyPrinter(){
         return creditCardMoneyPrinter.get();
     }
 
@@ -193,7 +155,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return creditCardMoneyPrinter;
     }
 
-    public @NotNull double getDebitCardMoneyPrinter(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public double getDebitCardMoneyPrinter(){
         return debitCardMoneyPrinter.get();
     }
 
@@ -205,7 +169,9 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return debitCardMoneyPrinter;
     }
 
-    public @NotNull double getCreditNotePrinter(){
+    @NotNull
+    @ColumnDefault("0.00")
+    public double getCreditNotePrinter(){
         return creditNotePrinter.get();
     }
 
@@ -233,6 +199,8 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return totalSales;
     }
 
+    @ColumnDefault("0")
+    @NotNull
     public String getzReportNumber(){
         return zReportNumber.get();
     }

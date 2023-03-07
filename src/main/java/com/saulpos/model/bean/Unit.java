@@ -2,6 +2,7 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -11,7 +12,6 @@ import javafx.beans.property.SimpleStringProperty;
 public class Unit extends BeanImplementation<Unit> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty description = new SimpleStringProperty();
 
     @Id
@@ -28,6 +28,7 @@ public class Unit extends BeanImplementation<Unit> {
         this.id.set(id);
     }
 
+    @NotNull
     public String getDescription() {
         return description.get();
     }

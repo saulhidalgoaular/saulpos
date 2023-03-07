@@ -15,15 +15,10 @@ import javafx.beans.property.SimpleStringProperty;
 public class ProductMovementDetail extends BeanImplementation<ProductMovementDetail> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
-
     private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
-
     private SimpleIntegerProperty amount = new SimpleIntegerProperty();
-
     private SimpleStringProperty type = new SimpleStringProperty();
-
-    @OneToMany
-    private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<ProductMovement>();
 
     @Id
     @GeneratedValue
@@ -35,17 +30,18 @@ public class ProductMovementDetail extends BeanImplementation<ProductMovementDet
         this.id.set(id);
     }
 
-    public @NotNull SimpleStringProperty idProperty() {
+    public SimpleStringProperty idProperty() {
         return id;
     }
 
 
     @OneToOne
+    @NotNull
     public Product getProduct() {
         return product.get();
     }
 
-    public @NotNull SimpleObjectProperty<Product> productProperty() {
+    public SimpleObjectProperty<Product> productProperty() {
         return product;
     }
 
@@ -53,7 +49,8 @@ public class ProductMovementDetail extends BeanImplementation<ProductMovementDet
         this.product.set(product);
     }
 
-    public @NotNull int getAmount() {
+    @NotNull
+    public int getAmount() {
         return amount.get();
     }
 
@@ -77,7 +74,8 @@ public class ProductMovementDetail extends BeanImplementation<ProductMovementDet
         return type;
     }
 
-    @OneToOne
+    @ManyToOne
+    @NotNull
     public ProductMovement getProductMovement() {
         return productMovement.get();
     }

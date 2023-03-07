@@ -15,9 +15,7 @@ import java.util.Set;
 public class Profile  extends BeanImplementation<Profile> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty description = new SimpleStringProperty();
-
     private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
 
     @Id

@@ -16,11 +16,8 @@ import java.time.LocalTime;
 public class Shift extends BeanImplementation<Shift> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty name = new SimpleStringProperty();
-
     private ObjectProperty<LocalTime> start = new SimpleObjectProperty<>();
-
     private ObjectProperty<LocalTime> end = new SimpleObjectProperty<>();
 
     @Id
@@ -49,7 +46,8 @@ public class Shift extends BeanImplementation<Shift> {
         this.name.set(name);
     }
 
-    public @NotNull LocalTime getStart() {
+    @NotNull
+    public LocalTime getStart() {
         return start.get();
     }
 
@@ -61,7 +59,8 @@ public class Shift extends BeanImplementation<Shift> {
         this.start.set(start);
     }
 
-    public @NotNull LocalTime getEnd() {
+    @NotNull
+    public LocalTime getEnd() {
         return end.get();
     }
 

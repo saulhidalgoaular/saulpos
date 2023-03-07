@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleStringProperty;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Access(AccessType.PROPERTY)
@@ -16,15 +17,11 @@ import java.time.LocalDateTime;
 public class ProductMovement extends BeanImplementation<ProductMovement> {
 
     private SimpleStringProperty id = new SimpleStringProperty();
-
     private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
-
     private SimpleStringProperty description = new SimpleStringProperty();
-
     private SimpleStringProperty code = new SimpleStringProperty();
-
     private SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
-
+    private ObjectProperty<Set<ProductMovementDetail>> price = new SimpleObjectProperty<>();
     @Id
     @GeneratedValue
     public String getId(){
@@ -86,6 +83,19 @@ public class ProductMovement extends BeanImplementation<ProductMovement> {
 
     public void setStore(Storage store) {
         this.store.set(store);
+    }
+
+    @OneToMany
+    public Set<ProductMovementDetail> getPrice() {
+        return price.get();
+    }
+
+    public ObjectProperty<Set<ProductMovementDetail>> priceProperty() {
+        return price;
+    }
+
+    public void setPrice(Set<ProductMovementDetail> price) {
+        this.price.set(price);
     }
 
     @Override

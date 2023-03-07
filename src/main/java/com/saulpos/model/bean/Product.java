@@ -16,35 +16,20 @@ public class Product extends BeanImplementation<Product> {
 
     public Product() {
     }
-
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty description = new SimpleStringProperty();
-
     private ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
-
     private SimpleStringProperty brand = new SimpleStringProperty();
-
     private SimpleStringProperty area = new SimpleStringProperty();
-
     private SimpleStringProperty barcode = new SimpleStringProperty();
-
     private SimpleStringProperty model = new SimpleStringProperty();
-
     private ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
-
     private ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
-
     private SimpleIntegerProperty existence = new SimpleIntegerProperty();
-
     private SimpleBooleanProperty blocked = new SimpleBooleanProperty();
-
     private SimpleStringProperty imagePath = new SimpleStringProperty();
-
     private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
-
     private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
-
     private ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
 
     @Id
@@ -61,11 +46,11 @@ public class Product extends BeanImplementation<Product> {
         this.id.set(id);
     }
 
+    @NotNull
     public String getDescription() {
         return description.get();
     }
 
-    @NotNull
     public SimpleStringProperty descriptionProperty() {
         return description;
     }
@@ -79,7 +64,6 @@ public class Product extends BeanImplementation<Product> {
         return registrationDate.get();
     }
 
-    @NotNull
     public ObjectProperty<LocalDate> registrationDateProperty() {
         return registrationDate;
     }
@@ -113,12 +97,11 @@ public class Product extends BeanImplementation<Product> {
     }
 
     @NotNull
-    @Column(nullable = false)
     public String getBarcode() {
         return barcode.get();
     }
 
-    public @NotNull SimpleStringProperty barcodeProperty() {
+    public SimpleStringProperty barcodeProperty() {
         return barcode;
     }
 
@@ -126,6 +109,7 @@ public class Product extends BeanImplementation<Product> {
         this.barcode.set(barcode);
     }
 
+    @NotNull
     public String getModel() {
         return model.get();
     }
@@ -170,7 +154,7 @@ public class Product extends BeanImplementation<Product> {
         return existence.get();
     }
 
-    public @NotNull SimpleIntegerProperty existenceProperty() {
+    public SimpleIntegerProperty existenceProperty() {
         return existence;
     }
 
@@ -183,7 +167,7 @@ public class Product extends BeanImplementation<Product> {
         return blocked.get();
     }
 
-    public @NotNull SimpleBooleanProperty blockedProperty() {
+    public SimpleBooleanProperty blockedProperty() {
         return blocked;
     }
 
@@ -209,7 +193,7 @@ public class Product extends BeanImplementation<Product> {
         return discount.get();
     }
 
-    public @NotNull SimpleObjectProperty<Discount> discountProperty() {
+    public SimpleObjectProperty<Discount> discountProperty() {
         return discount;
     }
 
