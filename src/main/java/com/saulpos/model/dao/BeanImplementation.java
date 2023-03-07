@@ -1,13 +1,10 @@
 package com.saulpos.model.dao;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
-import javafx.beans.property.SimpleObjectProperty;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 
 public abstract class BeanImplementation<I extends BeanImplementation> extends AbstractBeanImplementation<I> {
 
@@ -35,4 +32,9 @@ public abstract class BeanImplementation<I extends BeanImplementation> extends A
 
     @Override
     public abstract I clone();
+
+    @Override
+    public boolean previouslySaved() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        return false;
+    }
 }
