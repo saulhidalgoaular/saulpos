@@ -7,15 +7,12 @@ import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
-import com.saulpos.javafxcrudgenerator.sample.Product;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
-import com.saulpos.model.bean.User;
+import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.LoginView;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
@@ -51,9 +48,9 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
         );
 
         CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
-        crudGeneratorParameter.setClazz(User.class);
+        crudGeneratorParameter.setClazz(UserB.class);
         crudGeneratorParameter.setDataProvider(new HibernateDataProvider());
-        CrudGenerator<User> crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
+        CrudGenerator<UserB> crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         try {
             CrudPresenter crud = crudGenerator.generate();
             mainVBox.getChildren().add(crud.getView().getMainView());

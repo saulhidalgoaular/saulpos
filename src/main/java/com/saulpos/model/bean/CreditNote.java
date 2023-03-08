@@ -41,7 +41,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     @Column(nullable = false)
     private SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
-    private SimpleObjectProperty<User> user = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
 
 
     private SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
@@ -211,16 +211,16 @@ public class CreditNote extends BeanImplementation<CreditNote> {
 
     @OneToOne
     @NotNull
-    public User getUser() {
+    public UserB getUser() {
         return user.get();
     }
 
-    public SimpleObjectProperty<User> userProperty() {
+    public SimpleObjectProperty<UserB> userProperty() {
         return user;
     }
 
-    public void setUser(User user) {
-        this.user.set(user);
+    public void setUser(UserB userB) {
+        this.user.set(userB);
     }
 
     @NotNull

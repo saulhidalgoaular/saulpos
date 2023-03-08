@@ -13,7 +13,7 @@ import org.hibernate.annotations.ColumnDefault;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class User extends BeanImplementation<User> {
+public class UserB extends BeanImplementation<UserB> {
 
     private SimpleIntegerProperty id = new SimpleIntegerProperty();
     @Search
@@ -148,12 +148,27 @@ public class User extends BeanImplementation<User> {
 
 
     @Override
-    public void receiveChanges(User currentBean) {
+    public void receiveChanges(UserB currentBean) {
 
     }
 
     @Override
-    public User clone() {
+    public UserB clone() {
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return "UserB{" +
+                "id=" + id +
+                ", userName=" + userName +
+                ", password=" + password +
+                ", name=" + name +
+                ", lastname=" + lastname +
+                ", profile=" + profile +
+                ", enabled=" + enabled +
+                ", shouldChangePassword=" + shouldChangePassword +
+                ", canChangePassword=" + canChangePassword +
+                '}';
     }
 }

@@ -1,0 +1,33 @@
+<persistence xmlns="http://java.sun.com/xml/ns/persistence"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_2_0.xsd"
+             version="2.0">
+    <persistence-unit name="saulpos" transaction-type="RESOURCE_LOCAL">
+
+        <provider>org.hibernate.jpa.HibernatePersistenceProvider</provider>
+
+        <properties>
+            <!-- JDBC Database connection settings -->
+            <property name="connection.driver_class" value="org.h2.Driver"></property>
+            <property name="connection.url" value="jdbc:h2:mem:test"></property>
+            <property name="connection.username" value="sa"></property>
+            <property name="connection.password" value=""></property>
+            <!-- JDBC connection pool settings ... using built-in test pool -->
+            <property name="connection.pool_size" value="1"></property>
+            <!-- Select our SQL dialect -->
+            <property name="dialect" value="org.hibernate.dialect.H2Dialect"></property>
+            <!-- Echo the SQL to stdout -->
+            <property name="show_sql" value="true"></property>
+            <!-- Set the current session context -->
+            <property name="current_session_context_class" value="thread"></property>
+            <!-- Drop and re-create the database schema on startup -->
+            <property name="hbm2ddl.auto" value="update"></property>
+            <!-- dbcp connection pool configuration -->
+            <property name="hibernate.dbcp.initialSize" value="5"></property>
+            <property name="hibernate.dbcp.maxTotal" value="20"></property>
+            <property name="hibernate.dbcp.maxIdle" value="10"></property>
+            <property name="hibernate.dbcp.minIdle" value="5"></property>
+            <property name="hibernate.dbcp.maxWaitMillis" value="-1"></property>
+        </properties>
+    </persistence-unit>
+</persistence>

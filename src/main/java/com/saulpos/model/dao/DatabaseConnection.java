@@ -2,9 +2,7 @@ package com.saulpos.model.dao;
 
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -14,7 +12,6 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.persister.collection.mutation.RowMutationOperations;
 
 import java.beans.PropertyVetoException;
 import java.io.File;
@@ -33,6 +30,8 @@ public class DatabaseConnection {
     private static DatabaseConnection INSTANCE = null;
     public SessionFactory sessionFactory;
 
+    public EntityManagerFactory entityManagerFactory;
+
     private DatabaseConnection() {
 
     }
@@ -46,11 +45,12 @@ public class DatabaseConnection {
     }
 
     public void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Configuration configuration = new Configuration().configure();
+        /*Configuration configuration = new Configuration().configure();
         for (Class cls : getEntityClassesFromPackage("com.saulpos.model.bean")) {
             configuration.addAnnotatedClass(cls);
         }
-        sessionFactory = configuration.buildSessionFactory();
+        sessionFactory = configuration.buildSessionFactory();*/
+        entityManagerFactory = Persistence.createEntityManagerFactory("saulpos");
     }
 
     @Deprecated
@@ -81,17 +81,19 @@ public class DatabaseConnection {
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         List ans = null;
         Session session = getInstance().sessionFactory.openSession();
+
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
 
-            org.hibernate.query.Query sessionQuery = session.createQuery(query);
+
+            Query entityQuery =  entityManagerFactory.createEntityManager().createQuery(query);
             if ( parameters != null ){
                 for ( String key : parameters.keySet() ){
-                    sessionQuery.setParameter(key, parameters.get(key));
+                    entityQuery.setParameter(key, parameters.get(key));
                 }
             }
-            ans = sessionQuery.list();
+            ans = entityQuery.getResultList();
 
             tx.commit();
         }catch (Exception e) {
@@ -113,34 +115,29 @@ public class DatabaseConnection {
 
     public void createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
 
-        Session session = null;
-        Transaction tx = null;
-
+        EntityTransaction transaction = null;
         try
         {
-            session = getInstance().sessionFactory.openSession();
-            EntityManager entityManager = sessionFactory.createEntityManager();
-            tx = session.beginTransaction();
+            EntityManager entityManager = entityManagerFactory.createEntityManager();
+            transaction = entityManager.getTransaction();
+            transaction.begin();
+
             entityManager.persist(newEntry);
-            tx.commit();
+            transaction.commit();
         }
         catch (Exception e)
         {
-            if (tx!=null)
-                tx.rollback();
+            if (transaction!=null)
+                transaction.rollback();
             throw e;
-        } finally {
-            session.close();
-
         }
     }
 
     public List listBySample(Class clazz, AbstractBean sample)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         Session session = sessionFactory.openSession();
-        EntityManager entityManager = sessionFactory.createEntityManager();
         //entityManager.find()
         try {
-            CriteriaBuilder builder = entityManager.getCriteriaBuilder();
+            CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
             CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
             Root<? extends AbstractBean> root = query.from(sample.getClass());
 
@@ -276,7 +273,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.remove(entry);
+            entityManagerFactory.createEntityManager().remove(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
@@ -291,7 +288,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.update(entry);
+            entityManagerFactory.createEntityManager().merge(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
@@ -306,7 +303,7 @@ public class DatabaseConnection {
         Transaction tx = null;
         try{
             tx = session.beginTransaction();
-            session.merge(entry);
+            entityManagerFactory.createEntityManager().merge(entry);
             tx.commit();
         }catch (Exception e) {
             if (tx!=null) tx.rollback();
