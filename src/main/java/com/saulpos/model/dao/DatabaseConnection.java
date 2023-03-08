@@ -153,7 +153,7 @@ public class DatabaseConnection {
                     if (invoke.getValue() != null) {
                         // Add restriction
                         String searchString = (String) invoke.getValue();
-                        restrictions.add(builder.like(root.get("name"), "%" + searchString + "%"));
+                        restrictions.add(builder.like(root.get(field.getName()), "%" + searchString + "%"));
                     }
                 }
             }
