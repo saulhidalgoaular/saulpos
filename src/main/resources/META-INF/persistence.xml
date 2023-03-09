@@ -12,6 +12,12 @@
             <property name="connection.url" value="jdbc:h2:mem:test"></property>
             <property name="connection.username" value="sa"></property>
             <property name="connection.password" value=""></property>
+
+            <property name="hibernate.dialect" value="org.hibernate.dialect.H2Dialect"/>
+            <property name="hibernate.hbm2ddl.auto" value="create-drop" />
+            <property name="show_sql" value="true"/>
+            <property name="hibernate.temp.use_jdbc_metadata_defaults" value="false"/>
+
             <!-- JDBC connection pool settings ... using built-in test pool -->
             <property name="connection.pool_size" value="1"></property>
             <!-- Select our SQL dialect -->
