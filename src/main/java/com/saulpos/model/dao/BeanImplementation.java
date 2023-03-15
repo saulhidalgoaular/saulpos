@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 public abstract class BeanImplementation<I extends BeanImplementation> extends AbstractBeanImplementation<I> {
-    // comment
     private static final long serialVersionUID = 1L;
 
     @Override
