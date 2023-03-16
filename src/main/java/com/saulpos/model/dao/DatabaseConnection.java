@@ -134,10 +134,10 @@ public class DatabaseConnection {
     }
 
     public List listBySample(Class clazz, AbstractBean sample)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = sessionFactory.openSession();
-        //entityManager.find()
+
         try {
             CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
+            EntityManager entityManager = entityManagerFactory.createEntityManager();
             CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
             Root<? extends AbstractBean> root = query.from(sample.getClass());
 
@@ -156,14 +156,13 @@ public class DatabaseConnection {
             }
 
             query.where(restrictions.toArray(new Predicate[0]));
-            List results = session.createQuery(query).getResultList();
+
+            List results = entityManager.createQuery(query).getResultList();
             return results;
         }
         catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
         {
             e.printStackTrace();
-        } finally {
-            session.close();
         }
         return null;
     }
