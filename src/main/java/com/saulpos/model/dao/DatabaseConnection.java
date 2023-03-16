@@ -50,7 +50,7 @@ public class DatabaseConnection {
             configuration.addAnnotatedClass(cls);
         }
         sessionFactory = configuration.buildSessionFactory();*/
-        entityManagerFactory = Persistence.createEntityManagerFactory("saulpos");
+        entityManagerFactory = Persistence.createEntityManagerFactory("jpa-saulpos");
     }
 
     @Deprecated
