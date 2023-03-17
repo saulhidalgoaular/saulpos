@@ -116,7 +116,6 @@ public class DatabaseConnection {
     }
 
     public void createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-
         EntityTransaction transaction = null;
         try
         {
@@ -288,8 +287,9 @@ public class DatabaseConnection {
     public void update(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
-            entityManagerFactory.createEntityManager().merge(entry);
-
+            entityManager.getTransaction().begin();
+            entityManager.merge(entry);
+            entityManager.getTransaction().commit();
         }catch (Exception e) {
             throw e;
         }finally {

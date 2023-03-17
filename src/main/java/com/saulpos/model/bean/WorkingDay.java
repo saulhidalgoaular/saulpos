@@ -15,7 +15,7 @@ import java.util.Date;
 @Table
 public class WorkingDay extends BeanImplementation<WorkingDay> {
 
-    private SimpleStringProperty id =new SimpleStringProperty();
+    private SimpleIntegerProperty id =new SimpleIntegerProperty();
     private  ObjectProperty<Date> date = new SimpleObjectProperty<>();
     private SimpleStringProperty saleCode =new SimpleStringProperty();
     private SimpleDoubleProperty moneyCreditCard= new SimpleDoubleProperty();
@@ -40,15 +40,15 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
 
     @Id
     @GeneratedValue
-    public String getId() {
+    public int getId() {
         return id.get();
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id.set(id);
     }
 
-    public SimpleStringProperty idProperty() {
+    public SimpleIntegerProperty idProperty() {
         return id;
     }
     @NotNull

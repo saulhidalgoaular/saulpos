@@ -2,6 +2,8 @@ package com.saulpos.model.dao;
 
 import javafx.beans.property.SimpleBooleanProperty;
 
+import java.lang.reflect.InvocationTargetException;
+
 public class DaoUtils {
 
     public static String getGetter(final String fieldName, final Class type){
@@ -11,6 +13,5 @@ public class DaoUtils {
     public static String getSetter(final String fieldName){
         return "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
     }
-
 
 }

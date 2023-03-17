@@ -1,7 +1,6 @@
 package com.saulpos.model.bean;
 
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;

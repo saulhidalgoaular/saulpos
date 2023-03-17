@@ -1,8 +1,6 @@
 package com.saulpos.model.dao;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementation;
-import com.saulpos.model.bean.Storage;
-import javafx.beans.property.Property;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import javafx.beans.value.ObservableValue;
 
 import java.beans.PropertyVetoException;
@@ -12,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 
-public abstract class BeanImplementation<I extends BeanImplementation> extends AbstractBeanImplementation<I> {
+public abstract class BeanImplementation<I extends BeanImplementation> extends AbstractBeanImplementationSoftDelete<I> {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -23,19 +21,22 @@ public abstract class BeanImplementation<I extends BeanImplementation> extends A
 
     @Override
     public void update() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        super.update();
-        DatabaseConnection.getInstance().update(this);
+        super.update(); // Soft update
     }
 
     @Override
     public void saveOrUpdate() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        super.saveOrUpdate();
-        DatabaseConnection.getInstance().saveOrUpdate(this);
+        super.saveOrUpdate(); // Soft update
     }
 
     @Override
     public void delete() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        DatabaseConnection.getInstance().delete(this);
+        super.delete(); // Soft delete
+    }
+
+    @Override
+    public void modify() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        DatabaseConnection.getInstance().update(this);
     }
 
     @Override
