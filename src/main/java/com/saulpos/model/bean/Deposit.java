@@ -89,14 +89,4 @@ public class Deposit extends BeanImplementation<Deposit> {
         return amount;
     }
 
-    @Override
-    public void receiveChanges(Deposit currentBean) {
-
-    }
-
-    @Override
-    public Deposit clone() {
-        //Todo
-        return null;
-    }
 }

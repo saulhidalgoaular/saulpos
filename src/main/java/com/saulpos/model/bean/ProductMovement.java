@@ -98,14 +98,4 @@ public class ProductMovement extends BeanImplementation<ProductMovement> {
         this.price.set(price);
     }
 
-    @Override
-    public void receiveChanges(ProductMovement currentBean) {
-
-    }
-
-    @Override
-    public ProductMovement clone() {
-        //Todo
-        return null;
-    }
 }

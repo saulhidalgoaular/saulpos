@@ -80,14 +80,4 @@ public class Discount extends BeanImplementation<Discount> {
         return percentage;
     }
 
-    @Override
-    public void receiveChanges(Discount currentBean) {
-
-    }
-
-    @Override
-    public Discount clone() {
-        //Todo
-        return null;
-    }
 }

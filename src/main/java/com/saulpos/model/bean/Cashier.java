@@ -117,14 +117,4 @@ public class Cashier extends BeanImplementation<Cashier> {
     }
 
 
-
-    @Override
-    public void receiveChanges(Cashier currentBean) {
-
-    }
-
-    @Override
-    public Cashier clone() {
-        return null;
-    }
 }

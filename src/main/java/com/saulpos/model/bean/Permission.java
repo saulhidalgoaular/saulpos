@@ -57,14 +57,4 @@ public class Permission extends BeanImplementation<Permission> {
         return node;
     }
 
-    @Override
-    public void receiveChanges(Permission typeOfUserCan) {
-
-    }
-
-    @Override
-    public Permission clone() {
-        //Todo
-        return null;
-    }
 }

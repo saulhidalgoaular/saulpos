@@ -274,15 +274,4 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.status.set(status);
     }
 
-
-    @Override
-    public void receiveChanges(Invoice currentBean) {
-
-    }
-
-    @Override
-    public Invoice clone() {
-        //Todo
-        return null;
-    }
 }

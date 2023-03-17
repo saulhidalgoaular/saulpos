@@ -42,14 +42,4 @@ public class Storage extends BeanImplementation<Storage> {
         this.description.set(description);
     }
 
-
-    @Override
-    public void receiveChanges(Storage currentBean) {
-
-    }
-
-    @Override
-    public Storage clone() {
-        return null;
-    }
 }

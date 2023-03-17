@@ -228,14 +228,4 @@ public class Product extends BeanImplementation<Product> {
         this.price.set(price);
     }
 
-    @Override
-    public void receiveChanges(Product currentBean) {
-
-    }
-
-    @Override
-    public Product clone() {
-        // TODO
-        return null;
-    }
 }

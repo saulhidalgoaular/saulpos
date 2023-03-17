@@ -123,13 +123,4 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
         this.date.set(date);
     }
 
-    @Override
-    public BankPOSMachine clone() {
-        //Todo
-        return null;
-    }
-    @Override
-    public void receiveChanges(BankPOSMachine currentBean) {
-
-    }
 }

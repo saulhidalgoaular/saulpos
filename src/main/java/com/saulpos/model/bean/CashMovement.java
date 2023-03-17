@@ -73,15 +73,4 @@ public class CashMovement extends BeanImplementation<CashMovement> {
         this.amount.set(amount);
     }
 
-    @Override
-    public void receiveChanges(CashMovement currentBean) {
-
-    }
-
-    @Override
-    public CashMovement clone() {
-        //Todo
-
-        return null;
-    }
 }

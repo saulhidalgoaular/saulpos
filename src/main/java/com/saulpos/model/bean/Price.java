@@ -78,14 +78,4 @@ public class Price extends BeanImplementation<Price> {
         this.date.set(date);
     }
 
-    @Override
-    public void receiveChanges(Price currentBean) {
-
-    }
-
-    @Override
-    public Price clone() {
-        //Todo
-        return null;
-    }
 }

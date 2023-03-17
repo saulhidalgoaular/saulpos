@@ -117,13 +117,4 @@ public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
         this.discount.set(discount);
     }
 
-    @Override
-    public void receiveChanges(CreditNoteDetails creditNoteDetails) {
-
-    }
-
-    @Override
-    public CreditNoteDetails clone() {
-        return null;
-    }
 }

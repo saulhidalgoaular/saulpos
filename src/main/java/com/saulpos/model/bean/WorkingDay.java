@@ -371,14 +371,4 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
         return closed;
     }
 
-    @Override
-    public void receiveChanges(WorkingDay currentBean) {
-
-    }
-
-    @Override
-    public WorkingDay clone() {
-        //Todo
-        return null;
-    }
 }

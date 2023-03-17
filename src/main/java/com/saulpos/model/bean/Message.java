@@ -42,14 +42,4 @@ public class Message extends BeanImplementation<Message> {
         this.userMessage.set(userMessage);
     }
 
-    @Override
-    public void receiveChanges(Message currentBean) {
-
-    }
-
-    @Override
-    public Message clone() {
-        //Todo
-        return null;
-    }
 }

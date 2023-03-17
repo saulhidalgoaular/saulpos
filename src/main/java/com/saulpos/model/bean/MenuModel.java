@@ -119,17 +119,6 @@ public class MenuModel extends BeanImplementation<MenuModel> {
         return new LogoutMenuAction();
     }
 
-    @Override
-    public void receiveChanges(MenuModel currentBean) {
-        // Not necessary
-    }
-
-    @Override
-    public MenuModel clone() {
-        // Not necessary
-        return null;
-    }
-
     public enum MenuType {
         Administrative, POS
     }

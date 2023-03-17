@@ -55,13 +55,4 @@ public class Configuration extends BeanImplementation<Configuration> {
         this.name = name;
     }
 
-    @Override
-    public void receiveChanges(Configuration currentBean) {
-
-    }
-
-    @Override
-    public Configuration clone() {
-        return null;
-    }
 }

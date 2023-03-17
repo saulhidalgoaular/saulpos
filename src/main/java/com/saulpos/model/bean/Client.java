@@ -75,15 +75,4 @@ public class Client extends BeanImplementation<Client> {
         this.phone.set(phone);
     }
 
-    @Override
-    public void receiveChanges(Client currentBean) {
-
-    }
-
-    @Override
-    public Client clone() {
-        //Todo
-
-        return null;
-    }
 }

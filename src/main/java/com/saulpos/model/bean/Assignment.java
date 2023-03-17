@@ -106,15 +106,4 @@ public class Assignment extends BeanImplementation<Assignment> {
         this.day.set(dateTime);
     }
 
-
-    @Override
-    public void receiveChanges(Assignment currentBean) {
-
-    }
-
-    @Override
-    public Assignment clone() {
-        //Todo
-        return null;
-    }
 }

@@ -57,13 +57,4 @@ public class Profile  extends BeanImplementation<Profile> {
         this.permissions.set(permissions);
     }
 
-    @Override
-    public void receiveChanges(Profile currentBean) {
-
-    }
-
-    @Override
-    public Profile clone() {
-        return null;
-    }
 }

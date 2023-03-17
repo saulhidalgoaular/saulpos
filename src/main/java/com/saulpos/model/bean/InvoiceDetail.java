@@ -134,13 +134,4 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
         this.discount.set(discount);
     }
 
-    @Override
-    public void receiveChanges(InvoiceDetail currentBean) {
-
-    }
-
-    @Override
-    public InvoiceDetail clone() {
-        return null;
-    }
 }

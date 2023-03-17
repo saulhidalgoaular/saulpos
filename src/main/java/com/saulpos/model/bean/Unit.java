@@ -41,13 +41,4 @@ public class Unit extends BeanImplementation<Unit> {
         this.description.set(description);
     }
 
-    @Override
-    public void receiveChanges(Unit currentBean) {
-
-    }
-
-    @Override
-    public Unit clone() {
-        return null;
-    }
 }

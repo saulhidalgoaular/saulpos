@@ -93,13 +93,4 @@ public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
         return id.get();
     }
 
-    @Override
-    public BankPointOfSale clone() {
-        //Todo
-        return null;
-    }
-    @Override
-    public void receiveChanges(BankPointOfSale currentBean) {
-
-    }
 }

@@ -72,15 +72,4 @@ public class Shift extends BeanImplementation<Shift> {
         this.end.set(end);
     }
 
-
-    @Override
-    public void receiveChanges(Shift currentBean) {
-
-    }
-
-    @Override
-    public Shift clone() {
-        //Todo
-        return null;
-    }
 }

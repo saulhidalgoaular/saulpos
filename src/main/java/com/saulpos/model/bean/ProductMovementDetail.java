@@ -91,15 +91,4 @@ public class ProductMovementDetail extends BeanImplementation<ProductMovementDet
     public ProductMovementDetail() {
 
     }
-
-    @Override
-    public void receiveChanges(ProductMovementDetail currentBean) {
-
-    }
-
-    @Override
-    public ProductMovementDetail clone() {
-        //Todo
-        return null;
-    }
 }

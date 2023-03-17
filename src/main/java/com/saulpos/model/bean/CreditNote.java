@@ -263,13 +263,4 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         this.cashier.set(cashier);
     }
 
-    @Override
-    public void receiveChanges(CreditNote creditNote) {
-
-    }
-
-    @Override
-    public CreditNote clone() {
-        return null;
-    }
 }

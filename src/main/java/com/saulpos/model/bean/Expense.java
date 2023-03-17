@@ -84,13 +84,4 @@ public class Expense extends BeanImplementation<Expense> {
         this.description.set(description);
     }
 
-    @Override
-    public void receiveChanges(Expense currentBean) {
-    }
-
-    @Override
-    public Expense clone() {
-        //Todo
-        return null;
-    }
 }
