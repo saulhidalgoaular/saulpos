@@ -146,17 +146,6 @@ public class UserB extends BeanImplementation<UserB> {
         this.canChangePassword.set(canChangePassword);
     }
 
-
-    @Override
-    public void receiveChanges(UserB currentBean) {
-
-    }
-
-    @Override
-    public UserB clone() {
-        return null;
-    }
-
     @Override
     public String toString() {
         return "UserB{" +

@@ -28,7 +28,6 @@ import java.util.Map;
 
 public class DatabaseConnection {
     private static DatabaseConnection INSTANCE = null;
-    public SessionFactory sessionFactory;
 
     public EntityManagerFactory entityManagerFactory;
 
@@ -55,8 +54,10 @@ public class DatabaseConnection {
 
     @Deprecated
     public void runHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = getInstance().sessionFactory.openSession();
-        Transaction tx = null;
+
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+
+        /*Transaction tx = null;
         try {
             tx = session.beginTransaction();
 
@@ -74,12 +75,12 @@ public class DatabaseConnection {
             throw e;
         }finally {
             session.close();
-        }
+        }*/
     }
 
     @Deprecated
     public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        List ans = null;
+        /*List ans = null;
         Session session = getInstance().sessionFactory.openSession();
 
         Transaction tx = null;
@@ -103,7 +104,8 @@ public class DatabaseConnection {
             session.close();
         }
 
-        return ans;
+        return ans;*/
+        return null;
     }
 
     public List listAll(String entityName) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
@@ -158,6 +160,7 @@ public class DatabaseConnection {
             query.where(restrictions.toArray(new Predicate[0]));
 
             List results = entityManager.createQuery(query).getResultList();
+            entityManager.close();
             return results;
         }
         catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
@@ -268,47 +271,44 @@ public class DatabaseConnection {
     }
 
     public void delete(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = getInstance().sessionFactory.openSession();
-        Transaction tx = null;
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
-            tx = session.beginTransaction();
-            entityManagerFactory.createEntityManager().remove(entry);
-            tx.commit();
+            entityManager.remove(entry);
+
         }catch (Exception e) {
-            if (tx!=null) tx.rollback();
+
             throw e;
         }finally {
-            session.close();
+            if (entityManager != null){
+                entityManager.close();
+            }
         }
     }
 
     public void update(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = getInstance().sessionFactory.openSession();
-        Transaction tx = null;
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
-            tx = session.beginTransaction();
             entityManagerFactory.createEntityManager().merge(entry);
-            tx.commit();
+
         }catch (Exception e) {
-            if (tx!=null) tx.rollback();
             throw e;
         }finally {
-            session.close();
+            if (entityManager != null){
+                entityManager.close();
+            }
         }
     }
 
     public void saveOrUpdate(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        Session session = getInstance().sessionFactory.openSession();
-        Transaction tx = null;
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
-            tx = session.beginTransaction();
             entityManagerFactory.createEntityManager().merge(entry);
-            tx.commit();
         }catch (Exception e) {
-            if (tx!=null) tx.rollback();
             throw e;
         }finally {
-            session.close();
+            if (entityManager != null){
+                entityManager.close();
+            }
         }
     }
 }
