@@ -1,8 +1,7 @@
 package com.saulpos.presenter;
 
-import com.dlsc.formsfx.model.structure.Field;
-import com.dlsc.formsfx.model.structure.Form;
-import com.dlsc.formsfx.model.structure.Group;
+import com.dlsc.formsfx.model.event.FieldEvent;
+import com.dlsc.formsfx.model.structure.*;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
@@ -12,7 +11,15 @@ import com.saulpos.model.LoginModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.LoginView;
+import javafx.event.ActionEvent;
+import javafx.event.Event;
+import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.input.TouchEvent;
 import javafx.scene.layout.VBox;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
@@ -27,25 +34,27 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
     public void addBinding() {
 
     }
-
     @Override
     public void addComponents() {
 
+        Field usernameField = Field.ofStringType(model.getUsername()).label("Username:").id("username-input");
+        Field passwordField = Field.ofPasswordType(model.getPassword()).label("Password:").required("This field can’t be empty").id("password-input");
         Form form = Form.of(
-                Group.of(
-                        Field.ofStringType(model.getUsername())
-                                .label("Username:"),
-                        Field.ofPasswordType(model.getPassword())
-                                .label("Password:")
-                                .required("This field can’t be empty")
-                )
-
+                Group.of(usernameField, passwordField)
         ).title("Login");
-
 
         mainVBox.getChildren().add(
                 new FormRenderer(form)
         );
+
+        Button loginBTN = new Button("LOG IN");
+        loginBTN.setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent event) {
+                checkLogin(((DataField)usernameField).getValue().toString(),((DataField)passwordField).getValue().toString());
+            }
+        });
+        mainVBox.getChildren().add(loginBTN);
 
         CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
         crudGeneratorParameter.setClazz(UserB.class);
@@ -60,8 +69,8 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
     }
 
-    public void checkLogin(){
-        if (model.checkLogin()){
+    public void checkLogin(String username, String password){
+        if (model.checkLogin(username,password)){
             // Load other window
             System.out.println("OK");
         }else{

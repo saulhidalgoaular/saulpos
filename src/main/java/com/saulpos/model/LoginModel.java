@@ -34,11 +34,10 @@ public class LoginModel extends AbstractModel{
         this.password.set(password);
     }
 
-    public boolean checkLogin(){
-        String exampleUser = "georgy";
-        String examplePass = "chorbov";
-
-        return exampleUser.equals(username.getValue()) && examplePass.equals(password.getValue());
+    public boolean checkLogin(String inputUsername, String inputPassword){
+        String exampleUser = "admin";
+        String examplePass = "admin";
+        return exampleUser.equals(inputUsername) && examplePass.equals(inputPassword);
     }
 
     @Override
