@@ -17,16 +17,19 @@ public abstract class BeanImplementation<I extends BeanImplementation> extends A
 
     @Override
     public void save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        super.save();
         DatabaseConnection.getInstance().createEntry(this);
     }
 
     @Override
     public void update() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        super.update();
         DatabaseConnection.getInstance().update(this);
     }
 
     @Override
     public void saveOrUpdate() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        super.saveOrUpdate();
         DatabaseConnection.getInstance().saveOrUpdate(this);
     }
 
