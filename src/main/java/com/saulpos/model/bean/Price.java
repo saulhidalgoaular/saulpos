@@ -14,25 +14,9 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Price extends BeanImplementation<Price> {
-
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
     private SimpleDoubleProperty price = new SimpleDoubleProperty();
     private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
 
     @NotNull
     @OneToOne

@@ -16,8 +16,6 @@ public class MenuModel extends BeanImplementation<MenuModel> {
 
     private SimpleObjectProperty<MenuType> type = new SimpleObjectProperty<>();
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty name = new SimpleStringProperty();
 
     private SimpleObjectProperty<MenuModel> predecessor = new SimpleObjectProperty();
@@ -39,20 +37,6 @@ public class MenuModel extends BeanImplementation<MenuModel> {
     @Enumerated(EnumType.STRING)
     public MenuType getType() {
         return type.get();
-    }
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id){
-        this.id.set(id);
     }
 
     public @NotNull String getName(){

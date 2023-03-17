@@ -18,8 +18,6 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         InProgress, Completed
     }
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
 
     private SimpleObjectProperty<Invoice.InvoiceStatus> status = new SimpleObjectProperty<>();
@@ -52,19 +50,6 @@ public class CreditNote extends BeanImplementation<CreditNote> {
 
 
     private ObjectProperty<Set<CreditNoteDetails>> creditNoteDetails = new SimpleObjectProperty<>();
-
-    @Id @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @OneToOne
     @NotNull

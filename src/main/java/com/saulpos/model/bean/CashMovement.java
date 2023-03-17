@@ -15,24 +15,9 @@ import java.time.LocalDateTime;
 @Access(AccessType.PROPERTY)
 @Table
 public class CashMovement extends BeanImplementation<CashMovement> {
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
     private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<LocalDateTime>();
     private SimpleDoubleProperty amount = new SimpleDoubleProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId(){
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty(){
-        return id;
-    }
-
-    public void setId(int id){
-        this.id.set(id);
-    }
 
     @OneToOne
     @NotNull

@@ -13,28 +13,12 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 public class Cashier extends BeanImplementation<Cashier> {
-
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty printer = new SimpleStringProperty();
     private SimpleBooleanProperty enabled = new SimpleBooleanProperty();
     private SimpleStringProperty ZReport = new SimpleStringProperty();
     private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
     private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
 
     @NotNull
     @Column(nullable = false)

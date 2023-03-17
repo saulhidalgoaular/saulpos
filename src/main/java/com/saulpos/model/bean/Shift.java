@@ -15,24 +15,9 @@ import java.time.LocalTime;
 @Table
 public class Shift extends BeanImplementation<Shift> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty name = new SimpleStringProperty();
     private ObjectProperty<LocalTime> start = new SimpleObjectProperty<>();
     private ObjectProperty<LocalTime> end = new SimpleObjectProperty<>();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     public String getName() {
         return name.get();

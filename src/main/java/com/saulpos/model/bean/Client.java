@@ -12,8 +12,6 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class Client extends BeanImplementation<Client> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty name = new SimpleStringProperty();
 
     private SimpleStringProperty address = new SimpleStringProperty();
@@ -22,20 +20,6 @@ public class Client extends BeanImplementation<Client> {
 
     public Client() {
 
-    }
-
-    @Id
-    @GeneratedValue
-    public Integer getId() {
-        return id.get();
-    }
-
-    public void setId(Integer id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
     }
 
     @NotNull

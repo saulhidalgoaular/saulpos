@@ -19,8 +19,6 @@ public class Invoice extends BeanImplementation<Invoice> {
         InProgress, Cancelled, Waiting, Completed
     }
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>();
 
     private ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
@@ -95,21 +93,6 @@ public class Invoice extends BeanImplementation<Invoice> {
     }
 
     private ObjectProperty<Set<InvoiceDetail>> invoiceDetails;
-
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     public LocalDateTime getCreationDate() {
         return creationDate.get();

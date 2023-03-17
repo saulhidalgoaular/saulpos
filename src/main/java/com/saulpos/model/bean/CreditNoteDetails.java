@@ -14,27 +14,12 @@ import org.hibernate.annotations.ColumnDefault;
 @Table
 public class CreditNoteDetails extends BeanImplementation<CreditNoteDetails> {
 
-    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
     private final ObjectProperty<CreditNote> creditNote = new SimpleObjectProperty<>();
     private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<Product>();
     private final SimpleIntegerProperty amount = new SimpleIntegerProperty();
     private final SimpleIntegerProperty cancelled = new SimpleIntegerProperty();
     private final SimpleDoubleProperty salePrice = new SimpleDoubleProperty();
     private final SimpleDoubleProperty discount = new SimpleDoubleProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @ManyToOne
     @NotNull

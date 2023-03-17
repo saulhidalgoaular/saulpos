@@ -16,13 +16,13 @@ public class HibernateDataProvider implements AbstractDataProvider {
 
     @Override
     public List getAllItems(Class aClass) {
-        return getAllItems(aClass, null);
+        return getAllItems(aClass, null, SearchType.LIKE);
     }
 
     @Override
-    public List getAllItems(Class aClass, AbstractBean abstractBean)  {
+    public List getAllItems(Class aClass, AbstractBean abstractBean, SearchType type)  {
         try {
-            return DatabaseConnection.getInstance().listBySample(aClass, abstractBean);
+            return DatabaseConnection.getInstance().listBySample(aClass, abstractBean, type);
         } catch (PropertyVetoException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

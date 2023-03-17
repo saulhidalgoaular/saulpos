@@ -12,8 +12,6 @@ import java.time.LocalDate;
 @Table
 public class Discount extends BeanImplementation<Discount> {
 
-    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty description=new SimpleStringProperty();
 
     private ObjectProperty<LocalDate> startingDate=new SimpleObjectProperty<>();
@@ -24,19 +22,6 @@ public class Discount extends BeanImplementation<Discount> {
 
     public Discount() {
 
-    }
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
     }
 
     public String getDescription(){

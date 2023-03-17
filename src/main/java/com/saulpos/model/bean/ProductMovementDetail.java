@@ -14,26 +14,10 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class ProductMovementDetail extends BeanImplementation<ProductMovementDetail> {
 
-    private SimpleStringProperty id = new SimpleStringProperty();
     private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
     private SimpleIntegerProperty amount = new SimpleIntegerProperty();
     private SimpleStringProperty type = new SimpleStringProperty();
     private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<ProductMovement>();
-
-    @Id
-    @GeneratedValue
-    public String getId() {
-        return id.get();
-    }
-
-    public void setId(String id) {
-        this.id.set(id);
-    }
-
-    public SimpleStringProperty idProperty() {
-        return id;
-    }
-
 
     @OneToOne
     @NotNull

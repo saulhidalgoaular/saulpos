@@ -16,7 +16,6 @@ public class Product extends BeanImplementation<Product> {
 
     public Product() {
     }
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
     private SimpleStringProperty brand = new SimpleStringProperty();
@@ -31,20 +30,6 @@ public class Product extends BeanImplementation<Product> {
     private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
     private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
     private ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @NotNull
     public String getDescription() {

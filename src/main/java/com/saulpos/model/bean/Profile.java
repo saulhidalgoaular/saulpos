@@ -14,23 +14,8 @@ import java.util.Set;
 @Table
 public class Profile  extends BeanImplementation<Profile> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     public String getDescription() {
         return description.get();

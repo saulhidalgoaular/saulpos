@@ -12,23 +12,9 @@ import javafx.beans.property.SimpleObjectProperty;
 //tipo_de_usuario_puede
 public class Permission extends BeanImplementation<Permission> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
     private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @ManyToOne
     public Profile getProfile(){

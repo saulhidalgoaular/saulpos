@@ -14,8 +14,6 @@ import org.hibernate.annotations.ColumnDefault;
 @Table
 public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
 
-    private final SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     //codigo_de_articulo : internal invoice code
     private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<Invoice>();
 
@@ -37,20 +35,6 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
     //descuento
     @ColumnDefault("0.00")
     private final SimpleDoubleProperty discount = new SimpleDoubleProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
 
     @OneToOne
     public Product getProduct() {

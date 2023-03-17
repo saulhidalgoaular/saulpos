@@ -19,7 +19,6 @@ public class Assignment extends BeanImplementation<Assignment> {
         Open, Closed, Cancelled
     }
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     @OneToOne
     @Column(nullable = false)
     private SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
@@ -47,20 +46,6 @@ public class Assignment extends BeanImplementation<Assignment> {
 
     public void setStatus(AssignmentStatus status) {
         this.status.set(status);
-    }
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
     }
 
     @OneToOne

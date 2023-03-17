@@ -16,8 +16,6 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
     public enum Medium{
         Debit, Credit, AmericanExpress
     }
-
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<LocalDate>();
     private SimpleObjectProperty<BankPointOfSale> bankPontOfSale = new SimpleObjectProperty<BankPointOfSale>();
     private SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
@@ -96,19 +94,7 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
     public void setBankPontOfSale(BankPointOfSale bankPontOfSale) {
         this.bankPontOfSale.set(bankPontOfSale);
     }
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
 
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
     @NotNull
     @Column(nullable = false)
     public LocalDate getDate() {

@@ -11,23 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 public class Message extends BeanImplementation<Message> {
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
-
     private SimpleStringProperty userMessage = new SimpleStringProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId(){
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty(){
-        return id;
-    }
-
-    public void setId(int id){
-        this.id.set(id);
-    }
 
     @NotNull
     public String getUserMessage(){

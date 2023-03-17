@@ -17,7 +17,6 @@ public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
         Debit, Credit, AmericanExpress, All
     }
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty batch = new SimpleStringProperty();
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
@@ -77,20 +76,6 @@ public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
 
     public void setDescription(String description) {
         this.description.set(description);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
     }
 
 }

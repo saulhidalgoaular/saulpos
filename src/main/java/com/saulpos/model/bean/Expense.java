@@ -12,25 +12,10 @@ import java.time.LocalDate;
 @Table
 public class Expense extends BeanImplementation<Expense> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
     private SimpleStringProperty concept = new SimpleStringProperty();
     private SimpleDoubleProperty amount = new SimpleDoubleProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId(){
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty(){
-        return id;
-    }
-
-    public void setId(int id){
-        this.id.set(id);
-    }
 
     @NotNull
     public LocalDate getDate(){

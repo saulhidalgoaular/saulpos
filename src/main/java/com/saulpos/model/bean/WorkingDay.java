@@ -14,8 +14,6 @@ import java.util.Date;
 @Access(AccessType.PROPERTY)
 @Table
 public class WorkingDay extends BeanImplementation<WorkingDay> {
-
-    private SimpleIntegerProperty id =new SimpleIntegerProperty();
     private  ObjectProperty<Date> date = new SimpleObjectProperty<>();
     private SimpleStringProperty saleCode =new SimpleStringProperty();
     private SimpleDoubleProperty moneyCreditCard= new SimpleDoubleProperty();
@@ -38,19 +36,6 @@ public class WorkingDay extends BeanImplementation<WorkingDay> {
     private SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
     private SimpleBooleanProperty closed = new SimpleBooleanProperty();
 
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
     @NotNull
     public Date getDate() {
         return this.date.get();

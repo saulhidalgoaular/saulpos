@@ -3,6 +3,7 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -130,7 +131,7 @@ public class DatabaseConnection {
         }
     }
 
-    public List listBySample(Class clazz, AbstractBean sample)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public List listBySample(Class clazz, AbstractBean sample, AbstractDataProvider.SearchType type)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
 
         try {
             CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
@@ -142,12 +143,18 @@ public class DatabaseConnection {
             final Field[] allFields = sample.getClass().getDeclaredFields();
             List<Predicate> restrictions = new ArrayList<>();
             for (Field field : allFields) {
-                if (field.isAnnotationPresent(Search.class)) {
-                    final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                    if (invoke.getValue() != null) {
-                        // Add restriction
-                        String searchString = (String) invoke.getValue();
-                        restrictions.add(builder.like(root.get(field.getName()), "%" + searchString + "%"));
+                final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                if (invoke.getValue() != null) {
+                    // Add restriction
+                    String searchString = (String) invoke.getValue();
+                    if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
+                        restrictions.add(
+                                builder.like(root.get(field.getName()), "%" + searchString + "%")
+                        );
+                    }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
+                        restrictions.add(
+                                builder.equal(root.get(field.getName()), searchString)
+                        );
                     }
                 }
             }

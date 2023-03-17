@@ -16,8 +16,8 @@ public class Main extends Application {
         DatabaseConnection.getInstance().initialize();
 
         UserB georgy = new UserB();
-        georgy.setUserName("georgy");
-        georgy.setPassword("chorbov");
+        georgy.setUserName("admin");
+        georgy.setPassword("admin");
         georgy.save();
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/login.fxml"));
@@ -25,7 +25,7 @@ public class Main extends Application {
         LoginPresenter loginPresenter = new LoginPresenter(loginModel);
         fxmlLoader.setController(loginPresenter);
 
-        Scene scene = new Scene(fxmlLoader.load(), 640, 200);
+        Scene scene = new Scene(fxmlLoader.load(), 700, 200);
 
         stage.setTitle("Login!");
         stage.setScene(scene);

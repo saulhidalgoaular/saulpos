@@ -15,25 +15,11 @@ import java.util.Set;
 @Table
 public class ProductMovement extends BeanImplementation<ProductMovement> {
 
-    private SimpleStringProperty id = new SimpleStringProperty();
     private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty code = new SimpleStringProperty();
     private SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
     private ObjectProperty<Set<ProductMovementDetail>> price = new SimpleObjectProperty<>();
-    @Id
-    @GeneratedValue
-    public String getId(){
-        return id.get();
-    }
-
-    public SimpleStringProperty idProperty(){
-        return id;
-    }
-
-    public void setId(String id){
-        this.id.set(id);
-    }
 
     public @NotNull LocalDateTime getDate(){
         return date.get();

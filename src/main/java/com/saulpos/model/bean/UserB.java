@@ -15,7 +15,6 @@ import org.hibernate.annotations.ColumnDefault;
 @Table
 public class UserB extends BeanImplementation<UserB> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     @Search
     private SimpleStringProperty userName = new SimpleStringProperty();
     private SimpleStringProperty password = new SimpleStringProperty();
@@ -26,20 +25,6 @@ public class UserB extends BeanImplementation<UserB> {
     private SimpleBooleanProperty shouldChangePassword = new SimpleBooleanProperty();
     private SimpleBooleanProperty canChangePassword = new SimpleBooleanProperty();
 
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @NotNull
     public String getUserName() {
@@ -149,7 +134,7 @@ public class UserB extends BeanImplementation<UserB> {
     @Override
     public String toString() {
         return "UserB{" +
-                "id=" + id +
+                "id=" + getId() +
                 ", userName=" + userName +
                 ", password=" + password +
                 ", name=" + name +

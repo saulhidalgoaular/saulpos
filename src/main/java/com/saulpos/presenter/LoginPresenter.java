@@ -39,6 +39,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
         Field usernameField = Field.ofStringType(model.getUsername()).label("Username:").id("username-input");
         Field passwordField = Field.ofPasswordType(model.getPassword()).label("Password:").required("This field can’t be empty").id("password-input");
+
         Form form = Form.of(
                 Group.of(usernameField, passwordField)
         ).title("Login");
@@ -48,29 +49,12 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
         );
 
         Button loginBTN = new Button("LOG IN");
-        loginBTN.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent event) {
-                checkLogin(((DataField)usernameField).getValue().toString(),((DataField)passwordField).getValue().toString());
-            }
-        });
+        loginBTN.setOnAction(event -> checkLogin());
         mainVBox.getChildren().add(loginBTN);
-
-        CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
-        crudGeneratorParameter.setClazz(UserB.class);
-        crudGeneratorParameter.setDataProvider(new HibernateDataProvider());
-        CrudGenerator<UserB> crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
-        try {
-            CrudPresenter crud = crudGenerator.generate();
-            mainVBox.getChildren().add(crud.getView().getMainView());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-
     }
 
-    public void checkLogin(String username, String password){
-        if (model.checkLogin(username,password)){
+    public void checkLogin(){
+        if (model.checkLogin()){
             // Load other window
             System.out.println("OK");
         }else{

@@ -12,26 +12,10 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Deposit extends BeanImplementation<Deposit> {
-
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
     private SimpleStringProperty bank =new SimpleStringProperty();
     private SimpleStringProperty number =new SimpleStringProperty();
     private SimpleDoubleProperty amount=new SimpleDoubleProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
 
     @NotNull
     public String getBank() {

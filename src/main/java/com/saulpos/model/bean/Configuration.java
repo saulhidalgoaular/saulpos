@@ -10,23 +10,12 @@ import jakarta.validation.constraints.NotNull;
 @Access(AccessType.PROPERTY)
 @Table
 public class Configuration extends BeanImplementation<Configuration> {
-
-    private int id;
     private String key;
     private String value;
     private String name;
 
     public Configuration() {
 
-    }
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     @NotNull

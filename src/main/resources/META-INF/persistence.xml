@@ -4,7 +4,7 @@
              version="2.0">
     <persistence-unit name="jpa-saulpos" transaction-type="RESOURCE_LOCAL">
         <properties>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:test"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:h2:mem:test;TRACE_LEVEL_FILE=4;TRACE_LEVEL_SYSTEM_OUT=3"/>
             <property name="jakarta.persistence.jdbc.user" value="sa"/>
             <property name="jakarta.persistence.jdbc.password" value=""/>
             <property name="jakarta.persistence.schema-generation.database.action" value="drop-and-create"/>

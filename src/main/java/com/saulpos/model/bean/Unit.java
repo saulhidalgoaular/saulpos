@@ -11,22 +11,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class Unit extends BeanImplementation<Unit> {
 
-    private SimpleIntegerProperty id = new SimpleIntegerProperty();
     private SimpleStringProperty description = new SimpleStringProperty();
-
-    @Id
-    @GeneratedValue
-    public int getId() {
-        return id.get();
-    }
-
-    public SimpleIntegerProperty idProperty() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id.set(id);
-    }
 
     @NotNull
     public String getDescription() {
