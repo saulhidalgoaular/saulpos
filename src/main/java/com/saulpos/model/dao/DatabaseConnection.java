@@ -2,6 +2,7 @@ package com.saulpos.model.dao;
 
 import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -44,11 +45,6 @@ public class DatabaseConnection {
     }
 
     public void initialize() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        /*Configuration configuration = new Configuration().configure();
-        for (Class cls : getEntityClassesFromPackage("com.saulpos.model.bean")) {
-            configuration.addAnnotatedClass(cls);
-        }
-        sessionFactory = configuration.buildSessionFactory();*/
         entityManagerFactory = Persistence.createEntityManagerFactory("jpa-saulpos");
     }
 
@@ -155,6 +151,7 @@ public class DatabaseConnection {
                     }
                 }
             }
+            restrictions.add(builder.equal(root.get("beanStatus"), AbstractBeanImplementationSoftDelete.BeanStatus.Active));
 
             query.where(restrictions.toArray(new Predicate[0]));
 
