@@ -111,6 +111,12 @@
             <artifactId>jaxb-runtime</artifactId>
             <version>3.0.0</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/commons-codec/commons-codec -->
+        <dependency>
+            <groupId>commons-codec</groupId>
+            <artifactId>commons-codec</artifactId>
+            <version>1.15</version>
+        </dependency>
         <!-- https://mvnrepository.com/artifact/com.dlsc.formsfx/formsfx-core -->
         <dependency>
             <groupId>com.dlsc.formsfx</groupId>
