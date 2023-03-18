@@ -147,6 +147,7 @@ public class UserB extends BeanImplementation<UserB> {
         passwordHashed.set(
                 DigestUtils.sha1Hex(password.get())
         );
+        password.set(null);
     }
 
     @Override

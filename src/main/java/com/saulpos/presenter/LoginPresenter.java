@@ -4,16 +4,24 @@ import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.saulpos.Main;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
+import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
+
+import java.io.IOException;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
     @FXML
     public VBox mainVBox;
+
+    private Form form;
 
     public LoginPresenter(LoginModel nModel) {
         super(nModel);
@@ -23,14 +31,18 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
     public void addBinding() {
 
     }
+
     @Override
     public void addComponents() {
 
-        Field usernameField = Field.ofStringType(model.getUsername()).label("Username:").id("username-input");
-        Field passwordField = Field.ofPasswordType(model.getPassword()).label("Password:").required("This field can’t be empty").id("password-input");
-
-        Form form = Form.of(
-                Group.of(usernameField, passwordField)
+        form = Form.of(
+                Group.of(
+                        Field.ofStringType(model.usernameProperty())
+                                .label("Username"),
+                        Field.ofPasswordType(model.passwordProperty())
+                                .label("Password")
+                                .required("This field can’t be empty")
+                )
         ).title("Login");
 
         mainVBox.getChildren().add(
@@ -44,8 +56,11 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
     public void checkLogin() {
         try {
-            if (model.checkLogin()) {
+            form.persist();
+            UserB userB = model.checkLogin();
+            if (userB != null) {
                 // Load other window
+
                 System.out.println("OK");
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Please try again.");
@@ -54,6 +69,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
             DialogBuilder.createExceptionDialog("Error", "Error checking the user in database", e.getMessage(), e);
         }
     }
+
 
     @Override
     public void initializeComponents() {

@@ -12,7 +12,7 @@ import java.util.List;
 
 public class LoginModel extends AbstractModel{
 
-    private SimpleStringProperty username = new SimpleStringProperty("");
+    private SimpleStringProperty username = new SimpleStringProperty("test");
 
     private SimpleStringProperty password = new SimpleStringProperty("");
 
@@ -40,14 +40,16 @@ public class LoginModel extends AbstractModel{
         this.password.set(password);
     }
 
-    public boolean checkLogin() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public UserB checkLogin() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         UserB userB = new UserB();
         userB.setUserName(username.getValue());
         userB.setPassword(password.getValue());
         userB.hashPassword();
         final List list = DatabaseConnection.getInstance().listBySample(UserB.class, userB, AbstractDataProvider.SearchType.EQUAL);
-        System.out.println("List " + list.size());
-        return !list.isEmpty();
+        if (list.isEmpty()){
+            return null;
+        }
+        return (UserB) list.get(0);
     }
 
     @Override

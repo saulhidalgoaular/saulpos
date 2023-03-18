@@ -139,9 +139,13 @@ public class DatabaseConnection {
             List<Predicate> restrictions = new ArrayList<>();
             for (Field field : allFields) {
                 final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                if (invoke.getValue() != null) {
+                Object value = invoke.getValue();
+                if (value != null) {
+                    if (!(value instanceof String) || ((String) value).isBlank()){
+                        continue;
+                    }
                     // Add restriction
-                    String searchString = (String) invoke.getValue();
+                    String searchString = (String) value;
                     if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
                         restrictions.add(
                                 builder.like(root.get(field.getName()), "%" + searchString + "%")
