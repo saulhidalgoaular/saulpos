@@ -5,7 +5,6 @@ import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import org.hibernate.annotations.ColumnDefault;
@@ -18,6 +17,7 @@ public class UserB extends BeanImplementation<UserB> {
     @Search
     private SimpleStringProperty userName = new SimpleStringProperty();
     private SimpleStringProperty password = new SimpleStringProperty();
+    private SimpleStringProperty passwordHashed = new SimpleStringProperty();
     private SimpleStringProperty name = new SimpleStringProperty();
     private SimpleStringProperty lastname = new SimpleStringProperty();
     private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty<>();
@@ -129,6 +129,12 @@ public class UserB extends BeanImplementation<UserB> {
 
     public void setCanChangePassword(boolean canChangePassword) {
         this.canChangePassword.set(canChangePassword);
+    }
+
+    public void hash() {
+        passwordHashed.set(
+                DigestUtils.sha1Hex(password.get())
+        );
     }
 
     @Override
