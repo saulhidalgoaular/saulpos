@@ -1,25 +1,14 @@
 package com.saulpos.presenter;
 
-import com.dlsc.formsfx.model.event.FieldEvent;
-import com.dlsc.formsfx.model.structure.*;
+import com.dlsc.formsfx.model.structure.Field;
+import com.dlsc.formsfx.model.structure.Form;
+import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
-import com.saulpos.javafxcrudgenerator.CrudGenerator;
-import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
-import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
-import com.saulpos.model.bean.UserB;
-import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.LoginView;
-import javafx.event.ActionEvent;
-import javafx.event.Event;
-import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.TouchEvent;
 import javafx.scene.layout.VBox;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
@@ -53,12 +42,16 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
         mainVBox.getChildren().add(loginBTN);
     }
 
-    public void checkLogin(){
-        if (model.checkLogin()){
-            // Load other window
-            System.out.println("OK");
-        }else{
-            DialogBuilder.createError("Error" ,"Invalid username or password", "Please try again.");
+    public void checkLogin() {
+        try {
+            if (model.checkLogin()) {
+                // Load other window
+                System.out.println("OK");
+            } else {
+                DialogBuilder.createError("Error", "Invalid username or password", "Please try again.");
+            }
+        } catch (Exception e) {
+            DialogBuilder.createExceptionDialog("Error", "Error checking the user in database", e.getMessage(), e);
         }
     }
 

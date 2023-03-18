@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.hibernate.annotations.ColumnDefault;
 
 @Entity
@@ -25,6 +26,17 @@ public class UserB extends BeanImplementation<UserB> {
     private SimpleBooleanProperty shouldChangePassword = new SimpleBooleanProperty();
     private SimpleBooleanProperty canChangePassword = new SimpleBooleanProperty();
 
+    public String getPasswordHashed() {
+        return passwordHashed.get();
+    }
+
+    public void setPasswordHashed(String passwordHashed) {
+        this.passwordHashed.set(passwordHashed);
+    }
+
+    public SimpleStringProperty passwordHashedProperty() {
+        return passwordHashed;
+    }
 
     @NotNull
     public String getUserName() {
@@ -131,7 +143,7 @@ public class UserB extends BeanImplementation<UserB> {
         this.canChangePassword.set(canChangePassword);
     }
 
-    public void hash() {
+    public void hashPassword() {
         passwordHashed.set(
                 DigestUtils.sha1Hex(password.get())
         );

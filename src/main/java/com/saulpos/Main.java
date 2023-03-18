@@ -15,10 +15,11 @@ public class Main extends Application {
     public void start(Stage stage) throws Exception {
         DatabaseConnection.getInstance().initialize();
 
-        UserB georgy = new UserB();
-        georgy.setUserName("admin");
-        georgy.setPassword("admin");
-        georgy.save();
+        UserB admin = new UserB();
+        admin.setUserName("admin");
+        admin.setPassword("admin");
+        admin.hashPassword();
+        admin.save();
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/login.fxml"));
         LoginModel loginModel = new LoginModel();

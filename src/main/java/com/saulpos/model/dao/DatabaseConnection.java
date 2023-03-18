@@ -1,6 +1,5 @@
 package com.saulpos.model.dao;
 
-import com.saulpos.javafxcrudgenerator.annotations.Search;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
@@ -10,10 +9,6 @@ import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import javafx.beans.property.Property;
-import org.hibernate.Session;
-import org.hibernate.SessionFactory;
-import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
 
 import java.beans.PropertyVetoException;
 import java.io.File;
@@ -163,6 +158,7 @@ public class DatabaseConnection {
             query.where(restrictions.toArray(new Predicate[0]));
 
             List results = entityManager.createQuery(query).getResultList();
+            System.out.println("Results");
             entityManager.close();
             return results;
         }
