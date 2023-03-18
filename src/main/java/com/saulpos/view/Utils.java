@@ -8,6 +8,7 @@ import javafx.animation.Timeline;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.util.Duration;
@@ -18,7 +19,12 @@ import java.util.ArrayList;
 public class Utils {
     public static void goForward(final String fxmlPath, final AbstractPresenter controller,
                                  final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(fxmlPath, controller, classInstance, mainPane, mainPane.getScene().getWidth(), .0, false);
+        goTo(fxmlPath, controller, classInstance, mainPane, mainPane.getScene().getWidth(), .0, true);
+    }
+
+    public static void setFullScreen(final Pane mainPane) throws IOException {
+        mainPane.setMinHeight(800);
+        mainPane.setMinWidth(800);
     }
 
     public static void goBack(final String fxmlPath, final AbstractPresenter controller,

@@ -8,11 +8,17 @@ import com.saulpos.Main;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.MainModel;
+import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
+import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.Utils;
+import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Menu;
+import javafx.scene.control.MenuBar;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
@@ -63,7 +69,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 MainModel mainModel = new MainModel(userB);
                 MainPresenter mainPresenter = new MainPresenter(mainModel);
                 Utils.goForward("/main.fxml", mainPresenter, getClass(), mainVBox);
-                System.out.println("OK");
+                Utils.setFullScreen(mainVBox);
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Please try again.").showAndWait();
             }
