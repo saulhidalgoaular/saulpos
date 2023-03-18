@@ -17,17 +17,17 @@ import java.util.ArrayList;
 
 public class Utils {
     public static void goForward(final String fxmlPath, final AbstractPresenter controller,
-                                 final Class classInstance, final Pane mainPane, final Pane innerPane) throws IOException {
+                                 final Class classInstance, final Pane mainPane) throws IOException {
         goTo(fxmlPath, controller, classInstance, mainPane, mainPane.getScene().getWidth(), .0, false);
     }
 
     public static void goBack(final String fxmlPath, final AbstractPresenter controller,
-                       final Class classInstance, final Pane mainPane, final Pane innerPane) throws IOException {
+                       final Class classInstance, final Pane mainPane) throws IOException {
         goTo(fxmlPath, controller, classInstance, mainPane, (mainPane.getScene().getWidth()) * (-1), .0, false);
     }
 
     public static void goBackRemove(final String fxmlPath, final AbstractPresenter controller,
-                             final Class classInstance, final Pane mainPane, final Pane innerPane) throws IOException {
+                             final Class classInstance, final Pane mainPane) throws IOException {
         goTo(fxmlPath, controller, classInstance, mainPane,.0, mainPane.getScene().getWidth(), true);
     }
 

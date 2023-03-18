@@ -12,7 +12,7 @@ import java.util.List;
 
 public class LoginModel extends AbstractModel{
 
-    private SimpleStringProperty username = new SimpleStringProperty("test");
+    private SimpleStringProperty username = new SimpleStringProperty("");
 
     private SimpleStringProperty password = new SimpleStringProperty("");
 

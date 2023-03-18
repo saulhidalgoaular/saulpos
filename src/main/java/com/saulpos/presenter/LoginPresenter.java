@@ -7,11 +7,11 @@ import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.saulpos.Main;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
+import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
+import com.saulpos.view.Utils;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.VBox;
 
@@ -60,13 +60,15 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
             UserB userB = model.checkLogin();
             if (userB != null) {
                 // Load other window
-
+                MainModel mainModel = new MainModel(userB);
+                MainPresenter mainPresenter = new MainPresenter(mainModel);
+                Utils.goForward("/main.fxml", mainPresenter, getClass(), mainVBox);
                 System.out.println("OK");
             } else {
-                DialogBuilder.createError("Error", "Invalid username or password", "Please try again.");
+                DialogBuilder.createError("Error", "Invalid username or password", "Please try again.").showAndWait();
             }
         } catch (Exception e) {
-            DialogBuilder.createExceptionDialog("Error", "Error checking the user in database", e.getMessage(), e);
+            DialogBuilder.createExceptionDialog("Error", "Error checking the user in database", e.getMessage(), e).showAndWait();
         }
     }
 
