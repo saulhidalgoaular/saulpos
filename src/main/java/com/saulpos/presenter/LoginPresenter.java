@@ -6,32 +6,18 @@ import com.dlsc.formsfx.model.structure.Group;
 import com.dlsc.formsfx.view.controls.SimplePasswordControl;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.dlsc.formsfx.view.renderer.GroupRenderer;
-import com.saulpos.Main;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.MainModel;
-import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
-import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.MainView;
 import com.saulpos.view.Utils;
-import com.saulpos.view.menu.MenuBarGenerator;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
-import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Menu;
-import javafx.scene.control.MenuBar;
 import javafx.scene.control.PasswordField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-
-import java.io.IOException;
-import java.util.HashSet;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
     @FXML

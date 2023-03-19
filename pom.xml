@@ -159,7 +159,7 @@
                         <id>default-cli</id>
                         <configuration>
                             <mainClass>
-                                com.saulpos.Main
+                                com.saulpos.Launcher
                             </mainClass>
                             <launcher>app</launcher>
                             <jlinkZipName>app</jlinkZipName>
@@ -172,7 +172,7 @@
                     <execution>
                         <id>debug</id>
                         <configuration>
-                            <mainClass>com.saulpos.Main</mainClass>
+                            <mainClass>com.saulpos.Launcher</mainClass>
                             <options>
                                 <option>-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=*:63342</option>
                             </options>

@@ -3,6 +3,7 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.UserB;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -314,5 +315,13 @@ public class DatabaseConnection {
                 entityManager.close();
             }
         }
+    }
+
+    public void saveDefaultValues() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+        UserB admin = new UserB();
+        admin.setUserName("admin");
+        admin.setPassword("admin");
+        admin.hashPassword();
+        admin.save();
     }
 }
