@@ -17,7 +17,7 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
         Debit, Credit, AmericanExpress
     }
     private ObjectProperty<LocalDate> date = new SimpleObjectProperty<LocalDate>();
-    private SimpleObjectProperty<BankPointOfSale> bankPontOfSale = new SimpleObjectProperty<BankPointOfSale>();
+    private SimpleObjectProperty<BankPOS> bankPontOfSale = new SimpleObjectProperty<BankPOS>();
     private SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
     private SimpleFloatProperty declaration = new SimpleFloatProperty();
     private SimpleFloatProperty actualAmount = new SimpleFloatProperty();
@@ -83,15 +83,15 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
 
     @OneToOne
     @JoinColumn(nullable = false)
-    public BankPointOfSale getBankPontOfSale() {
+    public BankPOS getBankPontOfSale() {
         return bankPontOfSale.get();
     }
 
-    public SimpleObjectProperty<BankPointOfSale> bankPontOfSaleProperty() {
+    public SimpleObjectProperty<BankPOS> bankPontOfSaleProperty() {
         return bankPontOfSale;
     }
 
-    public void setBankPontOfSale(BankPointOfSale bankPontOfSale) {
+    public void setBankPontOfSale(BankPOS bankPontOfSale) {
         this.bankPontOfSale.set(bankPontOfSale);
     }
 

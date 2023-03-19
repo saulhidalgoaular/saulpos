@@ -33,11 +33,8 @@ public class DefaultMenuGenerator {
         MenuModel profiles = new MenuModel("Profiles", system, null, "ManageProfileMenuAction", MenuModel.MenuType.Administrative);
         answer.add(profiles);
 
-        MenuModel bankPOS = new MenuModel("Bank Point of Sale", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel bankPOS = new MenuModel("Bank Point of Sale", system, null, "ManageBankPOSMenuAction", MenuModel.MenuType.Administrative);
         answer.add(bankPOS);
-
-        MenuModel resendSales = new MenuModel("Resend Sales", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
-        answer.add(resendSales);
 
         MenuModel users = new MenuModel("Users", system, null, "ManageUserMenuAction", MenuModel.MenuType.Administrative);
         answer.add(users);
@@ -56,7 +53,7 @@ public class DefaultMenuGenerator {
         MenuModel closeDay = new MenuModel("Close Day", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(closeDay);
 
-        MenuModel messages = new MenuModel("Messages", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel messages = new MenuModel("Messages", shop, null, "ManageMessagesMenuAction", MenuModel.MenuType.Administrative);
         answer.add(messages);
 
         MenuModel configurePrinter = new MenuModel("Configure Printer", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
@@ -65,7 +62,7 @@ public class DefaultMenuGenerator {
         MenuModel reports = new MenuModel("Reports", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(reports);
 
-        MenuModel shifts = new MenuModel("Shifts", shop, null, "TestMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel shifts = new MenuModel("Shifts", shop, null, "ManageShiftsMenuAction", MenuModel.MenuType.Administrative);
         answer.add(shifts);
 
         return answer;

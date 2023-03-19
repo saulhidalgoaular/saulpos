@@ -3,38 +3,37 @@ package com.saulpos.model.bean;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-import org.hibernate.annotations.ColumnDefault;
+
 // punto de venta de banco
 // 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
-    public enum Type{
+public class BankPOS extends BeanImplementation<BankPOS> {
+    public enum POSType {
         Debit, Credit, AmericanExpress, All
     }
 
     private SimpleStringProperty description = new SimpleStringProperty();
     private SimpleStringProperty batch = new SimpleStringProperty();
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
-    private SimpleObjectProperty<BankPointOfSale.Type> type = new SimpleObjectProperty<BankPointOfSale.Type>();
+    private SimpleObjectProperty<BankPOS.POSType> POSType = new SimpleObjectProperty<BankPOS.POSType>();
 
     @NotNull
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    public Type getType() {
-        return type.get();
+    public BankPOS.POSType getPOSType() {
+        return POSType.get();
     }
 
-    public SimpleObjectProperty<Type> typeProperty() {
-        return type;
+    public SimpleObjectProperty<BankPOS.POSType> POSTypeProperty() {
+        return POSType;
     }
 
-    public void setType(Type type) {
-        this.type.set(type);
+    public void setPOSType(BankPOS.POSType POSType) {
+        this.POSType.set(POSType);
     }
 
     @OneToOne
@@ -65,7 +64,7 @@ public class BankPointOfSale extends BeanImplementation<BankPointOfSale> {
         this.batch.set(batch);
     }
 
-    @ColumnDefault("")
+
     public String getDescription() {
         return description.get();
     }

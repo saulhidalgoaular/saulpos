@@ -4,7 +4,6 @@ import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -15,46 +14,46 @@ import java.time.LocalTime;
 @Table
 public class Shift extends BeanImplementation<Shift> {
 
-    private SimpleStringProperty name = new SimpleStringProperty();
-    private ObjectProperty<LocalTime> start = new SimpleObjectProperty<>();
-    private ObjectProperty<LocalTime> end = new SimpleObjectProperty<>();
+    private SimpleStringProperty shiftName = new SimpleStringProperty();
+    private ObjectProperty<LocalTime> shiftStart = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalTime> shiftEnd = new SimpleObjectProperty<>();
 
-    public String getName() {
-        return name.get();
+    public String getShiftName() {
+        return shiftName.get();
     }
 
-    public SimpleStringProperty nameProperty() {
-        return name;
+    public SimpleStringProperty shiftNameProperty() {
+        return shiftName;
     }
 
-    public void setName(String name) {
-        this.name.set(name);
-    }
-
-    @NotNull
-    public LocalTime getStart() {
-        return start.get();
-    }
-
-    public ObjectProperty<LocalTime> startProperty() {
-        return start;
-    }
-
-    public void setStart(LocalTime start) {
-        this.start.set(start);
+    public void setShiftName(String shiftName) {
+        this.shiftName.set(shiftName);
     }
 
     @NotNull
-    public LocalTime getEnd() {
-        return end.get();
+    public LocalTime getShiftStart() {
+        return shiftStart.get();
     }
 
-    public ObjectProperty<LocalTime> endProperty() {
-        return end;
+    public ObjectProperty<LocalTime> shiftStartProperty() {
+        return shiftStart;
     }
 
-    public void setEnd(LocalTime end) {
-        this.end.set(end);
+    public void setShiftStart(LocalTime shiftStart) {
+        this.shiftStart.set(shiftStart);
+    }
+
+    @NotNull
+    public LocalTime getShiftEnd() {
+        return shiftEnd.get();
+    }
+
+    public ObjectProperty<LocalTime> shiftEndProperty() {
+        return shiftEnd;
+    }
+
+    public void setShiftEnd(LocalTime shiftEnd) {
+        this.shiftEnd.set(shiftEnd);
     }
 
 }
