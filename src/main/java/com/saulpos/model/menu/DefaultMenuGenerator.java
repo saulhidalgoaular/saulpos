@@ -13,7 +13,7 @@ public class DefaultMenuGenerator {
         MenuModel session = new MenuModel("Session", null, null, null, MenuModel.MenuType.Administrative);
         answer.add(session);
 
-        MenuModel killSession = new MenuModel("Kill Session (Exit)", session, "null", "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel killSession = new MenuModel("Log out", session, "null", "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(killSession);
 
         // SYSTEM ROOT MENU
