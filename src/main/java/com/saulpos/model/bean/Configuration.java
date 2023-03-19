@@ -3,45 +3,54 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.SimpleStringProperty;
 
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
 public class Configuration extends BeanImplementation<Configuration> {
-    private String key;
-    private String value;
-    private String name;
+    private SimpleStringProperty keyConfig = new SimpleStringProperty();
+    private SimpleStringProperty valueConfig = new SimpleStringProperty();
+    private SimpleStringProperty name = new SimpleStringProperty();
 
     public Configuration() {
 
     }
 
-    @NotNull
-    public String getKey() {
-        return key;
+    public String getKeyConfig() {
+        return keyConfig.get();
     }
 
-    public void setKey(String key) {
-        this.key = key;
+    public SimpleStringProperty keyConfigProperty() {
+        return keyConfig;
     }
 
-    @NotNull
-    public String getValue() {
-        return value;
+    public void setKeyConfig(String keyConfig) {
+        this.keyConfig.set(keyConfig);
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public String getValueConfig() {
+        return valueConfig.get();
+    }
+
+    public SimpleStringProperty valueConfigProperty() {
+        return valueConfig;
+    }
+
+    public void setValueConfig(String valueConfig) {
+        this.valueConfig.set(valueConfig);
     }
 
     public String getName() {
+        return name.get();
+    }
+
+    public SimpleStringProperty nameProperty() {
         return name;
     }
 
     public void setName(String name) {
-        this.name = name;
+        this.name.set(name);
     }
-
 }

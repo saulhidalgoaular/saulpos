@@ -17,6 +17,9 @@ public class Profile  extends BeanImplementation<Profile> {
     private SimpleStringProperty description = new SimpleStringProperty();
     private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
 
+    public Profile() {
+    }
+
     public String getDescription() {
         return description.get();
     }

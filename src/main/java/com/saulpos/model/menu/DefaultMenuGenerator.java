@@ -24,13 +24,13 @@ public class DefaultMenuGenerator {
         MenuModel cashierMachine = new MenuModel("Cash Registers", system, null, "ManageCashierMenuAction", MenuModel.MenuType.Administrative);
         answer.add(cashierMachine);
 
-        MenuModel configuration = new MenuModel("Configuration", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel configuration = new MenuModel("Configuration", system, null, "ManageConfigMenuAction", MenuModel.MenuType.Administrative);
         answer.add(configuration);
 
         MenuModel configureStore = new MenuModel("Configure Store", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(configureStore);
 
-        MenuModel profiles = new MenuModel("Profiles", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel profiles = new MenuModel("Profiles", system, null, "ManageProfileMenuAction", MenuModel.MenuType.Administrative);
         answer.add(profiles);
 
         MenuModel bankPOS = new MenuModel("Bank Point of Sale", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
