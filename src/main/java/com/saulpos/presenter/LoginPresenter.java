@@ -3,7 +3,9 @@ package com.saulpos.presenter;
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
+import com.dlsc.formsfx.view.controls.SimplePasswordControl;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
+import com.dlsc.formsfx.view.renderer.GroupRenderer;
 import com.saulpos.Main;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
@@ -14,14 +16,21 @@ import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.Utils;
 import com.saulpos.view.menu.MenuBarGenerator;
+import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
+import javafx.scene.control.PasswordField;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 import java.io.IOException;
+import java.util.HashSet;
 
 public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
     @FXML
@@ -51,13 +60,13 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 )
         ).title("Login");
 
+        FormRenderer formRendered = new FormRenderer(form);
+        PasswordField passwordField = (PasswordField) ((StackPane) ((SimplePasswordControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(1)).getChildren().get(1)).getChildren().get(0);
+        passwordField.setOnAction(actionEvent -> checkLogin());
         mainVBox.getChildren().add(
-                new FormRenderer(form)
+                formRendered
         );
 
-        Button loginBTN = new Button("LOG IN");
-        loginBTN.setOnAction(event -> checkLogin());
-        mainVBox.getChildren().add(loginBTN);
     }
 
     public void checkLogin() {
