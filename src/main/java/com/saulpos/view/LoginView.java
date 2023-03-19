@@ -6,4 +6,8 @@ public class LoginView extends AbstractView {
     }
 
 
+    @Override
+    public void initialize() {
+
+    }
 }

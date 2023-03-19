@@ -15,13 +15,15 @@ import java.util.ResourceBundle;
 public abstract class AbstractPresenter
         <M extends AbstractModel, V extends AbstractView> implements Initializable{
     final protected M model;
+    final protected V view;
     protected AbstractPresenter father;
 
     @FXML
     public AnchorPane mainPane;
 
-    public AbstractPresenter(M nModel){
-        model = nModel;
+    public AbstractPresenter(M model, V view) {
+        this.model = model;
+        this.view = view;
     }
 
     /**

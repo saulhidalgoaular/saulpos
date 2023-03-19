@@ -4,6 +4,7 @@ import com.saulpos.model.LoginModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.presenter.LoginPresenter;
+import com.saulpos.view.LoginView;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -23,7 +24,7 @@ public class Main extends Application {
 
         FXMLLoader fxmlLoader = new FXMLLoader(Main.class.getResource("/login.fxml"));
         LoginModel loginModel = new LoginModel();
-        LoginPresenter loginPresenter = new LoginPresenter(loginModel);
+        LoginPresenter loginPresenter = new LoginPresenter(loginModel, new LoginView());
         fxmlLoader.setController(loginPresenter);
 
         Scene scene = new Scene(fxmlLoader.load(), 840, 840);

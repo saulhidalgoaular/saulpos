@@ -30,8 +30,8 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
     public VBox mainVBox;
     private Pane pane = new Pane();
 
-    public MainPresenter(MainModel nModel) {
-        super(nModel);
+    public MainPresenter(MainModel model, MainView view) {
+        super(model, view);
     }
 
     @Override

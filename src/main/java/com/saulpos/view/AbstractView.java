@@ -1,4 +1,5 @@
 package com.saulpos.view;
 
-public class AbstractView {
+public abstract class AbstractView {
+    public abstract void initialize();
 }

@@ -4,4 +4,9 @@ public class MainView extends AbstractView {
 
     public MainView() {
     }
+
+    @Override
+    public void initialize() {
+
+    }
 }

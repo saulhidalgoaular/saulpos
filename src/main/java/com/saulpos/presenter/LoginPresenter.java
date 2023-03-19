@@ -14,6 +14,7 @@ import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.LoginView;
+import com.saulpos.view.MainView;
 import com.saulpos.view.Utils;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.event.ActionEvent;
@@ -38,8 +39,8 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
     private Form form;
 
-    public LoginPresenter(LoginModel nModel) {
-        super(nModel);
+    public LoginPresenter(LoginModel model, LoginView view) {
+        super(model, view);
     }
 
     @Override
@@ -76,7 +77,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
             if (userB != null) {
                 // Load other window
                 MainModel mainModel = new MainModel(userB);
-                MainPresenter mainPresenter = new MainPresenter(mainModel);
+                MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
                 Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Please try again.").showAndWait();
