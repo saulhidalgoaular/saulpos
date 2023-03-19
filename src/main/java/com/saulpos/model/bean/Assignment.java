@@ -5,7 +5,6 @@ import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.LocalDateTime;
@@ -26,28 +25,28 @@ public class Assignment extends BeanImplementation<Assignment> {
     @OneToOne
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
-    private ObjectProperty<LocalDateTime> day = new SimpleObjectProperty<>();
+    private ObjectProperty<LocalDateTime> assignmentDay = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<AssignmentStatus> status = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<AssignmentStatus> assignmentStatus = new SimpleObjectProperty<>();
 
     public Assignment() {
 
     }
+
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(nullable = false)
-    public AssignmentStatus getStatus() {
-        return status.get();
+    public AssignmentStatus getAssignmentStatus() {
+        return assignmentStatus.get();
     }
 
-    public SimpleObjectProperty<AssignmentStatus> statusProperty() {
-        return status;
+    public SimpleObjectProperty<AssignmentStatus> assignmentStatusProperty() {
+        return assignmentStatus;
     }
 
-    public void setStatus(AssignmentStatus status) {
-        this.status.set(status);
+    public void setAssignmentStatus(AssignmentStatus assignmentStatus) {
+        this.assignmentStatus.set(assignmentStatus);
     }
-
     @OneToOne
     @JoinColumn(nullable = false)
     public Shift getShift() {
@@ -78,16 +77,16 @@ public class Assignment extends BeanImplementation<Assignment> {
 
     @NotNull
     @Column(nullable = false)
-    public LocalDateTime getDay() {
-        return day.get();
+    public LocalDateTime getAssignmentDay() {
+        return assignmentDay.get();
     }
 
-    public ObjectProperty<LocalDateTime> dayProperty() {
-        return day;
+    public ObjectProperty<LocalDateTime> assignmentDayProperty() {
+        return assignmentDay;
     }
 
-    public void setDay(LocalDateTime dateTime) {
-        this.day.set(dateTime);
+    public void setAssignmentDay(LocalDateTime dateTime) {
+        this.assignmentDay.set(dateTime);
     }
 
 }

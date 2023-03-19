@@ -50,7 +50,7 @@ public class DefaultMenuGenerator {
         MenuModel product = new MenuModel("Products", shop, null, "ManageProductsMenuAction", MenuModel.MenuType.Administrative);
         answer.add(product);
 
-        MenuModel assignment = new MenuModel("Assignments", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel assignment = new MenuModel("Assignments", shop, null, "ManageAssignmentsMenuAction", MenuModel.MenuType.Administrative);
         answer.add(assignment);
 
         MenuModel closeDay = new MenuModel("Close Day", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
