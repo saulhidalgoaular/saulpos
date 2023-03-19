@@ -47,7 +47,7 @@ public class DefaultMenuGenerator {
         MenuModel shop = new MenuModel("Shop", null, null, null, MenuModel.MenuType.Administrative);
         answer.add(shop);
 
-        MenuModel product = new MenuModel("Products", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel product = new MenuModel("Products", shop, null, "ManageProductsMenuAction", MenuModel.MenuType.Administrative);
         answer.add(product);
 
         MenuModel assignment = new MenuModel("Assignments", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
