@@ -70,15 +70,12 @@ public class Utils {
     public static void goTo(final ViewDef viewDef,
                      final Pane mainPane, final double from,
                      final double to, final boolean remove) throws IOException {
-
-        Pane rootPane = mainPane;
-        Parent tempPane;
-        while ( (tempPane = rootPane.getParent()) != null ){
-            if ( tempPane instanceof  Pane ){
-                rootPane = (Pane) tempPane;
-            }
+        Parent rootPane = mainPane;
+        while ( rootPane != null && !(rootPane instanceof ParentPane) ){
+            rootPane = rootPane.getParent();
         }
-        final Pane rootPaneFinal = rootPane;
+
+        final Pane rootPaneFinal = (Pane) rootPane;
 
         final ArrayList<Node> childrenToRemove = new ArrayList<>(rootPaneFinal.getChildren());
         if ( remove ){

@@ -4,6 +4,7 @@ import com.saulpos.model.LoginModel;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.presenter.LoginPresenter;
 import com.saulpos.view.LoginView;
+import com.saulpos.view.ParentPane;
 import com.saulpos.view.Utils;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -20,13 +21,13 @@ public class Launcher extends Application {
         LoginModel loginModel = new LoginModel();
         LoginPresenter loginPresenter = new LoginPresenter(loginModel, new LoginView());
 
-        AnchorPane anchorPane = new AnchorPane();
+        ParentPane parentPane = new ParentPane();
         stage.setTitle("Saul POS");
-        stage.setScene(new Scene(anchorPane));
+        stage.setScene(new Scene(parentPane));
         stage.setMaximized(true);
         stage.show();
 
-        Utils.goForward(new Utils.ViewDef("/login.fxml", loginPresenter), anchorPane);
+        Utils.goForward(new Utils.ViewDef("/login.fxml", loginPresenter), parentPane);
     }
 
     public static void main(String[] args) {

@@ -4,6 +4,7 @@ import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import com.saulpos.view.MainView;
+import com.saulpos.view.ParentPane;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -17,7 +18,7 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
 
     @FXML
     public VBox mainVBox;
-    private Pane pane = new Pane();
+    private ParentPane pane = new ParentPane();
 
     public MainPresenter(MainModel model, MainView view) {
         super(model, view);
@@ -32,11 +33,9 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
     public void addComponents() {
         DefaultMenuGenerator dmg = new DefaultMenuGenerator();
         ArrayList<MenuModel> mb = dmg.generateMenu();
-        //MenuModel[] menuArray = (MenuModel[]) mb.toArray();
         MenuModel[] menuArray = mb.toArray(new MenuModel[mb.size()]);
-        MenuBar menuBar = MenuBarGenerator.generateMenuNode(menuArray, mainVBox);
-        Label saulPOSLabel = new Label("SAUL POS");
-        pane.getChildren().add(saulPOSLabel);
+        MenuBar menuBar = MenuBarGenerator.generateMenuNode(menuArray, pane);
+
         mainVBox.getChildren().add(menuBar);
         mainVBox.getChildren().add(pane);
     }
