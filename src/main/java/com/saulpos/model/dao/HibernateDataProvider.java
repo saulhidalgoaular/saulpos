@@ -22,7 +22,7 @@ public class HibernateDataProvider implements AbstractDataProvider {
     @Override
     public List getAllItems(Class aClass, AbstractBean abstractBean, SearchType type)  {
         try {
-            return DatabaseConnection.getInstance().listBySample(aClass, abstractBean, null);
+            return DatabaseConnection.getInstance().listBySample(aClass, abstractBean, type);
         } catch (PropertyVetoException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {

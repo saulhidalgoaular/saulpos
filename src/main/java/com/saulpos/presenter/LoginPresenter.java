@@ -68,8 +68,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 // Load other window
                 MainModel mainModel = new MainModel(userB);
                 MainPresenter mainPresenter = new MainPresenter(mainModel);
-                Utils.goForward("/main.fxml", mainPresenter, getClass(), mainVBox);
-                Utils.setFullScreen(mainVBox);
+                Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Please try again.").showAndWait();
             }

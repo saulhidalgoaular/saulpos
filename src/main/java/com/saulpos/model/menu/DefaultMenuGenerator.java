@@ -21,7 +21,7 @@ public class DefaultMenuGenerator {
         MenuModel system = new MenuModel("System", null, null, null, MenuModel.MenuType.Administrative);
         answer.add(system);
 
-        MenuModel cashierMachine = new MenuModel("Cash Registers", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel cashierMachine = new MenuModel("Cash Registers", system, null, "ManageCashierMenuAction", MenuModel.MenuType.Administrative);
         answer.add(cashierMachine);
 
         MenuModel configuration = new MenuModel("Configuration", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
@@ -39,7 +39,7 @@ public class DefaultMenuGenerator {
         MenuModel resendSales = new MenuModel("Resend Sales", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(resendSales);
 
-        MenuModel users = new MenuModel("Users", system, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        MenuModel users = new MenuModel("Users", system, null, "ManageUserMenuAction", MenuModel.MenuType.Administrative);
         answer.add(users);
 
         // SHOP ROOT MENU
@@ -50,8 +50,8 @@ public class DefaultMenuGenerator {
         MenuModel product = new MenuModel("Products", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(product);
 
-        MenuModel assignement = new MenuModel("Assignments", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
-        answer.add(assignement);
+        MenuModel assignment = new MenuModel("Assignments", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
+        answer.add(assignment);
 
         MenuModel closeDay = new MenuModel("Close Day", shop, null, "LogoutMenuAction", MenuModel.MenuType.Administrative);
         answer.add(closeDay);

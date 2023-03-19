@@ -1,6 +1,8 @@
 package com.saulpos.model.menu.action;
 
+import javafx.scene.layout.Pane;
+
 public interface MenuAction {
 
-    Object run();
+    Object run(Pane mainPane) throws Exception;
 }

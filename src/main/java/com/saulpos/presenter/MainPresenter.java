@@ -47,7 +47,7 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
         ArrayList<MenuModel> mb = dmg.generateMenu();
         //MenuModel[] menuArray = (MenuModel[]) mb.toArray();
         MenuModel[] menuArray = mb.toArray(new MenuModel[mb.size()]);
-        MenuBar menuBar = MenuBarGenerator.generateMenuNode(menuArray);
+        MenuBar menuBar = MenuBarGenerator.generateMenuNode(menuArray, mainVBox);
         Label saulPOSLabel = new Label("SAUL POS");
         pane.getChildren().add(saulPOSLabel);
         mainVBox.getChildren().add(menuBar);

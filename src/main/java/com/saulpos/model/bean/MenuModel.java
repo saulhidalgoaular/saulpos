@@ -9,6 +9,8 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.lang.reflect.Method;
+
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
@@ -97,10 +99,10 @@ public class MenuModel extends BeanImplementation<MenuModel> {
     }
 
     @Transient
-    public MenuAction getMenuAction() {
-        // implement the action.
-        //"com.saulpos.model.menu.LogoutMenuAction"
-        return new LogoutMenuAction();
+    public MenuAction getMenuAction() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
+        String actionClassName = "com.saulpos.model.menu.action." + getAction();
+        Class<?> dogClass = Class.forName(actionClassName); // convert string classname to class
+        return (MenuAction) dogClass.newInstance(); // invoke empty constructor
     }
 
     public enum MenuType {

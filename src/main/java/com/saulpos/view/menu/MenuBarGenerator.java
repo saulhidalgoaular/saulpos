@@ -1,7 +1,6 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.model.bean.MenuModel;
-import com.saulpos.model.menu.action.LogoutMenuAction;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.event.ActionEvent;
@@ -10,14 +9,15 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class MenuBarGenerator {
-    public static MenuBar generateMenuNode(MenuModel[] allMenu) {
+    public static MenuBar generateMenuNode(MenuModel[] allMenu, Pane mainPane) {
         // We need to order them before adding them into the menu;
         HashSet<MenuModel> visited = new HashSet<>();
         // Let's order them using dfs
@@ -41,17 +41,11 @@ public class MenuBarGenerator {
                     @Override
                     public void handle(ActionEvent event) {
                         try {
-                            //menu.getMenuAction().run();
-                            String actionClassName = "com.saulpos.model.menu.action." + menu.getAction();
-                            Class<?> dogClass = Class.forName(actionClassName); // convert string classname to class
-                            Object actionContainerClass = dogClass.newInstance(); // invoke empty constructor
-
-                            final String methodName = "run";
-                            Method getNameMethod = actionContainerClass.getClass().getMethod(methodName);
-                            getNameMethod.invoke(actionContainerClass); // explicit cast
+                            menu.getMenuAction().run(mainPane);
                         }
                         catch (Exception e){
                             // TODO: call the message library
+                            e.printStackTrace();
                         }
                     }
                 });

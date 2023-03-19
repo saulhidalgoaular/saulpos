@@ -17,33 +17,58 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Utils {
-    public static void goForward(final String fxmlPath, final AbstractPresenter controller,
-                                 final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(fxmlPath, controller, classInstance, mainPane, mainPane.getScene().getWidth(), .0, true);
+
+    public static class ViewDef{
+        private String fxmlPath;
+
+        private AbstractPresenter presenter;
+        private Node rootNode;
+        
+        public ViewDef(String fxmlPath, AbstractPresenter presenter){
+            this.fxmlPath = fxmlPath;
+            this.presenter = presenter;
+        }
+
+        public ViewDef(Node rootNode) {
+            this.rootNode = rootNode;
+        }
+        
+        public Node getRoot() throws IOException {
+            if (fxmlPath != null){
+                FXMLLoader loader = new FXMLLoader(presenter.getClass().getResource(fxmlPath), presenter.getModel().getLanguage());
+
+                loader.setController(presenter);
+
+                final Parent root = loader.load();
+                return root;
+            }else{
+                return rootNode;
+            }
+        }
     }
 
-    public static void setFullScreen(final Pane mainPane) throws IOException {
-        mainPane.setMinHeight(800);
-        mainPane.setMinWidth(800);
+    public static void goForward(final ViewDef viewDef,
+                                 final Pane mainPane) throws IOException {
+        goTo(viewDef, mainPane, mainPane.getScene().getWidth(), .0, true);
     }
 
-    public static void goBack(final String fxmlPath, final AbstractPresenter controller,
-                       final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(fxmlPath, controller, classInstance, mainPane, (mainPane.getScene().getWidth()) * (-1), .0, false);
+    public static void goBack(final ViewDef viewDef,
+                       final Pane mainPane) throws IOException {
+        goTo(viewDef, mainPane, (mainPane.getScene().getWidth()) * (-1), .0, false);
     }
 
-    public static void goBackRemove(final String fxmlPath, final AbstractPresenter controller,
+    public static void goBackRemove(final ViewDef viewDef,
                              final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(fxmlPath, controller, classInstance, mainPane,.0, mainPane.getScene().getWidth(), true);
+        goTo(viewDef, mainPane,.0, mainPane.getScene().getWidth(), true);
     }
 
-    public static void goForwardRemove(final String fxmlPath, final AbstractPresenter controller,
-                                final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(fxmlPath, controller, classInstance, mainPane, mainPane.getScene().getWidth(), .0, true);
+    public static void goForwardRemove(final ViewDef viewDef,
+                                final Pane mainPane) throws IOException {
+        goTo(viewDef, mainPane, mainPane.getScene().getWidth(), .0, true);
     }
 
-    public static void goTo(final String fxmlPath, final AbstractPresenter controller,
-                     final Class classInstance, final Pane mainPane, final double from,
+    public static void goTo(final ViewDef viewDef,
+                     final Pane mainPane, final double from,
                      final double to, final boolean remove) throws IOException {
 
         Pane rootPane = mainPane;
@@ -56,12 +81,11 @@ public class Utils {
         final Pane rootPaneFinal = rootPane;
 
         final ArrayList<Node> childrenToRemove = new ArrayList<>(rootPaneFinal.getChildren());
+        if ( remove ){
+            rootPaneFinal.getChildren().removeAll(childrenToRemove);
+        }
+        final Node root = viewDef.getRoot();
 
-        FXMLLoader loader = new FXMLLoader(classInstance.getResource(fxmlPath), controller.getModel().getLanguage());
-
-        loader.setController(controller);
-
-        final Parent root = loader.load();
         AnchorPane.setBottomAnchor(root, .0);
         AnchorPane.setLeftAnchor(root, .0);
         AnchorPane.setRightAnchor(root, .0);
@@ -79,12 +103,8 @@ public class Utils {
         KeyValue kv = new KeyValue(root.translateXProperty(), to, Interpolator.EASE_IN);
         KeyFrame kf = new KeyFrame(Duration.millis(300), kv);
         timeline.getKeyFrames().add(kf);
-        //After completing animation, remove first scene
-        timeline.setOnFinished(t -> {
-            if ( remove ){
-                rootPaneFinal.getChildren().removeAll(childrenToRemove);
-            }
-        });
         timeline.play();
     }
+
+
 }
