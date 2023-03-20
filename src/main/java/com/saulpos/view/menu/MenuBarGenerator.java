@@ -1,6 +1,7 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.model.bean.MenuModel;
+import com.saulpos.view.POSIcons;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.event.ActionEvent;
@@ -31,6 +32,9 @@ public class MenuBarGenerator {
 
         MenuBar menuBar = new MenuBar();
 
+        //instantiate icons provider
+        POSIcons icons = new POSIcons();
+
         HashMap<MenuModel, MenuItem> allMenuObjects = new HashMap<>();
         for (MenuModel menu : order) {
             MenuItem newMenu;
@@ -53,7 +57,7 @@ public class MenuBarGenerator {
                 newMenu = new Menu(menu.getName());
             }
             if (menu.getIcon() != null && !menu.getIcon().isBlank()) {
-                newMenu.setGraphic(GlyphsDude.createIconLabel(FontAwesomeIcon.AMAZON, "", "20px", "10px", ContentDisplay.LEFT));
+                newMenu.setGraphic(GlyphsDude.createIconLabel(icons.getIconFromString(menu.getIcon()), "", "20px", "10px", ContentDisplay.LEFT));
             }
             allMenuObjects.put(menu, newMenu);
 
