@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.Ignore;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
@@ -15,6 +16,8 @@ import java.util.Set;
 public class Profile  extends BeanImplementation<Profile> {
 
     private SimpleStringProperty description = new SimpleStringProperty();
+
+    @Ignore
     private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
 
     public Profile() {
