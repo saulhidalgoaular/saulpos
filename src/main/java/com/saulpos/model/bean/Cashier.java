@@ -100,5 +100,8 @@ public class Cashier extends BeanImplementation<Cashier> {
     public Cashier() {
     }
 
-
+    @Override
+    public String toString() {
+        return description.getValue();
+    }
 }

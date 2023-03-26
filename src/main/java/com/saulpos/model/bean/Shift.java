@@ -56,4 +56,8 @@ public class Shift extends BeanImplementation<Shift> {
         this.shiftEnd.set(shiftEnd);
     }
 
+    @Override
+    public String toString() {
+        return shiftName.getValue();
+    }
 }

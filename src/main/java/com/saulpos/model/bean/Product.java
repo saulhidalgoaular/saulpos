@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.Readonly;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +25,8 @@ public class Product extends BeanImplementation<Product> {
     private SimpleStringProperty model = new SimpleStringProperty();
     private ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
     private ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
+
+    @Readonly
     private SimpleIntegerProperty existence = new SimpleIntegerProperty();
     private SimpleBooleanProperty blocked = new SimpleBooleanProperty();
     private SimpleStringProperty imagePath = new SimpleStringProperty();
