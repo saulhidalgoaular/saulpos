@@ -132,14 +132,18 @@ public class DatabaseConnection {
         try {
             CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
             EntityManager entityManager = entityManagerFactory.createEntityManager();
-            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(sample.getClass());
-            Root<? extends AbstractBean> root = query.from(sample.getClass());
+            Class<? extends AbstractBean> aClass = sample != null ? sample.getClass() : clazz;
+            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(aClass);
+            Root<? extends AbstractBean> root = query.from(aClass);
 
             // Add restrictions based on annotated fields
-            final Field[] allFields = sample.getClass().getDeclaredFields();
+            final Field[] allFields = aClass.getDeclaredFields();
             List<Predicate> restrictions = new ArrayList<>();
             for (Field field : allFields) {
-                final Property invoke = (Property) sample.getClass().getDeclaredMethod(field.getName() + "Property").invoke(sample);
+                if (sample == null){
+                    continue;
+                }
+                final Property invoke = (Property) aClass.getDeclaredMethod(field.getName() + "Property").invoke(sample);
                 Object value = invoke.getValue();
                 if (value != null) {
                     if (!(value instanceof String) || ((String) value).isBlank()){

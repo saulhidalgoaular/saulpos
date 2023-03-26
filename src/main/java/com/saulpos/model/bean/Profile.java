@@ -48,4 +48,8 @@ public class Profile  extends BeanImplementation<Profile> {
         this.permissions.set(permissions);
     }
 
+    @Override
+    public String toString() {
+        return description.getValue();
+    }
 }
