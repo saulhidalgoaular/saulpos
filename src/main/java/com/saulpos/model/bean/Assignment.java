@@ -1,6 +1,7 @@
 package com.saulpos.model.bean;
 
 
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -20,13 +21,17 @@ public class Assignment extends BeanImplementation<Assignment> {
 
     @OneToOne
     @Column(nullable = false)
+    @TableViewColumn
     private SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
 
     @OneToOne
+    @TableViewColumn
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
+    @TableViewColumn(minWidth = 120, prefWidth = 150)
     private ObjectProperty<LocalDateTime> assignmentDay = new SimpleObjectProperty<>();
 
+    @TableViewColumn(minWidth = 130, prefWidth = 160)
     private SimpleObjectProperty<AssignmentStatus> assignmentStatus = new SimpleObjectProperty<>();
 
     public Assignment() {

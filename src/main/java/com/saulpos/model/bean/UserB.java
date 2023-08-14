@@ -1,9 +1,6 @@
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
-import com.saulpos.javafxcrudgenerator.annotations.Ignore;
-import com.saulpos.javafxcrudgenerator.annotations.Password;
-import com.saulpos.javafxcrudgenerator.annotations.Search;
+import com.saulpos.javafxcrudgenerator.annotations.*;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -20,6 +17,7 @@ public class UserB extends BeanImplementation<UserB> {
 
     @Search
     @DisplayOrder(orderValue = 0)
+    @TableViewColumn
     private SimpleStringProperty userName = new SimpleStringProperty();
     @Password
     @DisplayOrder(orderValue = 1)
@@ -28,21 +26,26 @@ public class UserB extends BeanImplementation<UserB> {
     private SimpleStringProperty passwordHashed = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 2)
+    @TableViewColumn
     private SimpleStringProperty name = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 3)
+    @TableViewColumn
     private SimpleStringProperty lastname = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 4)
+    @TableViewColumn
     private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty<>();
 
     @DisplayOrder(orderValue = 5)
     private SimpleBooleanProperty enabled = new SimpleBooleanProperty();
 
     @DisplayOrder(orderValue = 6)
+    @TableViewColumn(minWidth = 160, prefWidth = 170)
     private SimpleBooleanProperty shouldChangePassword = new SimpleBooleanProperty();
 
     @DisplayOrder(orderValue = 7)
+    @TableViewColumn(minWidth = 150, prefWidth = 170)
     private SimpleBooleanProperty canChangePassword = new SimpleBooleanProperty();
 
     public String getPasswordHashed() {

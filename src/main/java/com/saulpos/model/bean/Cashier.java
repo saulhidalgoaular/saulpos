@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -13,13 +14,18 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 public class Cashier extends BeanImplementation<Cashier> {
+    @TableViewColumn
     private SimpleStringProperty description = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleStringProperty printer = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleBooleanProperty enabled = new SimpleBooleanProperty();
+    @TableViewColumn
     private SimpleStringProperty ZReport = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
+    @TableViewColumn(minWidth = 120, prefWidth = 150)
     private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
-
     @NotNull
     @Column(nullable = false)
     public String getDescription() {

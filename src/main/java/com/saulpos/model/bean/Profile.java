@@ -1,6 +1,7 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.annotations.Ignore;
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
@@ -15,6 +16,7 @@ import java.util.Set;
 @Table
 public class Profile  extends BeanImplementation<Profile> {
 
+    @TableViewColumn(minWidth = 350, prefWidth = 550)
     private SimpleStringProperty description = new SimpleStringProperty();
 
     @Ignore

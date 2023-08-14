@@ -1,6 +1,7 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.javafxcrudgenerator.annotations.Readonly;
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -17,21 +18,34 @@ public class Product extends BeanImplementation<Product> {
 
     public Product() {
     }
+    @TableViewColumn
     private SimpleStringProperty description = new SimpleStringProperty();
+    @TableViewColumn(minWidth = 120, prefWidth = 150)
     private ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
+    @TableViewColumn
     private SimpleStringProperty brand = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleStringProperty area = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleStringProperty barcode = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleStringProperty model = new SimpleStringProperty();
+    @TableViewColumn
     private ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
+    @TableViewColumn
     private ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
-
+    @TableViewColumn
     @Readonly
     private SimpleIntegerProperty existence = new SimpleIntegerProperty();
+    @TableViewColumn
     private SimpleBooleanProperty blocked = new SimpleBooleanProperty();
+    @TableViewColumn
     private SimpleStringProperty imagePath = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
+    @TableViewColumn
     private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
+    @TableViewColumn
     private ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
 
     @NotNull

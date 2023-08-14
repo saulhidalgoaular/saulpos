@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -14,8 +15,13 @@ import java.time.LocalTime;
 @Table
 public class Shift extends BeanImplementation<Shift> {
 
+    @TableViewColumn
     private SimpleStringProperty shiftName = new SimpleStringProperty();
+
+    @TableViewColumn
     private ObjectProperty<LocalTime> shiftStart = new SimpleObjectProperty<>();
+
+    @TableViewColumn
     private ObjectProperty<LocalTime> shiftEnd = new SimpleObjectProperty<>();
 
     public String getShiftName() {

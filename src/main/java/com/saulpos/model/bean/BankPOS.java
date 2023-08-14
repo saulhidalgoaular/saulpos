@@ -1,5 +1,6 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -16,9 +17,13 @@ public class BankPOS extends BeanImplementation<BankPOS> {
         Debit, Credit, AmericanExpress, All
     }
 
+    @TableViewColumn
     private SimpleStringProperty description = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleStringProperty batch = new SimpleStringProperty();
+    @TableViewColumn
     private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+    @TableViewColumn
     private SimpleObjectProperty<BankPOS.POSType> POSType = new SimpleObjectProperty<BankPOS.POSType>();
 
     @NotNull
