@@ -9,13 +9,13 @@ module com.saulpos {
     requires jakarta.persistence;
     requires jfxtras.controls;
     requires jakarta.validation;
-    requires com.saulpos.javafxcrudgenerator;
+    requires javafx.crud.generator;
     requires org.hibernate.orm.core;
     requires org.apache.commons.codec;
     requires com.dlsc.formsfx;
 
     opens com.saulpos;
-    exports com.saulpos;
+    exports com.saulpos.model.bean;
     exports com.saulpos.presenter;
 
 }

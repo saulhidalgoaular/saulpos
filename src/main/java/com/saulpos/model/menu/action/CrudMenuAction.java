@@ -12,7 +12,7 @@ import javafx.scene.layout.Pane;
 
 public class CrudMenuAction implements MenuAction {
 
-    private Class crudClass;
+    Class crudClass;
 
 
     public CrudMenuAction(Class crudClass) {
