@@ -131,6 +131,14 @@
 
     </dependencies>
 
+    <repositories>
+        <repository>
+            <id>S3</id>
+            <name>S3 SAULPOS Repository</name>
+            <url>https://saulpos-maven.s3.amazonaws.com/release</url>
+        </repository>
+    </repositories>
+
     <build>
         <extensions>
             <extension>

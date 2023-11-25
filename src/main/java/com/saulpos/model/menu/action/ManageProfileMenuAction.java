@@ -45,8 +45,8 @@ public class ManageProfileMenuAction extends CrudMenuAction{
         Function customButtonFunction = new Function() {
             @Override
             public Object[] run(Object[] params) throws Exception {
-                Product productBeingEdited = (Product) params[0];
-                System.out.println(productBeingEdited.getName());
+                Profile productBeingEdited = (Profile) params[0];
+                System.out.println(productBeingEdited.getDescription());
                 return null;
             }
         };
