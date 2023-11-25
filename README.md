@@ -2,12 +2,12 @@
 
 ## Módulo administrativo
 
-    1. Login
-    2. Logout
+    1. Login [Done]
+    2. Logout [Done]
     3. Bloqueo de usuario y/o sistema
-    4. Gestión Configuración
+    4. Gestión Configuración [Done]
     5. Gestión de perfiles de acceso
-    6. Gestión usuarios
+    6. Gestión usuarios [Done]
     7. Tienda
         1. Cierre del día
         2. Vista zetas fiscales
@@ -17,24 +17,24 @@
         6. Medios de pago por el cajero
         7. Área de resumen
     8. Asignaciones de turno
-        1. Nueva
+        1. Nueva [Done]
         2. Re-abrir
         3. Cancelar
         4. Cerrar
     9. Inventario
-        1. Gestion de articulos
+        1. Gestion de articulos [Done]
         2. Gestion de etiquetas
         3. Cancelar
         4. Cerrar
     10. Gestión de mensajes
-        1. Gestion
+        1. Gestion [Done]
     11. Gestión de reportes
         1. Gestion
     12. Gestión de turno
-        1. Nuevo turno
-        2. Modificar turno
-    13. Gestión punto de venta de banco
-    14. Gestión cajas
+        1. Nuevo turno [Done]
+        2. Modificar turno [Done]
+    13. Gestión punto de venta de banco [Done]
+    14. Gestión cajas [Done]
 
 
 ## Módulo de ventas
