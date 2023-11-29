@@ -108,4 +108,9 @@ public class MenuModel extends BeanImplementation<MenuModel> {
     public enum MenuType {
         Administrative, POS
     }
+
+    @Override
+    public String toString() {
+        return name.getValue();
+    }
 }

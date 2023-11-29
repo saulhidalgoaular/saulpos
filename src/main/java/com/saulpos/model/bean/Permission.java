@@ -3,6 +3,7 @@ package com.saulpos.model.bean;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
@@ -15,6 +16,7 @@ public class Permission extends BeanImplementation<Permission> {
     private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
     private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
+    private SimpleBooleanProperty granted = new SimpleBooleanProperty();
 
     @ManyToOne
     public Profile getProfile(){
@@ -42,4 +44,15 @@ public class Permission extends BeanImplementation<Permission> {
         return node;
     }
 
+    public boolean isGranted() {
+        return granted.get();
+    }
+
+    public SimpleBooleanProperty grantedProperty() {
+        return granted;
+    }
+
+    public void setGranted(boolean granted) {
+        this.granted.set(granted);
+    }
 }

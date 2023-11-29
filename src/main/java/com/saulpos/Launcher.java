@@ -38,35 +38,35 @@ public class Launcher extends Application {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.print("Timer Task fired!!!");
+                //System.out.print("Timer Task fired!!!");
             }
         }, 10*1000);
 
         stage.addEventHandler(KeyEvent.ANY, new EventHandler<KeyEvent>() {
             @Override
             public void handle(KeyEvent keyEvent) {
-                timer.cancel();
+                /*timer.cancel();
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         System.out.print("Timer Task fired!!!");
                     }
-                }, 10*1000);
+                }, 10*1000);*/
             }
         });
 
         stage.addEventHandler(MouseEvent.ANY, new EventHandler<Event>() {
             @Override
             public void handle(Event event) {
-                timer.cancel();
+                /*timer.cancel();
                 Timer timer = new Timer();
                 timer.schedule(new TimerTask() {
                     @Override
                     public void run() {
                         System.out.print("Timer Task fired!!!");
                     }
-                }, 1*1000);
+                }, 1*1000);*/
             }
         });
 

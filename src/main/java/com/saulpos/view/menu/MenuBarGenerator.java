@@ -1,9 +1,9 @@
 package com.saulpos.view.menu;
 
+import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.view.POSIcons;
 import de.jensd.fx.glyphs.GlyphsDude;
-import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.control.ContentDisplay;
@@ -11,32 +11,20 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 
 public class MenuBarGenerator {
-    public static MenuBar generateMenuNode(MenuModel[] allMenu, Pane mainPane) {
-        // We need to order them before adding them into the menu;
-        HashSet<MenuModel> visited = new HashSet<>();
-        // Let's order them using dfs
-
-        ArrayList<MenuModel> order = new ArrayList<>();
-        for (int i = 0; i < allMenu.length; i++) {
-            topologicalOrder(order, visited, allMenu[i]);
-        }
+    public static MenuBar generateMenuNode(ArrayList<MenuModel> allMenu, Pane mainPane) {
 
         // we have the order to add them;
 
         MenuBar menuBar = new MenuBar();
 
-        //instantiate icons provider
-        POSIcons icons = new POSIcons();
-
         HashMap<MenuModel, MenuItem> allMenuObjects = new HashMap<>();
-        for (MenuModel menu : order) {
+        for (MenuModel menu : allMenu) {
             MenuItem newMenu;
 
             if (menu.getAction() != null && !menu.getAction().isBlank()) {
@@ -45,11 +33,10 @@ public class MenuBarGenerator {
                     @Override
                     public void handle(ActionEvent event) {
                         try {
-                            menu.getMenuAction().run(mainPane);
+                            menu.getMenuAction().run(allMenu, mainPane);
                         }
                         catch (Exception e){
-                            // TODO: call the message library
-                            e.printStackTrace();
+                            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
                         }
                     }
                 });
@@ -57,7 +44,7 @@ public class MenuBarGenerator {
                 newMenu = new Menu(menu.getName());
             }
             if (menu.getIcon() != null && !menu.getIcon().isBlank()) {
-                newMenu.setGraphic(GlyphsDude.createIconLabel(icons.getIconFromString(menu.getIcon()), "", "20px", "10px", ContentDisplay.LEFT));
+                newMenu.setGraphic(POSIcons.getGraphic(menu.getIcon()));
             }
             allMenuObjects.put(menu, newMenu);
 
@@ -71,18 +58,5 @@ public class MenuBarGenerator {
         }
 
         return menuBar;
-    }
-
-    private static void topologicalOrder(ArrayList<MenuModel> order, HashSet<MenuModel> visited, MenuModel menu) {
-        if (!visited.contains(menu)) {
-            // I need to add my parent first.
-            visited.add(menu);
-
-            if (menu.getPredecessor() != null) {
-                topologicalOrder(order, visited, menu.getPredecessor());
-            }
-
-            order.add(menu);
-        }
     }
 }

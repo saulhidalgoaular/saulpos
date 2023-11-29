@@ -33,8 +33,8 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
     public void addComponents() {
         DefaultMenuGenerator dmg = new DefaultMenuGenerator();
         ArrayList<MenuModel> mb = dmg.generateMenu();
-        MenuModel[] menuArray = mb.toArray(new MenuModel[mb.size()]);
-        MenuBar menuBar = MenuBarGenerator.generateMenuNode(menuArray, pane);
+        getModel().setMenuModel(mb);
+        MenuBar menuBar = MenuBarGenerator.generateMenuNode(mb, pane);
 
         mainVBox.getChildren().add(menuBar);
         mainVBox.getChildren().add(pane);

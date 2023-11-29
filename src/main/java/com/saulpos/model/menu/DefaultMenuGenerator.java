@@ -3,6 +3,7 @@ package com.saulpos.model.menu;
 import com.saulpos.model.bean.MenuModel;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class DefaultMenuGenerator {
     public ArrayList<MenuModel> generateMenu() {
@@ -65,6 +66,30 @@ public class DefaultMenuGenerator {
         MenuModel shifts = new MenuModel("Shifts", shop, "CLOCK_ALT", "ManageShiftsMenuAction", MenuModel.MenuType.Administrative);
         answer.add(shifts);
 
-        return answer;
+
+        // We need to order them before adding them into the menu;
+        HashSet<MenuModel> visited = new HashSet<>();
+        // Let's order them using dfs
+
+        ArrayList<MenuModel> orderedMenu = new ArrayList<>();
+
+        for (MenuModel menu : answer) {
+            topologicalOrder(orderedMenu, visited, menu);
+        }
+
+        return orderedMenu;
+    }
+
+    public static void topologicalOrder(ArrayList<MenuModel> order, HashSet<MenuModel> visited, MenuModel menu) {
+        if (!visited.contains(menu)) {
+            // I need to add my parent first.
+            visited.add(menu);
+
+            if (menu.getPredecessor() != null) {
+                topologicalOrder(order, visited, menu.getPredecessor());
+            }
+
+            order.add(menu);
+        }
     }
 }
