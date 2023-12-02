@@ -34,6 +34,9 @@ public class MenuModel extends BeanImplementation<MenuModel> {
         this.type = new SimpleObjectProperty<>(type);
     }
 
+    public MenuModel() {
+    }
+
     private MenuAction menuAction;
 
     @Enumerated(EnumType.STRING)

@@ -1,10 +1,13 @@
 package com.saulpos.model;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.Permission;
+import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.exception.SaulPosException;
 import javafx.beans.property.SimpleStringProperty;
+import org.hibernate.Hibernate;
 
 import java.beans.PropertyVetoException;
 import java.io.IOException;
@@ -54,6 +57,16 @@ public class LoginModel extends AbstractModel{
         if (!userB1.isEnabled()){
             throw new SaulPosException("User is not enabled. Please, contact the system administrator");
         }
+        Profile profile = userB1.getProfile();
+        System.out.println("Permission size: " + profile);
+
+        // Loading the permissions
+        // TODO: Improve this.
+        Hibernate.initialize(profile.getPermissions());
+        Permission permission = new Permission();
+        permission.setProfile(profile);
+        final List permissionList = DatabaseConnection.getInstance().listBySample(Permission.class, permission, AbstractDataProvider.SearchType.EQUAL);
+        profile.getPermissions().addAll(permissionList);
 
         return userB1;
     }

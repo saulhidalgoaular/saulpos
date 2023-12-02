@@ -7,6 +7,7 @@ import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.sample.Product;
 import com.saulpos.javafxcrudgenerator.view.CustomButton;
 import com.saulpos.javafxcrudgenerator.view.NodeConstructor;
+import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.Cashier;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Profile;
@@ -37,7 +38,7 @@ public class ManageProfileMenuAction extends CrudMenuAction{
     }
 
     @Override
-    public Object run(final ArrayList<MenuModel> completeMenu, Pane mainPane) throws Exception {
+    public Object run(MainModel mainModel, Pane mainPane) throws Exception {
         CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
         crudGeneratorParameter.setClazz(this.crudClass);
         HibernateDataProvider dataProvider = new HibernateDataProvider();
@@ -61,7 +62,7 @@ public class ManageProfileMenuAction extends CrudMenuAction{
 
                 VBox vBox = new VBox(5);
                 vBox.setPadding(new Insets(30));
-                vBox.getChildren().addAll(label, CheckBoxTreeItemMenuGenerator.generateMenuNode(completeMenu));
+                vBox.getChildren().addAll(label, CheckBoxTreeItemMenuGenerator.generateMenuNode(mainModel.getUserB().getProfile().getPermissions()));
 
                 Utils.goForward(new Utils.ViewDef(vBox), mainPane);
 

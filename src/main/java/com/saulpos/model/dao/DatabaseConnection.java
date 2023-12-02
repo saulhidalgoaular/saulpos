@@ -3,7 +3,11 @@ package com.saulpos.model.dao;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.MenuModel;
+import com.saulpos.model.bean.Permission;
+import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
+import com.saulpos.model.menu.DefaultMenuGenerator;
 import jakarta.persistence.*;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
@@ -20,9 +24,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class DatabaseConnection {
     private static DatabaseConnection INSTANCE = null;
@@ -167,7 +169,7 @@ public class DatabaseConnection {
             query.where(restrictions.toArray(new Predicate[0]));
 
             List results = entityManager.createQuery(query).getResultList();
-            System.out.println("Results");
+            System.out.println("Results: " + results.size());
             entityManager.close();
             return results;
         }
@@ -321,11 +323,4 @@ public class DatabaseConnection {
         }
     }
 
-    public void saveDefaultValues() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        /*UserB admin = new UserB();
-        admin.setUserName("admin");
-        admin.setPassword("admin");
-        admin.hashPassword();
-        admin.save();*/
-    }
 }

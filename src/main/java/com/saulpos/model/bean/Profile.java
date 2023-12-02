@@ -51,7 +51,7 @@ public class Profile  extends BeanImplementation<Profile> {
         this.description.set(description);
     }
 
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL)
     public Set<Permission> getPermissions() {
         return permissions.get();
     }

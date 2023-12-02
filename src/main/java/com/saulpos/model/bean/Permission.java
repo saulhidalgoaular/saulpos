@@ -31,7 +31,7 @@ public class Permission extends BeanImplementation<Permission> {
         this.profile.set(profile);
     }
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     public MenuModel getNode() {
         return node.get();
     }

@@ -112,7 +112,7 @@ public class UserB extends BeanImplementation<UserB> {
         this.lastname.set(lastname);
     }
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     @NotNull
     public Profile getProfile() {
         return profile.get();

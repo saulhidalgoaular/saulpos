@@ -31,10 +31,7 @@ public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
 
     @Override
     public void addComponents() {
-        DefaultMenuGenerator dmg = new DefaultMenuGenerator();
-        ArrayList<MenuModel> mb = dmg.generateMenu();
-        getModel().setMenuModel(mb);
-        MenuBar menuBar = MenuBarGenerator.generateMenuNode(mb, pane);
+        MenuBar menuBar = MenuBarGenerator.generateMenuNode(model, pane);
 
         mainVBox.getChildren().add(menuBar);
         mainVBox.getChildren().add(pane);

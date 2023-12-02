@@ -23,7 +23,6 @@ public class Launcher extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         DatabaseConnection.getInstance().initialize();
-        DatabaseConnection.getInstance().saveDefaultValues();
 
         LoginModel loginModel = new LoginModel();
         LoginPresenter loginPresenter = new LoginPresenter(loginModel, new LoginView());

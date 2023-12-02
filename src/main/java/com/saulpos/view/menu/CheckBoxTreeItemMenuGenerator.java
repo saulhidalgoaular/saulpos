@@ -1,22 +1,17 @@
 package com.saulpos.view.menu;
 
-import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.MenuModel;
+import com.saulpos.model.bean.Permission;
 import com.saulpos.view.POSIcons;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTreeCell;
-import javafx.util.Callback;
 import org.controlsfx.control.CheckTreeView;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 public class CheckBoxTreeItemMenuGenerator {
 
-    public static TreeView<MenuModel> generateMenuNode(ArrayList<MenuModel> allMenu){
+    public static TreeView<MenuModel> generateMenuNode(Set<Permission> permissions){
         final CheckTreeView<MenuModel> treeView = new CheckTreeView<>();
 
         final CheckBoxTreeItem<MenuModel> root = new CheckBoxTreeItem<>(null);
@@ -24,7 +19,8 @@ public class CheckBoxTreeItemMenuGenerator {
         treeView.setRoot(root);
 
         HashMap<MenuModel, CheckBoxTreeItem<MenuModel>> allMenuObjects = new HashMap<>();
-        for (MenuModel menu : allMenu) {
+        for (Permission permission : permissions) {
+            MenuModel menu = permission.getNode();
 
             CheckBoxTreeItem<MenuModel> treeItem = new CheckBoxTreeItem<>(menu);
             treeItem.setExpanded(true);

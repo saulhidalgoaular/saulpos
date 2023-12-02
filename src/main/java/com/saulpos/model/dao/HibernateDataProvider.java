@@ -43,4 +43,6 @@ public class HibernateDataProvider implements AbstractDataProvider {
     public void registerClass(Class aClass) {
         registeredClasses.add(aClass);
     }
+
+
 }

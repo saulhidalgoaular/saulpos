@@ -1,7 +1,9 @@
 package com.saulpos.view.menu;
 
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
+import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.MenuModel;
+import com.saulpos.model.bean.Permission;
 import com.saulpos.view.POSIcons;
 import de.jensd.fx.glyphs.GlyphsDude;
 import javafx.event.ActionEvent;
@@ -17,14 +19,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 public class MenuBarGenerator {
-    public static MenuBar generateMenuNode(ArrayList<MenuModel> allMenu, Pane mainPane) {
+    public static MenuBar generateMenuNode(MainModel mainModel, Pane mainPane) {
 
         // we have the order to add them;
 
         MenuBar menuBar = new MenuBar();
 
         HashMap<MenuModel, MenuItem> allMenuObjects = new HashMap<>();
-        for (MenuModel menu : allMenu) {
+        for (Permission permission : mainModel.getUserB().getProfile().getPermissions()) {
+            MenuModel menu = permission.getNode();
             MenuItem newMenu;
 
             if (menu.getAction() != null && !menu.getAction().isBlank()) {
@@ -33,7 +36,7 @@ public class MenuBarGenerator {
                     @Override
                     public void handle(ActionEvent event) {
                         try {
-                            menu.getMenuAction().run(allMenu, mainPane);
+                            menu.getMenuAction().run(mainModel, mainPane);
                         }
                         catch (Exception e){
                             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
@@ -43,6 +46,7 @@ public class MenuBarGenerator {
             } else {
                 newMenu = new Menu(menu.getName());
             }
+            newMenu.setDisable(!permission.isGranted());
             if (menu.getIcon() != null && !menu.getIcon().isBlank()) {
                 newMenu.setGraphic(POSIcons.getGraphic(menu.getIcon()));
             }
