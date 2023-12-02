@@ -16,6 +16,8 @@ import java.util.Set;
 @Table
 public class Profile  extends BeanImplementation<Profile> {
 
+    private SimpleStringProperty name = new SimpleStringProperty();
+
     @TableViewColumn(minWidth = 350, prefWidth = 550)
     private SimpleStringProperty description = new SimpleStringProperty();
 
@@ -23,6 +25,18 @@ public class Profile  extends BeanImplementation<Profile> {
     private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
 
     public Profile() {
+    }
+
+    public String getName() {
+        return name.get();
+    }
+
+    public SimpleStringProperty nameProperty() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name.set(name);
     }
 
     public String getDescription() {

@@ -3,6 +3,7 @@ package com.saulpos.model;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.model.exception.SaulPosException;
 import javafx.beans.property.SimpleStringProperty;
 
 import java.beans.PropertyVetoException;
@@ -40,7 +41,7 @@ public class LoginModel extends AbstractModel{
         this.password.set(password);
     }
 
-    public UserB checkLogin() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public UserB checkLogin() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException, SaulPosException {
         UserB userB = new UserB();
         userB.setUserName(username.getValue());
         userB.setPassword(password.getValue());
@@ -49,7 +50,12 @@ public class LoginModel extends AbstractModel{
         if (list.isEmpty()){
             return null;
         }
-        return (UserB) list.get(0);
+        UserB userB1 = (UserB) list.get(0);
+        if (!userB1.isEnabled()){
+            throw new SaulPosException("User is not enabled. Please, contact the system administrator");
+        }
+
+        return userB1;
     }
 
     @Override

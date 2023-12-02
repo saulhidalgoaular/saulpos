@@ -66,7 +66,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
                 Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
             } else {
-                DialogBuilder.createError("Error", "Invalid username or password", "Please try again.").showAndWait();
+                DialogBuilder.createError("Error", "Invalid username or password", "Invalid username or password").showAndWait();
             }
         } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Error", "Error checking the user in database", e.getMessage(), e).showAndWait();

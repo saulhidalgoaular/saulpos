@@ -322,10 +322,10 @@ public class DatabaseConnection {
     }
 
     public void saveDefaultValues() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        UserB admin = new UserB();
+        /*UserB admin = new UserB();
         admin.setUserName("admin");
         admin.setPassword("admin");
         admin.hashPassword();
-        admin.save();
+        admin.save();*/
     }
 }
