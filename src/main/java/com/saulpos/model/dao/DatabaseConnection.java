@@ -1,5 +1,6 @@
 package com.saulpos.model.dao;
 
+import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
@@ -129,55 +130,56 @@ public class DatabaseConnection {
         }
     }
 
-    public List listBySample(Class clazz, AbstractBean sample, AbstractDataProvider.SearchType type)  throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public List listBySample(Class clazz, AbstractBean sample, AbstractDataProvider.SearchType type, Function beforeCloseEntity) throws Exception {
+        CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
+        final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        Class<? extends AbstractBean> aClass = sample != null ? sample.getClass() : clazz;
+        CriteriaQuery<? extends AbstractBean> query = builder.createQuery(aClass);
+        Root<? extends AbstractBean> root = query.from(aClass);
 
-        try {
-            CriteriaBuilder builder = entityManagerFactory.getCriteriaBuilder();
-            EntityManager entityManager = entityManagerFactory.createEntityManager();
-            Class<? extends AbstractBean> aClass = sample != null ? sample.getClass() : clazz;
-            CriteriaQuery<? extends AbstractBean> query = builder.createQuery(aClass);
-            Root<? extends AbstractBean> root = query.from(aClass);
-
-            // Add restrictions based on annotated fields
-            final Field[] allFields = aClass.getDeclaredFields();
-            List<Predicate> restrictions = new ArrayList<>();
-            for (Field field : allFields) {
-                if (sample == null){
+        // Add restrictions based on annotated fields
+        final Field[] allFields = aClass.getDeclaredFields();
+        List<Predicate> restrictions = new ArrayList<>();
+        for (Field field : allFields) {
+            if (sample == null){
+                continue;
+            }
+            final Property invoke = (Property) aClass.getDeclaredMethod(field.getName() + "Property").invoke(sample);
+            Object value = invoke.getValue();
+            if (value != null) {
+                if (!(value instanceof String) || ((String) value).isBlank()){
                     continue;
                 }
-                final Property invoke = (Property) aClass.getDeclaredMethod(field.getName() + "Property").invoke(sample);
-                Object value = invoke.getValue();
-                if (value != null) {
-                    if (!(value instanceof String) || ((String) value).isBlank()){
-                        continue;
-                    }
-                    // Add restriction
-                    String searchString = (String) value;
-                    if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
-                        restrictions.add(
-                                builder.like(root.get(field.getName()), "%" + searchString + "%")
-                        );
-                    }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
-                        restrictions.add(
-                                builder.equal(root.get(field.getName()), searchString)
-                        );
-                    }
+                // Add restriction
+                String searchString = (String) value;
+                if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
+                    restrictions.add(
+                            builder.like(root.get(field.getName()), "%" + searchString + "%")
+                    );
+                }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
+                    restrictions.add(
+                            builder.equal(root.get(field.getName()), searchString)
+                    );
                 }
             }
-            restrictions.add(builder.equal(root.get("beanStatus"), AbstractBeanImplementationSoftDelete.BeanStatus.Active));
-
-            query.where(restrictions.toArray(new Predicate[0]));
-
-            List results = entityManager.createQuery(query).getResultList();
-            System.out.println("Results: " + results.size());
-            entityManager.close();
-            return results;
         }
-        catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException e)
-        {
-            e.printStackTrace();
+        restrictions.add(builder.equal(root.get("beanStatus"), AbstractBeanImplementationSoftDelete.BeanStatus.Active));
+
+        query.where(restrictions.toArray(new Predicate[0]));
+
+        List results = entityManager.createQuery(query).getResultList();
+        System.out.println("Results: " + results.size());
+
+        if (beforeCloseEntity != null){
+            beforeCloseEntity.run(new Object[]{results});
         }
-        return null;
+
+        entityManager.close();
+        return results;
+    }
+
+    public List listBySample(Class clazz, AbstractBean sample, AbstractDataProvider.SearchType type) throws Exception {
+        return listBySample(clazz, sample, type, null);
     }
     /*
     public List listBySample(Class clazz, AbstractBean sample) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {

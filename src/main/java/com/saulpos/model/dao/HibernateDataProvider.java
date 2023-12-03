@@ -31,6 +31,8 @@ public class HibernateDataProvider implements AbstractDataProvider {
             throw new RuntimeException(e);
         } catch (ClassNotFoundException e) {
             throw new RuntimeException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 

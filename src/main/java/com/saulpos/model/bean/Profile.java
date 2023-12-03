@@ -9,7 +9,7 @@ import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Access(AccessType.PROPERTY)
@@ -67,5 +67,42 @@ public class Profile  extends BeanImplementation<Profile> {
     @Override
     public String toString() {
         return description.getValue();
+    }
+
+    @Transient
+    public List<Permission> getSortedPermissions(){
+        // First let's build back the relationships.
+
+        ArrayList<Permission> orderedPermissions = new ArrayList<>();
+
+        // We need to order them before adding them into the menu;
+        HashSet<Permission> visited = new HashSet<>();
+        // Let's order them using dfs
+
+        HashMap<MenuModel, Permission> permissionMap = new HashMap<>();
+        for (Permission permission : getPermissions()){
+            permissionMap.put(permission.getNode(), permission);
+        }
+
+        for (Permission permission : getPermissions()) {
+            topologicalOrder(orderedPermissions, visited, permission, permissionMap);
+        }
+
+        return orderedPermissions;
+    }
+
+    public static void topologicalOrder(ArrayList<Permission> order, HashSet<Permission> visited, Permission permission,
+                                        HashMap<MenuModel, Permission> permissionMap) {
+        if (!visited.contains(permission)) {
+            // I need to add my parent first.
+            visited.add(permission);
+
+            MenuModel menu = permission.getNode();
+            if (menu.getPredecessor() != null) {
+                topologicalOrder(order, visited, permissionMap.get(menu.getPredecessor()), permissionMap);
+            }
+
+            order.add(permission);
+        }
     }
 }

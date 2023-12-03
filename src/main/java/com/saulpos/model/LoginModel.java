@@ -1,5 +1,6 @@
 package com.saulpos.model;
 
+import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.model.bean.Permission;
 import com.saulpos.model.bean.Profile;
@@ -44,12 +45,25 @@ public class LoginModel extends AbstractModel{
         this.password.set(password);
     }
 
-    public UserB checkLogin() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException, SaulPosException {
+    public UserB checkLogin() throws Exception {
         UserB userB = new UserB();
         userB.setUserName(username.getValue());
         userB.setPassword(password.getValue());
         userB.hashPassword();
-        final List list = DatabaseConnection.getInstance().listBySample(UserB.class, userB, AbstractDataProvider.SearchType.EQUAL);
+        final List list = DatabaseConnection.getInstance().listBySample(UserB.class, userB, AbstractDataProvider.SearchType.EQUAL, new Function() {
+            @Override
+            public Object[] run(Object[] objects) throws Exception {
+                List users = (List) objects[0];
+
+                if (users.isEmpty()){
+                    return null;
+                }
+
+                UserB userB1 = (UserB) users.get(0);
+                Hibernate.initialize(userB1.getProfile().getPermissions());
+                return null;
+            }
+        });
         if (list.isEmpty()){
             return null;
         }
@@ -59,14 +73,6 @@ public class LoginModel extends AbstractModel{
         }
         Profile profile = userB1.getProfile();
         System.out.println("Permission size: " + profile);
-
-        // Loading the permissions
-        // TODO: Improve this.
-        Hibernate.initialize(profile.getPermissions());
-        Permission permission = new Permission();
-        permission.setProfile(profile);
-        final List permissionList = DatabaseConnection.getInstance().listBySample(Permission.class, permission, AbstractDataProvider.SearchType.EQUAL);
-        profile.getPermissions().addAll(permissionList);
 
         return userB1;
     }
