@@ -23,6 +23,7 @@ import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.transformation.SortedList;
 
 import java.util.*;
 
@@ -37,7 +38,7 @@ public class Profile  extends BeanImplementation<Profile> {
     private final SimpleStringProperty description = new SimpleStringProperty();
 
     @Ignore
-    private final ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>(new HashSet<>());
+    private final ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>(new TreeSet<>());
 
     public Profile() {
     }
@@ -70,6 +71,10 @@ public class Profile  extends BeanImplementation<Profile> {
     public Set<Permission> getPermissions() {
         return permissions.get();
     }
+    @Transient
+    public TreeSet<Permission> getTreeSetPermissions(){
+        return new TreeSet<>(getPermissions());
+    }
 
     public ObjectProperty<Set<Permission>> permissionsProperty() {
         return permissions;
@@ -85,6 +90,7 @@ public class Profile  extends BeanImplementation<Profile> {
     }
 
     @Transient
+    @Deprecated
     public List<Permission> getSortedPermissions(){
         if (getPermissions() == null){
             return null;
@@ -126,7 +132,7 @@ public class Profile  extends BeanImplementation<Profile> {
     public void fillMissingPermissions() {
         HashSet<String> currentPermissions = new HashSet<>();
 
-        for (Permission permission : getSortedPermissions()){
+        for (Permission permission : getPermissions()){
             MenuModel currentMenu = permission.getNode();
             currentPermissions.add(currentMenu.getName()); // Let's assume all names are unique
         }

@@ -37,7 +37,7 @@ public class MenuBarGenerator {
         MenuBar menuBar = new MenuBar();
 
         HashMap<MenuModel, MenuItem> allMenuObjects = new HashMap<>();
-        for (Permission permission : mainModel.getUserB().getProfile().getSortedPermissions()) {
+        for (Permission permission : mainModel.getUserB().getProfile().getTreeSetPermissions()) {
             MenuModel menu = permission.getNode();
             MenuItem newMenu;
 

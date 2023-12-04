@@ -19,13 +19,14 @@ import com.saulpos.model.dao.BeanImplementation;
 import com.saulpos.model.menu.action.MenuAction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class MenuModel extends BeanImplementation<MenuModel> {
+public class MenuModel extends BeanImplementation<MenuModel> implements Comparable<MenuModel> {
 
     private SimpleObjectProperty<MenuType> type = new SimpleObjectProperty<>();
 
@@ -37,18 +38,19 @@ public class MenuModel extends BeanImplementation<MenuModel> {
 
     private SimpleStringProperty action = new SimpleStringProperty();
 
-    public MenuModel(String name, MenuModel predecessor, String icon, String action, MenuType type) {
+    private SimpleIntegerProperty menuOrder = new SimpleIntegerProperty();
+
+    public MenuModel(String name, MenuModel predecessor, String icon, String action, MenuType type, int order) {
         this.name = new SimpleStringProperty(name);
         this.predecessor = new SimpleObjectProperty<>(predecessor);
         this.icon = new SimpleStringProperty(icon);
         this.action = new SimpleStringProperty(action);
         this.type = new SimpleObjectProperty<>(type);
+        this.menuOrder = new SimpleIntegerProperty(order);
     }
 
     public MenuModel() {
     }
-
-    private MenuAction menuAction;
 
     @Enumerated(EnumType.STRING)
     public MenuType getType() {
@@ -112,11 +114,28 @@ public class MenuModel extends BeanImplementation<MenuModel> {
         return type;
     }
 
+    public int getMenuOrder() {
+        return menuOrder.get();
+    }
+
+    public SimpleIntegerProperty menuOrderProperty() {
+        return menuOrder;
+    }
+
+    public void setMenuOrder(int menuOrder) {
+        this.menuOrder.set(menuOrder);
+    }
+
     @Transient
     public MenuAction getMenuAction() throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         String actionClassName = "com.saulpos.model.menu.action." + getAction();
         Class<?> dogClass = Class.forName(actionClassName); // convert string classname to class
         return (MenuAction) dogClass.newInstance(); // invoke empty constructor
+    }
+
+    @Override
+    public int compareTo(MenuModel o) {
+        return getMenuOrder() - o.getMenuOrder();
     }
 
     public enum MenuType {

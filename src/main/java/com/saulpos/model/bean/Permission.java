@@ -25,7 +25,7 @@ import javafx.beans.property.SimpleObjectProperty;
 @Access(AccessType.PROPERTY)
 @Table
 //tipo_de_usuario_puede
-public class Permission extends BeanImplementation<Permission> {
+public class Permission extends BeanImplementation<Permission> implements Comparable<Permission>{
 
     private final SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
     private final ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
@@ -69,5 +69,10 @@ public class Permission extends BeanImplementation<Permission> {
 
     public void setGranted(boolean granted) {
         this.granted.set(granted);
+    }
+
+    @Override
+    public int compareTo(Permission o) {
+        return getNode().compareTo(o.getNode());
     }
 }

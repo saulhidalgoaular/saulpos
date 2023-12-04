@@ -155,20 +155,21 @@ public class DatabaseConnection {
             }
             final Property invoke = (Property) aClass.getDeclaredMethod(field.getName() + "Property").invoke(sample);
             Object value = invoke.getValue();
-            if (value != null) {
-                if (!(value instanceof String searchString) || ((String) value).isBlank()){
-                    continue;
-                }
-                // Add restriction
-                if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
-                    restrictions.add(
-                            builder.like(root.get(field.getName()), "%" + searchString + "%")
-                    );
-                }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
-                    restrictions.add(
-                            builder.equal(root.get(field.getName()), searchString)
-                    );
-                }
+            if (value == null){
+                continue;
+            }
+            if (!(value instanceof String searchString) || ((String) value).isBlank()){
+                continue;
+            }
+            // Add restriction
+            if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
+                restrictions.add(
+                        builder.like(root.get(field.getName()), "%" + searchString + "%")
+                );
+            }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
+                restrictions.add(
+                        builder.equal(root.get(field.getName()), searchString)
+                );
             }
         }
         restrictions.add(builder.equal(root.get("beanStatus"), AbstractBeanImplementationSoftDelete.BeanStatus.Active));
