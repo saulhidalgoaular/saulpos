@@ -37,17 +37,17 @@ public class Assignment extends BeanImplementation<Assignment> {
     @OneToOne
     @Column(nullable = false)
     @TableViewColumn
-    private SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
 
     @OneToOne
     @TableViewColumn
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
     @TableViewColumn(minWidth = 120, prefWidth = 150)
-    private ObjectProperty<LocalDateTime> assignmentDay = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> assignmentDay = new SimpleObjectProperty<>();
 
     @TableViewColumn(minWidth = 130, prefWidth = 160)
-    private SimpleObjectProperty<AssignmentStatus> assignmentStatus = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<AssignmentStatus> assignmentStatus = new SimpleObjectProperty<>();
 
     public Assignment() {
 

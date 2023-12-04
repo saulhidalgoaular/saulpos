@@ -34,34 +34,34 @@ public class Product extends BeanImplementation<Product> {
     public Product() {
     }
     @TableViewColumn
-    private SimpleStringProperty description = new SimpleStringProperty();
+    private final SimpleStringProperty description = new SimpleStringProperty();
     @TableViewColumn(minWidth = 120, prefWidth = 150)
-    private ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> registrationDate = new SimpleObjectProperty<>();
     @TableViewColumn
-    private SimpleStringProperty brand = new SimpleStringProperty();
+    private final SimpleStringProperty brand = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty area = new SimpleStringProperty();
+    private final SimpleStringProperty area = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty barcode = new SimpleStringProperty();
+    private final SimpleStringProperty barcode = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty model = new SimpleStringProperty();
+    private final SimpleStringProperty model = new SimpleStringProperty();
     @TableViewColumn
-    private ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
+    private final ObjectProperty<Unit> sellUnit = new SimpleObjectProperty<>();
     @TableViewColumn
-    private ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
+    private final ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
     @TableViewColumn
     @Readonly
-    private SimpleIntegerProperty existence = new SimpleIntegerProperty();
+    private final SimpleIntegerProperty existence = new SimpleIntegerProperty();
     @TableViewColumn
-    private SimpleBooleanProperty blocked = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty blocked = new SimpleBooleanProperty();
     @TableViewColumn
-    private SimpleStringProperty imagePath = new SimpleStringProperty();
+    private final SimpleStringProperty imagePath = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
+    private final SimpleObjectProperty<Discount> discount = new SimpleObjectProperty<Discount>();
     @TableViewColumn
-    private SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
+    private final SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
     @TableViewColumn
-    private ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
+    private final ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
 
     @NotNull
     public String getDescription() {

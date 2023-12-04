@@ -27,11 +27,11 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class Configuration extends BeanImplementation<Configuration> {
     @TableViewColumn
-    private SimpleStringProperty keyConfig = new SimpleStringProperty();
+    private final SimpleStringProperty keyConfig = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty valueConfig = new SimpleStringProperty();
+    private final SimpleStringProperty valueConfig = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty name = new SimpleStringProperty();
+    private final SimpleStringProperty name = new SimpleStringProperty();
 
     public Configuration() {
 

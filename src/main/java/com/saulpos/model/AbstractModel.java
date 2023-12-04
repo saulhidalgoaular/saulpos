@@ -25,8 +25,7 @@ public abstract class AbstractModel {
     ResourceBundle language;
 
     public AbstractModel(){
-        //language = ResourceBundle.getBundle("Language");
-        //initialize();
+
     }
 
     protected void initialize() throws PropertyVetoException {

@@ -33,38 +33,38 @@ public class CreditNote extends BeanImplementation<CreditNote> {
         InProgress, Completed
     }
 
-    private SimpleObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Invoice> invoice = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<Invoice.InvoiceStatus> status = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Invoice.InvoiceStatus> status = new SimpleObjectProperty<>();
 
-    private ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
 
-    private ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
-    private SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
 
-    private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
-    private SimpleDoubleProperty vat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty vat = new SimpleDoubleProperty();
 
     //@OneToOne Damir H. -> removed since we already have cashier, wich has printer.
     //private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<Cashier>();
 
-    private SimpleStringProperty taxNumber = new SimpleStringProperty();
+    private final SimpleStringProperty taxNumber = new SimpleStringProperty();
 
     @Column(nullable = false)
-    private SimpleStringProperty zReportNumber = new SimpleStringProperty();
+    private final SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
-    private SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
-
-
-    private SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
-
-    private SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
-
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+    private final SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
 
 
-    private ObjectProperty<Set<CreditNoteDetails>> creditNoteDetails = new SimpleObjectProperty<>();
+    private final SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
+
+    private final SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
+
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+
+
+    private final ObjectProperty<Set<CreditNoteDetails>> creditNoteDetails = new SimpleObjectProperty<>();
 
     @OneToOne
     @NotNull
@@ -170,21 +170,7 @@ public class CreditNote extends BeanImplementation<CreditNote> {
     public void setCreditNoteDetails(Set<CreditNoteDetails> creditNoteDetails) {
         this.creditNoteDetails.set(creditNoteDetails);
     }
-/*
-    @OneToOne
-    @NotNull
-    public Cashier getPrinter() {
-        return printer.get();
-    }
 
-    public SimpleObjectProperty<Cashier> printerProperty() {
-        return printer;
-    }
-
-    public void setPrinter(Cashier printer) {
-        this.printer.set(printer);
-    }
-*/
     public String getTaxNumber() {
         return taxNumber.get();
     }

@@ -18,7 +18,6 @@ package com.saulpos.model.bean;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 
@@ -27,11 +26,11 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class Client extends BeanImplementation<Client> {
 
-    private SimpleStringProperty name = new SimpleStringProperty();
+    private final SimpleStringProperty name = new SimpleStringProperty();
 
-    private SimpleStringProperty address = new SimpleStringProperty();
+    private final SimpleStringProperty address = new SimpleStringProperty();
 
-    private SimpleStringProperty phone = new SimpleStringProperty();
+    private final SimpleStringProperty phone = new SimpleStringProperty();
 
     public Client() {
 

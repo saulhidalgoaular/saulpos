@@ -27,10 +27,10 @@ import java.time.LocalDate;
 @Table
 public class Expense extends BeanImplementation<Expense> {
 
-    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
-    private SimpleStringProperty concept = new SimpleStringProperty();
-    private SimpleDoubleProperty amount = new SimpleDoubleProperty();
-    private SimpleStringProperty description = new SimpleStringProperty();
+    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+    private final SimpleStringProperty concept = new SimpleStringProperty();
+    private final SimpleDoubleProperty amount = new SimpleDoubleProperty();
+    private final SimpleStringProperty description = new SimpleStringProperty();
 
     @NotNull
     public LocalDate getDate(){

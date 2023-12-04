@@ -33,35 +33,35 @@ public class UserB extends BeanImplementation<UserB> {
     @Search
     @DisplayOrder(orderValue = 0)
     @TableViewColumn
-    private SimpleStringProperty userName = new SimpleStringProperty();
+    private final SimpleStringProperty userName = new SimpleStringProperty();
     @Password
     @DisplayOrder(orderValue = 1)
-    private SimpleStringProperty password = new SimpleStringProperty();
+    private final SimpleStringProperty password = new SimpleStringProperty();
     @Ignore
-    private SimpleStringProperty passwordHashed = new SimpleStringProperty();
+    private final SimpleStringProperty passwordHashed = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 2)
     @TableViewColumn
-    private SimpleStringProperty name = new SimpleStringProperty();
+    private final SimpleStringProperty name = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 3)
     @TableViewColumn
-    private SimpleStringProperty lastname = new SimpleStringProperty();
+    private final SimpleStringProperty lastname = new SimpleStringProperty();
 
     @DisplayOrder(orderValue = 4)
     @TableViewColumn
-    private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Profile> profile = new SimpleObjectProperty<>();
 
     @DisplayOrder(orderValue = 5)
-    private SimpleBooleanProperty enabled = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty enabled = new SimpleBooleanProperty();
 
     @DisplayOrder(orderValue = 6)
     @TableViewColumn(minWidth = 160, prefWidth = 170)
-    private SimpleBooleanProperty shouldChangePassword = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty shouldChangePassword = new SimpleBooleanProperty();
 
     @DisplayOrder(orderValue = 7)
     @TableViewColumn(minWidth = 150, prefWidth = 170)
-    private SimpleBooleanProperty canChangePassword = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty canChangePassword = new SimpleBooleanProperty();
 
     public String getPasswordHashed() {
         return passwordHashed.get();

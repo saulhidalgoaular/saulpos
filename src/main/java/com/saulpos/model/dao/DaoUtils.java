@@ -17,8 +17,6 @@ package com.saulpos.model.dao;
 
 import javafx.beans.property.SimpleBooleanProperty;
 
-import java.lang.reflect.InvocationTargetException;
-
 public class DaoUtils {
 
     public static String getGetter(final String fieldName, final Class type){

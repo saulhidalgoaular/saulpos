@@ -31,12 +31,12 @@ public class BankPOSMachine extends BeanImplementation<BankPOSMachine> {
     public enum Medium{
         Debit, Credit, AmericanExpress
     }
-    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<LocalDate>();
-    private SimpleObjectProperty<BankPOS> bankPontOfSale = new SimpleObjectProperty<BankPOS>();
-    private SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
-    private SimpleFloatProperty declaration = new SimpleFloatProperty();
-    private SimpleFloatProperty actualAmount = new SimpleFloatProperty();
-    private SimpleStringProperty batch = new SimpleStringProperty();
+    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<LocalDate>();
+    private final SimpleObjectProperty<BankPOS> bankPontOfSale = new SimpleObjectProperty<BankPOS>();
+    private final SimpleObjectProperty<BankPOSMachine.Medium> medium = new SimpleObjectProperty<BankPOSMachine.Medium>();
+    private final SimpleFloatProperty declaration = new SimpleFloatProperty();
+    private final SimpleFloatProperty actualAmount = new SimpleFloatProperty();
+    private final SimpleStringProperty batch = new SimpleStringProperty();
 
     @NotNull
     @Column(nullable = false)

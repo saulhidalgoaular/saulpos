@@ -20,18 +20,14 @@ import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Permission;
 import com.saulpos.view.POSIcons;
-import de.jensd.fx.glyphs.GlyphsDude;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.Pane;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 public class MenuBarGenerator {
     public static MenuBar generateMenuNode(MainModel mainModel, Pane mainPane) {

@@ -34,41 +34,41 @@ public class Invoice extends BeanImplementation<Invoice> {
         InProgress, Cancelled, Waiting, Completed
     }
 
-    private SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>();
 
-    private ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
 
-    private ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
-    private SimpleObjectProperty<Client> client = new SimpleObjectProperty();
+    private final SimpleObjectProperty<Client> client = new SimpleObjectProperty();
 
-    private SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
 
-    private SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
 
     @ColumnDefault("0.0000")
     @NotNull
-    private SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
 
     //iva
-    private SimpleDoubleProperty vat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty vat = new SimpleDoubleProperty();
     //@OneToOne
     @OneToOne
-    private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty<>();
 
-    private SimpleStringProperty taxNumber = new SimpleStringProperty();
+    private final SimpleStringProperty taxNumber = new SimpleStringProperty();
 
     @Column(nullable = false)
-    private SimpleStringProperty zReportNumber = new SimpleStringProperty();
+    private final SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
-    private SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
 
 
-    private SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
+    private final SimpleIntegerProperty articlesQuantity = new SimpleIntegerProperty();
 
-    private SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
+    private final SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
 
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
     @OneToOne
     public Cashier getPrinter() {

@@ -20,7 +20,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 import java.time.LocalDate;
@@ -29,8 +28,8 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Price extends BeanImplementation<Price> {
-    private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
-    private SimpleDoubleProperty price = new SimpleDoubleProperty();
+    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
+    private final SimpleDoubleProperty price = new SimpleDoubleProperty();
     private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
 
     @NotNull

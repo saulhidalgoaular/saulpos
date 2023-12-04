@@ -19,14 +19,11 @@ import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Permission;
 import com.saulpos.view.POSIcons;
 import javafx.beans.binding.Bindings;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.*;
 import org.controlsfx.control.CheckTreeView;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Set;
 
 public class CheckBoxTreeItemMenuGenerator {
 

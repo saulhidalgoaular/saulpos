@@ -21,7 +21,6 @@ import com.saulpos.model.dao.BeanImplementation;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -32,13 +31,13 @@ import java.util.*;
 @Table
 public class Profile  extends BeanImplementation<Profile> {
 
-    private SimpleStringProperty name = new SimpleStringProperty();
+    private final SimpleStringProperty name = new SimpleStringProperty();
 
     @TableViewColumn(minWidth = 350, prefWidth = 550)
-    private SimpleStringProperty description = new SimpleStringProperty();
+    private final SimpleStringProperty description = new SimpleStringProperty();
 
     @Ignore
-    private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>(new HashSet<>());
+    private final ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>(new HashSet<>());
 
     public Profile() {
     }

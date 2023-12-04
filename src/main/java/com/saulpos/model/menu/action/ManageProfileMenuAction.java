@@ -19,7 +19,6 @@ import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
-import com.saulpos.javafxcrudgenerator.sample.Product;
 import com.saulpos.javafxcrudgenerator.view.CustomButton;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.javafxcrudgenerator.view.NodeConstructor;
@@ -30,25 +29,16 @@ import com.saulpos.view.Utils;
 import com.saulpos.view.menu.CheckBoxTreeItemMenuGenerator;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTreeCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
 
-import java.beans.PropertyVetoException;
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
 
 public class ManageProfileMenuAction extends CrudMenuAction{
 
@@ -59,7 +49,7 @@ public class ManageProfileMenuAction extends CrudMenuAction{
     }
 
     @Override
-    public Object run(MainModel mainModel, Pane mainPane) throws Exception {
+    public void run(MainModel mainModel, Pane mainPane) throws Exception {
         CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
         crudGeneratorParameter.setClazz(this.crudClass);
         HibernateDataProvider dataProvider = new HibernateDataProvider();
@@ -128,6 +118,5 @@ public class ManageProfileMenuAction extends CrudMenuAction{
         CrudPresenter crud = crudGenerator.generate();
         viewDef = new Utils.ViewDef(crud.getView().getMainView());
         Utils.goForward(viewDef, mainPane);
-        return null;
     }
 }

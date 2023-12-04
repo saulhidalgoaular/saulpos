@@ -33,13 +33,13 @@ public class BankPOS extends BeanImplementation<BankPOS> {
     }
 
     @TableViewColumn
-    private SimpleStringProperty description = new SimpleStringProperty();
+    private final SimpleStringProperty description = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleStringProperty batch = new SimpleStringProperty();
+    private final SimpleStringProperty batch = new SimpleStringProperty();
     @TableViewColumn
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
     @TableViewColumn
-    private SimpleObjectProperty<BankPOS.POSType> POSType = new SimpleObjectProperty<BankPOS.POSType>();
+    private final SimpleObjectProperty<BankPOS.POSType> POSType = new SimpleObjectProperty<BankPOS.POSType>();
 
     @NotNull
     @Column(nullable = false)

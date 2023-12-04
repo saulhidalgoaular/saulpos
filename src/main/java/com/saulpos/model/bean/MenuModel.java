@@ -16,15 +16,11 @@
 package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
-import com.saulpos.model.menu.action.LogoutMenuAction;
 import com.saulpos.model.menu.action.MenuAction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
-
-import java.lang.reflect.Method;
 
 @Entity
 @Access(AccessType.PROPERTY)

@@ -20,7 +20,6 @@ import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 @Entity
@@ -29,7 +28,7 @@ import javafx.beans.property.SimpleStringProperty;
 public class Message extends BeanImplementation<Message> {
 
     @TableViewColumn(minWidth = 500, prefWidth = 550)
-    private SimpleStringProperty userMessage = new SimpleStringProperty();
+    private final SimpleStringProperty userMessage = new SimpleStringProperty();
 
     @NotNull
     public String getUserMessage(){

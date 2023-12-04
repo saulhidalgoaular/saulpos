@@ -27,13 +27,13 @@ import java.time.LocalDate;
 @Table
 public class Discount extends BeanImplementation<Discount> {
 
-    private SimpleStringProperty description=new SimpleStringProperty();
+    private final SimpleStringProperty description=new SimpleStringProperty();
 
-    private ObjectProperty<LocalDate> startingDate=new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> startingDate=new SimpleObjectProperty<>();
 
-    private ObjectProperty<LocalDate> endingDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> endingDate = new SimpleObjectProperty<>();
 
-    private SimpleDoubleProperty percentage=new SimpleDoubleProperty();
+    private final SimpleDoubleProperty percentage=new SimpleDoubleProperty();
 
     public Discount() {
 

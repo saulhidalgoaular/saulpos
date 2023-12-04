@@ -18,7 +18,6 @@ package com.saulpos.model.bean;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 
 @Entity
@@ -26,7 +25,7 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 public class Storage extends BeanImplementation<Storage> {
 
-    private SimpleStringProperty description = new SimpleStringProperty();
+    private final SimpleStringProperty description = new SimpleStringProperty();
 
     @NotNull
     public String getDescription() {

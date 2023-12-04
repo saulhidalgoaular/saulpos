@@ -27,10 +27,10 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Deposit extends BeanImplementation<Deposit> {
-    private ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
-    private SimpleStringProperty bank =new SimpleStringProperty();
-    private SimpleStringProperty number =new SimpleStringProperty();
-    private SimpleDoubleProperty amount=new SimpleDoubleProperty();
+    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+    private final SimpleStringProperty bank =new SimpleStringProperty();
+    private final SimpleStringProperty number =new SimpleStringProperty();
+    private final SimpleDoubleProperty amount=new SimpleDoubleProperty();
 
     @NotNull
     public String getBank() {

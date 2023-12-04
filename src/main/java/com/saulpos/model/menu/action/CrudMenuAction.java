@@ -17,15 +17,12 @@ package com.saulpos.model.menu.action;
 
 import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.Utils;
 import javafx.scene.layout.Pane;
-
-import java.util.ArrayList;
 
 public class CrudMenuAction implements MenuAction {
 
@@ -37,7 +34,7 @@ public class CrudMenuAction implements MenuAction {
     }
 
     @Override
-    public Object run(MainModel mainModel, Pane mainPane) throws Exception {
+    public void run(MainModel mainModel, Pane mainPane) throws Exception {
         CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
         crudGeneratorParameter.setClazz(crudClass);
         HibernateDataProvider dataProvider = new HibernateDataProvider();
@@ -48,6 +45,5 @@ public class CrudMenuAction implements MenuAction {
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
         Utils.goForward(new Utils.ViewDef(crud.getView().getMainView()), mainPane);
-        return null;
     }
 }

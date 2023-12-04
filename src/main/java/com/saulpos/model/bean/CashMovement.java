@@ -20,7 +20,6 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import org.hibernate.annotations.ColumnDefault;
 
@@ -30,9 +29,9 @@ import java.time.LocalDateTime;
 @Access(AccessType.PROPERTY)
 @Table
 public class CashMovement extends BeanImplementation<CashMovement> {
-    private SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
-    private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<LocalDateTime>();
-    private SimpleDoubleProperty amount = new SimpleDoubleProperty();
+    private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
+    private final ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<LocalDateTime>();
+    private final SimpleDoubleProperty amount = new SimpleDoubleProperty();
 
     @OneToOne
     @NotNull

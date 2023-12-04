@@ -17,7 +17,6 @@ package com.saulpos.model;
 
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
-import com.saulpos.model.bean.Permission;
 import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
@@ -26,15 +25,13 @@ import javafx.beans.property.SimpleStringProperty;
 import org.hibernate.Hibernate;
 
 import java.beans.PropertyVetoException;
-import java.io.IOException;
-import java.net.URISyntaxException;
 import java.util.List;
 
 public class LoginModel extends AbstractModel{
 
-    private SimpleStringProperty username = new SimpleStringProperty("");
+    private final SimpleStringProperty username = new SimpleStringProperty("");
 
-    private SimpleStringProperty password = new SimpleStringProperty("");
+    private final SimpleStringProperty password = new SimpleStringProperty("");
 
     public String getUsername() {
         return username.get();

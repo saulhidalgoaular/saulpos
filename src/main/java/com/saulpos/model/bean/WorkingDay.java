@@ -29,27 +29,27 @@ import java.util.Date;
 @Access(AccessType.PROPERTY)
 @Table
 public class WorkingDay extends BeanImplementation<WorkingDay> {
-    private  ObjectProperty<Date> date = new SimpleObjectProperty<>();
-    private SimpleStringProperty saleCode =new SimpleStringProperty();
-    private SimpleDoubleProperty moneyCreditCard= new SimpleDoubleProperty();
-    private SimpleDoubleProperty cash=new SimpleDoubleProperty();
-    private SimpleDoubleProperty moneyDebitCard = new SimpleDoubleProperty();
-    private SimpleDoubleProperty creditNotesMoney =new SimpleDoubleProperty();
-    private SimpleIntegerProperty ZReport =new SimpleIntegerProperty();
-    private SimpleDoubleProperty cashMoneyPrinter = new SimpleDoubleProperty();
-    private SimpleDoubleProperty creditCardMoneyPrinter = new SimpleDoubleProperty();
-    private SimpleDoubleProperty debitCardMoneyPrinter = new SimpleDoubleProperty();
-    private SimpleDoubleProperty creditNotePrinter = new SimpleDoubleProperty();
-    private SimpleBooleanProperty updateValues = new SimpleBooleanProperty();
-    private ObjectProperty<LocalDateTime> dateTime = new SimpleObjectProperty<>();
-    private SimpleDoubleProperty totalSales = new SimpleDoubleProperty();
-    private SimpleStringProperty zReportNumber = new SimpleStringProperty();
-    private SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty();
-    private SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
-    private SimpleIntegerProperty amountInvoices = new SimpleIntegerProperty();
-    private SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
-    private SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
-    private SimpleBooleanProperty closed = new SimpleBooleanProperty();
+    private final ObjectProperty<Date> date = new SimpleObjectProperty<>();
+    private final SimpleStringProperty saleCode =new SimpleStringProperty();
+    private final SimpleDoubleProperty moneyCreditCard= new SimpleDoubleProperty();
+    private final SimpleDoubleProperty cash=new SimpleDoubleProperty();
+    private final SimpleDoubleProperty moneyDebitCard = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty creditNotesMoney =new SimpleDoubleProperty();
+    private final SimpleIntegerProperty ZReport =new SimpleIntegerProperty();
+    private final SimpleDoubleProperty cashMoneyPrinter = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty creditCardMoneyPrinter = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty debitCardMoneyPrinter = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty creditNotePrinter = new SimpleDoubleProperty();
+    private final SimpleBooleanProperty updateValues = new SimpleBooleanProperty();
+    private final ObjectProperty<LocalDateTime> dateTime = new SimpleObjectProperty<>();
+    private final SimpleDoubleProperty totalSales = new SimpleDoubleProperty();
+    private final SimpleStringProperty zReportNumber = new SimpleStringProperty();
+    private final SimpleObjectProperty<Cashier> printer = new SimpleObjectProperty();
+    private final SimpleObjectProperty<Invoice> lastInvoice = new SimpleObjectProperty();
+    private final SimpleIntegerProperty amountInvoices = new SimpleIntegerProperty();
+    private final SimpleObjectProperty<CreditNote> lastCreditNote = new SimpleObjectProperty();
+    private final SimpleIntegerProperty amountCreditNotes = new SimpleIntegerProperty();
+    private final SimpleBooleanProperty closed = new SimpleBooleanProperty();
 
     @NotNull
     public Date getDate() {

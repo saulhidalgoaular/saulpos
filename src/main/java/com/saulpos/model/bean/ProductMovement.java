@@ -30,11 +30,11 @@ import java.util.Set;
 @Table
 public class ProductMovement extends BeanImplementation<ProductMovement> {
 
-    private ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
-    private SimpleStringProperty description = new SimpleStringProperty();
-    private SimpleStringProperty code = new SimpleStringProperty();
-    private SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
-    private ObjectProperty<Set<ProductMovementDetail>> price = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> date = new SimpleObjectProperty<>();
+    private final SimpleStringProperty description = new SimpleStringProperty();
+    private final SimpleStringProperty code = new SimpleStringProperty();
+    private final SimpleObjectProperty<Storage> store = new SimpleObjectProperty();
+    private final ObjectProperty<Set<ProductMovementDetail>> price = new SimpleObjectProperty<>();
 
     public @NotNull LocalDateTime getDate(){
         return date.get();

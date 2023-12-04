@@ -31,7 +31,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -157,11 +156,10 @@ public class DatabaseConnection {
             final Property invoke = (Property) aClass.getDeclaredMethod(field.getName() + "Property").invoke(sample);
             Object value = invoke.getValue();
             if (value != null) {
-                if (!(value instanceof String) || ((String) value).isBlank()){
+                if (!(value instanceof String searchString) || ((String) value).isBlank()){
                     continue;
                 }
                 // Add restriction
-                String searchString = (String) value;
                 if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
                     restrictions.add(
                             builder.like(root.get(field.getName()), "%" + searchString + "%")
@@ -280,13 +278,21 @@ public class DatabaseConnection {
         System.out.println(packageName);
         URL packageURL = classLoader.getResource(packageName);
 
-        URI uri = new URI(packageURL.toString());
+        URI uri = null;
+        if (packageURL != null) {
+            uri = new URI(packageURL.toString());
+        }
+        if (uri == null){
+            return names;
+        }
         File folder = new File(uri.getPath());
         File[] files = folder.listFiles();
-        for (File file: files) {
-            String name = file.getName();
-            name = name.substring(0, name.lastIndexOf('.'));  // remove ".class"
-            names.add(name);
+        if (files != null) {
+            for (File file: files) {
+                String name = file.getName();
+                name = name.substring(0, name.lastIndexOf('.'));  // remove ".class"
+                names.add(name);
+            }
         }
 
         return names;
@@ -297,9 +303,6 @@ public class DatabaseConnection {
         try{
             entityManager.remove(entry);
 
-        }catch (Exception e) {
-
-            throw e;
         }finally {
             if (entityManager != null){
                 entityManager.close();
@@ -313,9 +316,7 @@ public class DatabaseConnection {
             entityManager.getTransaction().begin();
             entityManager.merge(entry);
             entityManager.getTransaction().commit();
-        }catch (Exception e) {
-            throw e;
-        }finally {
+        } finally {
             if (entityManager != null){
                 entityManager.close();
             }
@@ -326,9 +327,7 @@ public class DatabaseConnection {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManagerFactory.createEntityManager().merge(entry);
-        }catch (Exception e) {
-            throw e;
-        }finally {
+        } finally {
             if (entityManager != null){
                 entityManager.close();
             }

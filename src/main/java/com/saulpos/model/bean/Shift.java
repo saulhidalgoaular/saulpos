@@ -18,12 +18,10 @@ package com.saulpos.model.bean;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -32,13 +30,13 @@ import java.time.LocalTime;
 public class Shift extends BeanImplementation<Shift> {
 
     @TableViewColumn
-    private SimpleStringProperty shiftName = new SimpleStringProperty();
+    private final SimpleStringProperty shiftName = new SimpleStringProperty();
 
     @TableViewColumn
-    private ObjectProperty<LocalTime> shiftStart = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalTime> shiftStart = new SimpleObjectProperty<>();
 
     @TableViewColumn
-    private ObjectProperty<LocalTime> shiftEnd = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalTime> shiftEnd = new SimpleObjectProperty<>();
 
     public String getShiftName() {
         return shiftName.get();

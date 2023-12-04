@@ -19,7 +19,6 @@ import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
 @Entity
@@ -28,10 +27,10 @@ import javafx.beans.property.SimpleObjectProperty;
 //tipo_de_usuario_puede
 public class Permission extends BeanImplementation<Permission> {
 
-    private SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
-    private ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<Profile> profile = new SimpleObjectProperty();
+    private final ObjectProperty<MenuModel> node = new SimpleObjectProperty<>();
 
-    private SimpleBooleanProperty granted = new SimpleBooleanProperty();
+    private final SimpleBooleanProperty granted = new SimpleBooleanProperty();
 
     @ManyToOne(cascade = CascadeType.ALL)
     @JoinColumn(name = "profile_id")

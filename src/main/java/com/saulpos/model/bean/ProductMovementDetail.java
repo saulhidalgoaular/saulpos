@@ -29,10 +29,10 @@ import javafx.beans.property.SimpleStringProperty;
 @Table
 public class ProductMovementDetail extends BeanImplementation<ProductMovementDetail> {
 
-    private SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
-    private SimpleIntegerProperty amount = new SimpleIntegerProperty();
-    private SimpleStringProperty type = new SimpleStringProperty();
-    private SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<ProductMovement>();
+    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
+    private final SimpleIntegerProperty amount = new SimpleIntegerProperty();
+    private final SimpleStringProperty type = new SimpleStringProperty();
+    private final SimpleObjectProperty<ProductMovement> productMovement = new SimpleObjectProperty<ProductMovement>();
 
     @OneToOne
     @NotNull
