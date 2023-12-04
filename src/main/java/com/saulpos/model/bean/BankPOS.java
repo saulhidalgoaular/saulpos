@@ -19,6 +19,7 @@ import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -40,6 +41,8 @@ public class BankPOS extends BeanImplementation<BankPOS> {
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
     @TableViewColumn
     private final SimpleObjectProperty<BankPOS.POSType> POSType = new SimpleObjectProperty<BankPOS.POSType>();
+
+    private final SimpleDoubleProperty minimumAmount = new SimpleDoubleProperty();
 
     @NotNull
     @Column(nullable = false)
@@ -97,4 +100,15 @@ public class BankPOS extends BeanImplementation<BankPOS> {
         this.description.set(description);
     }
 
+    public double getMinimumAmount() {
+        return minimumAmount.get();
+    }
+
+    public SimpleDoubleProperty minimumAmountProperty() {
+        return minimumAmount;
+    }
+
+    public void setMinimumAmount(double minimumAmount) {
+        this.minimumAmount.set(minimumAmount);
+    }
 }
