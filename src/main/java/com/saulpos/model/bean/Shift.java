@@ -8,6 +8,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 @Entity
@@ -36,7 +37,6 @@ public class Shift extends BeanImplementation<Shift> {
         this.shiftName.set(shiftName);
     }
 
-    @NotNull
     public LocalTime getShiftStart() {
         return shiftStart.get();
     }
@@ -49,7 +49,6 @@ public class Shift extends BeanImplementation<Shift> {
         this.shiftStart.set(shiftStart);
     }
 
-    @NotNull
     public LocalTime getShiftEnd() {
         return shiftEnd.get();
     }
