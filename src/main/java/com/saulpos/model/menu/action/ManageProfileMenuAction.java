@@ -74,7 +74,7 @@ public class ManageProfileMenuAction extends CrudMenuAction{
 
                 VBox vBox = new VBox(5);
                 vBox.setPadding(new Insets(30));
-                TreeView<MenuModel> treeView = CheckBoxTreeItemMenuGenerator.generateMenuNode(profile.getSortedPermissions());
+                TreeView<MenuModel> treeView = CheckBoxTreeItemMenuGenerator.generateMenuNode(profile.getTreeSetPermissions());
 
                 HBox buttonsHBox = new HBox(20);
                 Button closeButton = (Button) crudGeneratorParameter.getGenericButtonConstructor().generateNode("Close", FontAwesomeIcon.REMOVE);
