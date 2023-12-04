@@ -18,7 +18,8 @@ public class Permission extends BeanImplementation<Permission> {
 
     private SimpleBooleanProperty granted = new SimpleBooleanProperty();
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "profile_id")
     public Profile getProfile(){
         return profile.get();
     }

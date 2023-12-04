@@ -13,30 +13,16 @@ import java.net.URISyntaxException;
 public abstract class BeanImplementation<I extends BeanImplementation> extends AbstractBeanImplementationSoftDelete<I> {
     private static final long serialVersionUID = 1L;
 
-    @Override
-    public void save() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        super.save();
-        DatabaseConnection.getInstance().createEntry(this);
-    }
-
-    @Override
-    public void update() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        super.update(); // Soft update
-    }
 
     @Override
     public void saveOrUpdate() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        super.saveOrUpdate(); // Soft update
+        super.saveOrUpdate();
+        DatabaseConnection.getInstance().update(this);
     }
 
     @Override
     public void delete() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         super.delete(); // Soft delete
-    }
-
-    @Override
-    public void modify() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        DatabaseConnection.getInstance().update(this);
     }
 
     @Override
@@ -89,5 +75,6 @@ public abstract class BeanImplementation<I extends BeanImplementation> extends A
                 e.printStackTrace();
             }
         }
+        this.setId(currentBean.getId());
     }
 }

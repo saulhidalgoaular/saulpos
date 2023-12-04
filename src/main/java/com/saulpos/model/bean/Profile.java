@@ -3,6 +3,7 @@ package com.saulpos.model.bean;
 import com.saulpos.javafxcrudgenerator.annotations.Ignore;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
+import com.saulpos.model.menu.DefaultMenuGenerator;
 import jakarta.persistence.*;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -22,7 +23,7 @@ public class Profile  extends BeanImplementation<Profile> {
     private SimpleStringProperty description = new SimpleStringProperty();
 
     @Ignore
-    private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>();
+    private ObjectProperty<Set<Permission>> permissions = new SimpleObjectProperty<>(new HashSet<>());
 
     public Profile() {
     }
@@ -51,7 +52,7 @@ public class Profile  extends BeanImplementation<Profile> {
         this.description.set(description);
     }
 
-    @OneToMany(cascade = CascadeType.ALL)
+    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER, mappedBy = "profile")
     public Set<Permission> getPermissions() {
         return permissions.get();
     }
@@ -71,7 +72,9 @@ public class Profile  extends BeanImplementation<Profile> {
 
     @Transient
     public List<Permission> getSortedPermissions(){
-        // First let's build back the relationships.
+        if (getPermissions() == null){
+            return null;
+        }
 
         ArrayList<Permission> orderedPermissions = new ArrayList<>();
 
@@ -105,4 +108,28 @@ public class Profile  extends BeanImplementation<Profile> {
             order.add(permission);
         }
     }
+
+    public void fillMissingPermissions() {
+        HashSet<String> currentPermissions = new HashSet<>();
+
+        for (Permission permission : getSortedPermissions()){
+            MenuModel currentMenu = permission.getNode();
+            currentPermissions.add(currentMenu.getName()); // Let's assume all names are unique
+        }
+
+        DefaultMenuGenerator defaultMenuGenerator = new DefaultMenuGenerator();
+        ArrayList<MenuModel> menuModels = defaultMenuGenerator.generateMenu();
+
+        for (MenuModel menuModel : menuModels){
+            if (!currentPermissions.contains(menuModel.getName())) {
+                Permission permission = new Permission();
+                permission.setGranted(false);
+                permission.setProfile(this);
+                permission.setNode(menuModel);
+
+                getPermissions().add(permission);
+            }
+        }
+    }
+
 }

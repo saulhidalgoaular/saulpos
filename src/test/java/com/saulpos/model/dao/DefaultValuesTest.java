@@ -72,6 +72,6 @@ public class DefaultValuesTest {
             newProfile.getPermissions().add(permission);
         }
 
-        admin.save();
+        admin.saveOrUpdate();
     }
 }

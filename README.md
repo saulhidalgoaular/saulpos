@@ -6,7 +6,7 @@
     2. Logout [Hecho]
     3. Bloqueo de usuario y/o sistema
     4. Gestión Configuración [Hecho]
-    5. Gestión de perfiles de acceso
+    5. Gestión de perfiles de acceso [Hecho]
     6. Gestión usuarios [Hecho]
     7. Tienda
         1. Cierre del día

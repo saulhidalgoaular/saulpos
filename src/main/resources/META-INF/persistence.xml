@@ -7,7 +7,8 @@
             <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/saulpos"/>
             <property name="jakarta.persistence.jdbc.user" value="root"/>
             <property name="jakarta.persistence.jdbc.password" value="saulhidalgo"/>
-            <property name="jakarta.persistence.schema-generation.database.action" value="update"/>
+            <property name="jakarta.persistence.schema-generation.database.action" value="create"/>
+            <property name="hibernate.event.merge.entity_copy_observer" value="allow"/>
             <property name = "hibernate.show_sql" value = "true" />
             <property name="hibernate.format_sql" value="true"/>
         </properties>

@@ -166,6 +166,9 @@ public class UserB extends BeanImplementation<UserB> {
     }
 
     public void hashPassword() {
+        if (password.getValue() == null || password.getValue().isBlank()){
+            return;
+        }
         passwordHashed.set(
                 DigestUtils.sha1Hex(password.get())
         );

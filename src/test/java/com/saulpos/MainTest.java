@@ -22,7 +22,7 @@ class MainTest {
         admin.setUserName("admin");
         admin.setPassword("admin");
         admin.hashPassword();
-        admin.save();
+        admin.saveOrUpdate();
 
         FXMLLoader fxmlLoader = new FXMLLoader(Launcher.class.getResource("/login.fxml"));
         LoginModel loginModel = new LoginModel();
