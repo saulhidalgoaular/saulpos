@@ -29,6 +29,7 @@ import com.saulpos.model.bean.Report;
 import com.saulpos.model.bean.ReportColumn;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.report.DynamicReportsModel;
 import com.saulpos.view.Utils;
 import com.saulpos.view.menu.CheckBoxTreeItemMenuGenerator;
 import de.jensd.fx.glyphs.GlyphsDude;
@@ -63,7 +64,7 @@ public class ManageReportMenuAction extends CrudMenuAction{
         crudGeneratorParameter.setClazz(this.crudClass);
         HibernateDataProvider dataProvider = new HibernateDataProvider();
 
-        NodeConstructor customButtonConstructor = new NodeConstructor() {
+        NodeConstructor columnsButtonConstructor = new NodeConstructor() {
             @Override
             public Node generateNode(Object... name) {
                 Button customButton = new Button();
@@ -74,7 +75,7 @@ public class ManageReportMenuAction extends CrudMenuAction{
             }
         };
 
-        Function customButtonFunction = new Function() {
+        Function columnsButtonFunction = new Function() {
             @Override
             public Object[] run(Object[] params) throws Exception {
                 Report report = (Report)params[0];
@@ -145,7 +146,33 @@ public class ManageReportMenuAction extends CrudMenuAction{
             }
         };
 
-        crudGeneratorParameter.addCustomButton(new CustomButton(customButtonConstructor, customButtonFunction, true));
+        NodeConstructor runReportButtonConstructor = new NodeConstructor() {
+            @Override
+            public Node generateNode(Object... name) {
+                Button customButton = new Button();
+                Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.PLAY, crudGeneratorParameter.translate("run"), "20px", "10px", ContentDisplay.LEFT);
+                customButton.setGraphic(icon);
+                customButton.setPrefWidth(crudGeneratorParameter.getButtonWidth());
+                return customButton;
+            }
+        };
+
+        Function runReportFunction = new Function() {
+            @Override
+            public Object[] run(Object[] params) throws Exception {
+
+                Report report = (Report)params[0];
+
+                DynamicReportsModel dynamicReportsModel = new DynamicReportsModel(report, new HibernateDataProvider());
+
+                dynamicReportsModel.run();
+
+                return new Object[0];
+            }
+        };
+
+        crudGeneratorParameter.addCustomButton(new CustomButton(columnsButtonConstructor, columnsButtonFunction, true));
+        crudGeneratorParameter.addCustomButton(new CustomButton(runReportButtonConstructor, runReportFunction, true));
 
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);

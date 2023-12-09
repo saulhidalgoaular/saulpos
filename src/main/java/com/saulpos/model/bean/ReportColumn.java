@@ -25,13 +25,16 @@ import javafx.beans.property.SimpleStringProperty;
 @Entity
 @Access(AccessType.PROPERTY)
 @Table
-public class ReportColumn extends BeanImplementation<ReportColumn> {
+public class ReportColumn extends BeanImplementation<ReportColumn> implements Comparable<ReportColumn> {
+
 
     public enum Type{
         StringType, IntegerType, BigDecimalType, DateType, DateTypeToFractionType, DateYearType, DateDayType, DateMonthType
     }
 
     private final SimpleStringProperty name = new SimpleStringProperty();
+
+    private final SimpleStringProperty sqlName = new SimpleStringProperty();
 
     private final SimpleObjectProperty<Type> columnType = new SimpleObjectProperty<>();
 
@@ -88,5 +91,22 @@ public class ReportColumn extends BeanImplementation<ReportColumn> {
 
     public void setColumnOrder(int columnOrder) {
         this.columnOrder.set(columnOrder);
+    }
+
+    public String getSqlName() {
+        return sqlName.get();
+    }
+
+    public SimpleStringProperty sqlNameProperty() {
+        return sqlName;
+    }
+
+    public void setSqlName(String sqlName) {
+        this.sqlName.set(sqlName);
+    }
+
+    @Override
+    public int compareTo(ReportColumn o) {
+        return this.getColumnOrder() - o.getColumnOrder();
     }
 }

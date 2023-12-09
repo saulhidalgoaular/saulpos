@@ -123,6 +123,13 @@
             <artifactId>javafx-crud-generator</artifactId>
             <version>1.0-SNAPSHOT-20231209</version>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/net.sourceforge.dynamicreports/dynamicreports-core -->
+        <dependency>
+            <groupId>net.sourceforge.dynamicreports</groupId>
+            <artifactId>dynamicreports-core</artifactId>
+            <version>6.20.1</version>
+        </dependency>
+
 
     </dependencies>
 
