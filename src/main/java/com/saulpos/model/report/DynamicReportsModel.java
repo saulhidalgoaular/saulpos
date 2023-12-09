@@ -10,6 +10,7 @@ import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRDataSource;
+import net.sf.jasperreports.view.JasperViewer;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -32,7 +33,8 @@ public class DynamicReportsModel extends AbstractReportModel{
         report.columns(columns());
         report.setDataSource(sampleDataSource());
         try {
-            report.show();
+            JasperViewer jasperViewer = new JasperViewer(report.toJasperPrint(), false);
+            jasperViewer.setVisible(true);
         } catch (DRException e) {
             throw new RuntimeException(e);
         }
