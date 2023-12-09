@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.saulpos</groupId>
             <artifactId>javafx-crud-generator</artifactId>
-            <version>1.0-SNAPSHOT-20231207</version>
+            <version>1.0-SNAPSHOT-20231209</version>
         </dependency>
 
     </dependencies>

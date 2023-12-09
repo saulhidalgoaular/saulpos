@@ -158,19 +158,8 @@ public class DatabaseConnection {
             if (value == null){
                 continue;
             }
-            if (!(value instanceof String searchString) || ((String) value).isBlank()){
-                continue;
-            }
-            // Add restriction
-            if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
-                restrictions.add(
-                        builder.like(root.get(field.getName()), "%" + searchString + "%")
-                );
-            }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
-                restrictions.add(
-                        builder.equal(root.get(field.getName()), searchString)
-                );
-            }
+            addStringRestriction(type, builder, root, restrictions, field, value);
+            addBeanRestriction(type, builder, root, restrictions, field, value);
         }
         restrictions.add(builder.equal(root.get("beanStatus"), AbstractBeanImplementationSoftDelete.BeanStatus.Active));
 
@@ -185,6 +174,38 @@ public class DatabaseConnection {
 
         entityManager.close();
         return results;
+    }
+
+    private static void addBeanRestriction(AbstractDataProvider.SearchType type, CriteriaBuilder builder, Root<? extends AbstractBean> root, List<Predicate> restrictions, Field field, Object value) {
+        if (!(value instanceof BeanImplementation bean)){
+            return;
+        }
+        // Add restriction
+        if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
+            restrictions.add(
+                    builder.like(root.get(field.getName()), "%" + bean.getId() + "%")
+            );
+        }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
+            restrictions.add(
+                    builder.equal(root.get(field.getName()), bean.getId())
+            );
+        }
+    }
+
+    private static void addStringRestriction(AbstractDataProvider.SearchType type, CriteriaBuilder builder, Root<? extends AbstractBean> root, List<Predicate> restrictions, Field field, Object value) {
+        if (!(value instanceof String searchString) || ((String) value).isBlank()){
+            return;
+        }
+        // Add restriction
+        if (AbstractDataProvider.SearchType.LIKE.equals(type)) {
+            restrictions.add(
+                    builder.like(root.get(field.getName()), "%" + searchString + "%")
+            );
+        }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
+            restrictions.add(
+                    builder.equal(root.get(field.getName()), searchString)
+            );
+        }
     }
 
     public List listBySample(Class clazz, AbstractBean sample, AbstractDataProvider.SearchType type) throws Exception {
