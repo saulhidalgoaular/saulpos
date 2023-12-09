@@ -62,5 +62,10 @@ public class HibernateDataProvider implements AbstractDataProvider {
         registeredClasses.add(aClass);
     }
 
+    @Override
+    public List<Object[]> getItems(String query) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException{
+        return DatabaseConnection.getInstance().runQuery(query);
+    }
+
 
 }

@@ -14,4 +14,20 @@ public abstract class AbstractReportModel {
     }
 
     public abstract void run();
+
+    public Report getReport() {
+        return report;
+    }
+
+    public void setReport(Report report) {
+        this.report = report;
+    }
+
+    public AbstractDataProvider getDataProvider() {
+        return dataProvider;
+    }
+
+    public void setDataProvider(AbstractDataProvider dataProvider) {
+        this.dataProvider = dataProvider;
+    }
 }

@@ -26,11 +26,11 @@
         2. Gestion de etiquetas
         3. Cancelar
         4. Cerrar
-    10. Gestión de mensajes
+    10. Gestión de mensajes [Hecho]
         1. Gestion [Hecho]
-    11. Gestión de reportes
-        1. Gestion
-    12. Gestión de turno
+    11. Gestión de reportes [Hecho]
+        1. Gestion [Hecho]
+    12. Gestión de turno [Hecho]
         1. Nuevo turno [Hecho]
         2. Modificar turno [Hecho]
     13. Gestión punto de venta de banco [Hecho]

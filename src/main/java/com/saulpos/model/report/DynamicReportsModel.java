@@ -1,6 +1,7 @@
 package com.saulpos.model.report;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.Report;
 import com.saulpos.model.bean.ReportColumn;
 import net.sf.dynamicreports.jasper.builder.JasperReportBuilder;
@@ -8,15 +9,15 @@ import net.sf.dynamicreports.report.builder.column.ColumnBuilder;
 import net.sf.dynamicreports.report.constant.PageOrientation;
 import net.sf.dynamicreports.report.constant.PageType;
 import net.sf.dynamicreports.report.datasource.DRDataSource;
+import net.sf.dynamicreports.report.definition.datatype.DRIDataType;
 import net.sf.dynamicreports.report.exception.DRException;
 import net.sf.jasperreports.engine.JRDataSource;
 import net.sf.jasperreports.view.JasperViewer;
 
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Date;
-import java.util.Set;
+import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.*;
 
 import static net.sf.dynamicreports.report.builder.DynamicReports.*;
 
@@ -28,43 +29,45 @@ public class DynamicReportsModel extends AbstractReportModel{
 
     @Override
     public void run() {
-        JasperReportBuilder report = report();
-        report.setPageFormat(PageType.LETTER, Report.Orientation.PORTRAIT.equals(this.report.getOrientation()) ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE);
-        report.columns(columns());
-        report.setDataSource(sampleDataSource());
         try {
+            JasperReportBuilder report = report();
+            report.setPageFormat(PageType.LETTER, Report.Orientation.PORTRAIT.equals(this.report.getOrientation()) ? PageOrientation.PORTRAIT : PageOrientation.LANDSCAPE);
+            report.columns(columns());
+            report.highlightDetailOddRows();
+            report.title(Templates.createTitleComponent(this.report.getTitle()));
+            report.setDataSource(getDataSource());
             JasperViewer jasperViewer = new JasperViewer(report.toJasperPrint(), false);
             jasperViewer.setVisible(true);
-        } catch (DRException e) {
-            throw new RuntimeException(e);
+        }catch (Exception e){
+            DialogBuilder.createExceptionDialog("Error", "Error generating the report", e.getMessage(), e).showAndWait();
         }
     }
 
-    private ColumnBuilder[] columns(){
+    private ColumnBuilder[] columns() throws DRException {
         ArrayList<ColumnBuilder> answer = new ArrayList<>();
         ArrayList<ReportColumn> columns = new ArrayList<>(this.report.getColumns());
         Collections.sort(columns);
         for (ReportColumn column : columns){
-            if (ReportColumn.Type.StringType.equals(column.getColumnType())){
-                answer.add(col.column(column.getName(), column.getSqlName(), type.stringType()));
-            }
-            if (ReportColumn.Type.BigDecimalType.equals(column.getColumnType())){
-                answer.add(col.column(column.getName(), column.getSqlName(), type.bigDecimalType()));
-            }
-            if (ReportColumn.Type.IntegerType.equals(column.getColumnType())){
-                answer.add(col.column(column.getName(), column.getSqlName(), type.integerType()));
-            }
-            if (ReportColumn.Type.DateType.equals(column.getColumnType())){
-                answer.add(col.column(column.getName(), column.getSqlName(), type.dateType()));
-            }
+            answer.add(col.column(column.getName(), column.getSqlName(), (DRIDataType<? super Object, Object>) type.detectType(column.getColumnType().toString())));
         }
 
         return answer.toArray(new ColumnBuilder[0]);
     }
 
-    private JRDataSource sampleDataSource(){
-        DRDataSource dataSource = new DRDataSource("item", "orderdate", "quantity", "unitprice");
-        dataSource.add("Notebook", new Date(), 1, new BigDecimal(500));
+    private JRDataSource getDataSource() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+
+        ArrayList<ReportColumn> columns = new ArrayList<>(this.report.getColumns());
+        Collections.sort(columns);
+
+        DRDataSource dataSource = new DRDataSource(columns.stream().map(ReportColumn::getSqlName).toArray(String[]::new));
+
+        List<Object[]> items = this.getDataProvider().getItems(this.report.getQuery());
+
+        for (Object[] row : items){
+            dataSource.add(row);
+        }
+
         return dataSource;
     }
+
 }

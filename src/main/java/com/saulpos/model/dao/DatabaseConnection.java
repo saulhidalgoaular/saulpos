@@ -57,67 +57,9 @@ public class DatabaseConnection {
         entityManagerFactory = Persistence.createEntityManagerFactory("jpa-saulpos");
     }
 
-    @Deprecated
-    public void runHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-
-        EntityManager entityManager = entityManagerFactory.createEntityManager();
-
-        /*Transaction tx = null;
-        try {
-            tx = session.beginTransaction();
-
-            org.hibernate.query.Query sessionQuery = session.createQuery(query);
-            if ( parameters != null ){
-                for ( String key : parameters.keySet() ){
-                    sessionQuery.setParameter(key, parameters.get(key));
-                }
-            }
-            sessionQuery.executeUpdate();
-
-            tx.commit();
-        }catch (Exception e) {
-            if (tx!=null) tx.rollback();
-            throw e;
-        }finally {
-            session.close();
-        }*/
-    }
-
-    @Deprecated
-    public List listHqlQuery(String query, Map<String, Object> parameters) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        /*List ans = null;
-        Session session = getInstance().sessionFactory.openSession();
-
-        Transaction tx = null;
-        try{
-            tx = session.beginTransaction();
-
-
-            Query entityQuery =  entityManagerFactory.createEntityManager().createQuery(query);
-            if ( parameters != null ){
-                for ( String key : parameters.keySet() ){
-                    entityQuery.setParameter(key, parameters.get(key));
-                }
-            }
-            ans = entityQuery.getResultList();
-
-            tx.commit();
-        }catch (Exception e) {
-            if (tx!=null) tx.rollback();
-            throw e;
-        }finally {
-            session.close();
-        }
-
-        return ans;*/
-        return null;
-    }
-
-    public List listAll(String entityName) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        if (entityName == null){
-            return new ArrayList();
-        }
-        return listHqlQuery("FROM " + entityName, null);
+    public List<Object[]> runQuery(String query){
+        final EntityManager entityManager = entityManagerFactory.createEntityManager();
+        return entityManager.createNativeQuery(query).getResultList();
     }
 
     public void createEntry(Object newEntry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {

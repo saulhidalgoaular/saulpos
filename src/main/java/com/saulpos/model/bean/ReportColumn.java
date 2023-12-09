@@ -29,7 +29,11 @@ public class ReportColumn extends BeanImplementation<ReportColumn> implements Co
 
 
     public enum Type{
-        StringType, IntegerType, BigDecimalType, DateType, DateTypeToFractionType, DateYearType, DateDayType, DateMonthType
+        Bigdecimal, Biginteger, Byte, Double, Float, Integer,
+        Long, Short, Date, Dateyeartomonth, Dateyeartohour, Dateyeartominute,
+        Dateyeartosecond, Dateyeartofraction, Dateyear, Datemonth, Dateday,
+        Timehourtominute, Timehourtosecond, Timehourtofraction, Percentage,
+        Boolean, Character, String, List
     }
 
     private final SimpleStringProperty name = new SimpleStringProperty();
