@@ -76,7 +76,7 @@ public class DefaultMenuGenerator {
         MenuModel configurePrinter = new MenuModel("Configure Printer", shop, "PRINT", "LogoutMenuAction", MenuModel.MenuType.Administrative, 15);
         answer.add(configurePrinter);
 
-        MenuModel reports = new MenuModel("Reports", shop, "TABLE", "LogoutMenuAction", MenuModel.MenuType.Administrative, 16);
+        MenuModel reports = new MenuModel("Reports", shop, "TABLE", "ManageReportMenuAction", MenuModel.MenuType.Administrative, 16);
         answer.add(reports);
 
         MenuModel shifts = new MenuModel("Shifts", shop, "CLOCK_ALT", "ManageShiftsMenuAction", MenuModel.MenuType.Administrative, 17);

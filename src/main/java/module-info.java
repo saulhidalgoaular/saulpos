@@ -13,6 +13,8 @@ module com.saulpos {
     requires org.apache.commons.codec;
     requires com.dlsc.formsfx;
     requires com.saulpos.crud;
+    requires dynamicreports.core;
+    requires jasperreports;
 
     exports com.saulpos;
     exports com.saulpos.model.bean;
