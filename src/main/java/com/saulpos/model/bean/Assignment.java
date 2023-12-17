@@ -16,6 +16,7 @@
 package com.saulpos.model.bean;
 
 
+import com.saulpos.javafxcrudgenerator.annotations.Readonly;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
@@ -23,7 +24,8 @@ import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
 // asigna
 // 05.03.2023 DAMIR H. This class is checked, the create table statement matches the given through dox
 @Entity
@@ -43,8 +45,9 @@ public class Assignment extends BeanImplementation<Assignment> {
     @TableViewColumn
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
+    @Readonly
     @TableViewColumn(minWidth = 120, prefWidth = 150)
-    private final ObjectProperty<LocalDateTime> assignmentDay = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> assignmentDay = new SimpleObjectProperty<>(LocalDate.now());
 
     @TableViewColumn(minWidth = 130, prefWidth = 160)
     private final SimpleObjectProperty<AssignmentStatus> assignmentStatus = new SimpleObjectProperty<>();
@@ -97,16 +100,16 @@ public class Assignment extends BeanImplementation<Assignment> {
 
     @NotNull
     @Column(nullable = false)
-    public LocalDateTime getAssignmentDay() {
+    public LocalDate getAssignmentDay() {
         return assignmentDay.get();
     }
 
-    public ObjectProperty<LocalDateTime> assignmentDayProperty() {
+    public ObjectProperty<LocalDate> assignmentDayProperty() {
         return assignmentDay;
     }
 
-    public void setAssignmentDay(LocalDateTime dateTime) {
-        this.assignmentDay.set(dateTime);
+    public void setAssignmentDay(LocalDate date) {
+        this.assignmentDay.set(date);
     }
 
 }
