@@ -29,6 +29,7 @@ import com.saulpos.model.bean.Report;
 import com.saulpos.model.bean.ReportColumn;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.exception.SaulPosException;
 import com.saulpos.model.report.DynamicReportsModel;
 import com.saulpos.view.Utils;
 import com.saulpos.view.menu.CheckBoxTreeItemMenuGenerator;
@@ -162,6 +163,9 @@ public class ManageReportMenuAction extends CrudMenuAction{
             public Object[] run(Object[] params) throws Exception {
 
                 Report report = (Report)params[0];
+                if (report.getColumns().size() < 2){
+                    throw new SaulPosException("A report should have at least 2 columns");
+                }
 
                 DynamicReportsModel dynamicReportsModel = new DynamicReportsModel(report, new HibernateDataProvider());
 
