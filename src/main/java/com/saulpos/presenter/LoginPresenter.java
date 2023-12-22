@@ -28,6 +28,7 @@ import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.MainView;
 import com.saulpos.view.Utils;
+import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.PasswordField;
 import javafx.scene.layout.GridPane;
@@ -58,7 +59,9 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                                 .label("Username"),
                         Field.ofPasswordType(model.passwordProperty())
                                 .label("Password")
-                                .required("This field can’t be empty")
+                                .required("This field can’t be empty"),
+                        Field.ofSingleSelectionType(model.allSystemTypeProperty(), model.systemTypeProperty())
+                                .label("System")
                 )
         ).title("Login");
 

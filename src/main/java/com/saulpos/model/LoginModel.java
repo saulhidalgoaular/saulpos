@@ -17,11 +17,17 @@ package com.saulpos.model;
 
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.exception.SaulPosException;
+import javafx.beans.property.ListProperty;
+import javafx.beans.property.SimpleListProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.hibernate.Hibernate;
 
 import java.beans.PropertyVetoException;
@@ -32,6 +38,12 @@ public class LoginModel extends AbstractModel{
     private final SimpleStringProperty username = new SimpleStringProperty("");
 
     private final SimpleStringProperty password = new SimpleStringProperty("");
+
+    private final SimpleObjectProperty<MenuModel.MenuType> systemType = new SimpleObjectProperty<>(MenuModel.MenuType.Administrative);
+
+    private final ListProperty<MenuModel.MenuType> allSystemType = new SimpleListProperty<>(
+            FXCollections.observableArrayList(MenuModel.MenuType.Administrative, MenuModel.MenuType.POS)
+    );
 
     public String getUsername() {
         return username.get();
@@ -55,6 +67,30 @@ public class LoginModel extends AbstractModel{
 
     public void setPassword(String password) {
         this.password.set(password);
+    }
+
+    public MenuModel.MenuType getSystemType() {
+        return systemType.get();
+    }
+
+    public SimpleObjectProperty<MenuModel.MenuType> systemTypeProperty() {
+        return systemType;
+    }
+
+    public void setSystemType(MenuModel.MenuType systemType) {
+        this.systemType.set(systemType);
+    }
+
+    public ObservableList<MenuModel.MenuType> getAllSystemType() {
+        return allSystemType.get();
+    }
+
+    public ListProperty<MenuModel.MenuType> allSystemTypeProperty() {
+        return allSystemType;
+    }
+
+    public void setAllSystemType(ObservableList<MenuModel.MenuType> allSystemType) {
+        this.allSystemType.set(allSystemType);
     }
 
     public UserB checkLogin() throws Exception {
