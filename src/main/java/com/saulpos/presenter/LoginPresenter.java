@@ -24,6 +24,7 @@ import com.dlsc.formsfx.view.renderer.GroupRenderer;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.MainModel;
+import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.MainView;
@@ -80,9 +81,16 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
             UserB userB = model.checkLogin();
             if (userB != null) {
                 // Load other window
-                MainModel mainModel = new MainModel(userB);
-                MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
-                Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
+
+                if (MenuModel.MenuType.POS.equals(model.getSystemType())){
+                    // Load POS Model if it was selected.
+
+                    // TODO
+                }else{
+                    MainModel mainModel = new MainModel(userB);
+                    MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
+                    Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
+                }
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Invalid username or password").showAndWait();
             }

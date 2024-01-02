@@ -34,7 +34,7 @@ public class Invoice extends BeanImplementation<Invoice> {
         InProgress, Cancelled, Waiting, Completed
     }
 
-    private final SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>();
+    private final SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>(InvoiceStatus.InProgress);
 
     private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
 
