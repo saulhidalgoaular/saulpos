@@ -1,6 +1,7 @@
 package com.saulpos.model;
 
 import com.saulpos.model.bean.Invoice;
+import com.saulpos.model.bean.UserB;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -9,11 +10,13 @@ import java.beans.PropertyVetoException;
 
 public class POSMainModel extends AbstractModel{
 
+    private UserB userB;
     private SimpleObjectProperty<Invoice> invoiceInProgressProperty = new SimpleObjectProperty<>();
 
-    private ObservableList<Object> invoiceWaiting = FXCollections.observableArrayList();
+    private ObservableList<Invoice> invoiceWaiting = FXCollections.observableArrayList();
 
-    public POSMainModel() {
+    public POSMainModel(UserB userB) {
+        this.userB = userB;
         invoiceInProgressProperty.set(new Invoice());
     }
 
@@ -32,5 +35,13 @@ public class POSMainModel extends AbstractModel{
     @Override
     public void addDataSource() throws PropertyVetoException {
 
+    }
+
+    public UserB getUserB() {
+        return userB;
+    }
+
+    public void setUserB(UserB userB) {
+        this.userB = userB;
     }
 }

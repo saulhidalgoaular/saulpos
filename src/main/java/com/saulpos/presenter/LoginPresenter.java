@@ -24,10 +24,12 @@ import com.dlsc.formsfx.view.renderer.GroupRenderer;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.MainModel;
+import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.MainView;
+import com.saulpos.view.POSMainView;
 import com.saulpos.view.Utils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
@@ -84,8 +86,9 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
                 if (MenuModel.MenuType.POS.equals(model.getSystemType())){
                     // Load POS Model if it was selected.
-
-                    // TODO
+                    POSMainModel mainModel = new POSMainModel(userB);
+                    POSMainPresenter mainPresenter = new POSMainPresenter(mainModel, new POSMainView());
+                    Utils.goForward(new Utils.ViewDef("/posmain.fxml", mainPresenter), mainVBox);
                 }else{
                     MainModel mainModel = new MainModel(userB);
                     MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
