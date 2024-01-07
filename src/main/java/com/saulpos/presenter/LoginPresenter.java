@@ -18,6 +18,7 @@ package com.saulpos.presenter;
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
+import com.dlsc.formsfx.view.controls.SimpleComboBoxControl;
 import com.dlsc.formsfx.view.controls.SimplePasswordControl;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.dlsc.formsfx.view.renderer.GroupRenderer;
@@ -33,7 +34,9 @@ import com.saulpos.view.POSMainView;
 import com.saulpos.view.Utils;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -70,7 +73,13 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
 
         FormRenderer formRendered = new FormRenderer(form);
         PasswordField passwordField = (PasswordField) ((StackPane) ((SimplePasswordControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(1)).getChildren().get(1)).getChildren().get(0);
+        ComboBox comboBoxField = (ComboBox) ((StackPane) ((SimpleComboBoxControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(2)).getChildren().get(1)).getChildren().get(0);
         passwordField.setOnAction(actionEvent -> checkLogin());
+        comboBoxField.setOnKeyReleased(e -> {
+            if (e.getCode() == KeyCode.ENTER){
+                checkLogin();
+            }
+        });
         mainVBox.getChildren().add(
                 formRendered
         );

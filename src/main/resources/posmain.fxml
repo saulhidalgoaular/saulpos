@@ -33,35 +33,36 @@
                   <RowConstraints vgrow="ALWAYS" />
               </rowConstraints>
                <children>
-                  <Button mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Cobrar (F1)" textAlignment="CENTER" />
-                  <Button layoutX="23.0" layoutY="31.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Borrar (BACK)" textAlignment="CENTER" GridPane.columnIndex="1" />
-                  <Button layoutX="25.0" layoutY="24.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Clientes (F2)" textAlignment="CENTER" GridPane.rowIndex="1" />
-                  <Button layoutX="145.0" layoutY="24.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Extraer Dinero (F3)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" />
-                  <Button layoutX="25.0" layoutY="91.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="A espera (F4)" textAlignment="CENTER" GridPane.rowIndex="2" />
-                  <Button layoutX="175.0" layoutY="91.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Ver Espera (F5)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2" />
-                  <Button layoutX="25.0" layoutY="90.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Borrar Pedido (DEL)" textAlignment="CENTER" GridPane.rowIndex="3" />
-                  <Button layoutX="25.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Nota de Credito (F6)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="3" />
-                  <Button layoutX="23.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Desc Global (F7)" textAlignment="CENTER" GridPane.rowIndex="4" />
-                  <Button layoutX="173.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Salir (ESC)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="4" />
-                  <Button layoutX="173.0" layoutY="170.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Reporte X (F8)" textAlignment="CENTER" GridPane.rowIndex="5" />
-                  <Button layoutX="23.0" layoutY="210.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Reporte Z (END)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="5" />
+                  <Button fx:id="chargeButton" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Cobrar (F1)" textAlignment="CENTER" />
+                  <Button fx:id="deleteCurrentButton" layoutX="23.0" layoutY="31.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Borrar (BACK)" textAlignment="CENTER" GridPane.columnIndex="1" />
+                  <Button fx:id="clientsButton" layoutX="25.0" layoutY="24.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Clientes (F2)" textAlignment="CENTER" GridPane.rowIndex="1" />
+                  <Button fx:id="removeCashButton" layoutX="145.0" layoutY="24.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Extraer Dinero (F3)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                  <Button fx:id="sendToWaitButton" layoutX="25.0" layoutY="91.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="A espera (F4)" textAlignment="CENTER" GridPane.rowIndex="2" />
+                  <Button fx:id="viewWaitingButton" layoutX="175.0" layoutY="91.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Ver Espera (F5)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                  <Button fx:id="deleteAllButton" layoutX="25.0" layoutY="90.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Borrar Pedido (DEL)" textAlignment="CENTER" GridPane.rowIndex="3" />
+                  <Button fx:id="creditNoteButton" layoutX="25.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Nota de Credito (F6)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+                  <Button fx:id="globalDiscountButton" layoutX="23.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Desc Global (F7)" textAlignment="CENTER" GridPane.rowIndex="4" />
+                  <Button fx:id="exitButton" layoutX="173.0" layoutY="130.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Salir (ESC)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+                  <Button layoutX="173.0" layoutY="170.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Reporte X (F8)" textAlignment="CENTER" GridPane.rowIndex="5" fx:id="xReportButton" />
+                  <Button fx:id="zReportButton" layoutX="23.0" layoutY="210.0" mnemonicParsing="false" prefHeight="40.0" prefWidth="125.0" text="Reporte Z (END)" textAlignment="CENTER" GridPane.columnIndex="1" GridPane.rowIndex="5" />
                </children>
             </GridPane>
             <VBox HBox.hgrow="ALWAYS">
                <children>
-                  <TextField VBox.vgrow="NEVER">
+                  <TextField fx:id="barcodeTextField" promptText="Codigo de Barras" VBox.vgrow="NEVER">
                      <VBox.margin>
                         <Insets left="20.0" right="20.0" top="20.0" />
                      </VBox.margin>
                   </TextField>
-                  <TableView VBox.vgrow="ALWAYS">
+                  <TableView fx:id="itemsTableView" VBox.vgrow="ALWAYS">
                     <columns>
-                      <TableColumn prefWidth="-1.0" text="Descripcion" />
-                      <TableColumn prefWidth="-1.0" text="Cantidad" />
-                        <TableColumn prefWidth="-1.0" text="Descuento" />
-                        <TableColumn prefWidth="-1.0" text="Precio" />
-                        <TableColumn prefWidth="-1.0" text="IVA" />
-                        <TableColumn prefWidth="-1.0" text="Total" />
+                      <TableColumn fx:id="descriptionColumn" prefWidth="-1.0" text="Descripcion" />
+                      <TableColumn fx:id="amountColumn" prefWidth="-1.0" text="Cantidad" />
+                        <TableColumn fx:id="discountLabel" prefWidth="-1.0" text="Descuento" />
+                        <TableColumn fx:id="priceColumn" prefWidth="-1.0" text="Precio" />
+                        <TableColumn fx:id="vatColumn" prefWidth="-1.0" text="IVA" />
+                        <TableColumn fx:id="totalColumn" prefWidth="-1.0" text="Total" />
+                        <TableColumn fx:id="totalUSDColumn" prefWidth="-1.0" text="Total USD" />
                     </columns>
                      <columnResizePolicy>
                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
@@ -120,13 +121,25 @@
             </VBox>
          </children>
       </HBox>
-      <Label text="Saul POS" textAlignment="CENTER">
-         <font>
-            <Font name="System Bold" size="20.0" />
-         </font>
-         <VBox.margin>
-            <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
-         </VBox.margin>
-      </Label>
+      <HBox alignment="CENTER">
+         <children>
+            <Label text="Saul POS" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="20.0" />
+               </font>
+               <HBox.margin>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </HBox.margin>
+            </Label>
+            <Label fx:id="clockLabel" alignment="CENTER_RIGHT" textAlignment="CENTER">
+               <font>
+                  <Font name="System Bold" size="18.0" />
+               </font>
+               <HBox.margin>
+                  <Insets left="100.0" />
+               </HBox.margin>
+            </Label>
+         </children>
+      </HBox>
    </children>
 </VBox>
