@@ -9,6 +9,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.application.Platform;
+import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
+import com.saulpos.view.POSIcons;
 
 public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainView> {
 
@@ -17,82 +22,82 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
     public VBox mainPOSVBox;
 
     @FXML
-    private TableColumn<?, ?> amountColumn;
+    public TableColumn<?, ?> amountColumn;
 
     @FXML
-    private TextField barcodeTextField;
+    public TextField barcodeTextField;
 
     @FXML
-    private Button chargeButton;
+    public Button chargeButton;
 
     @FXML
-    private Button clientsButton;
+    public Button clientsButton;
 
     @FXML
-    private Label clockLabel;
+    public Label clockLabel;
 
     @FXML
-    private Button creditNoteButton;
+    public Button creditNoteButton;
 
     @FXML
-    private Button deleteAllButton;
+    public Button deleteAllButton;
 
     @FXML
-    private Button deleteCurrentButton;
+    public Button deleteCurrentButton;
 
     @FXML
-    private TableColumn<?, ?> descriptionColumn;
+    public TableColumn<?, ?> descriptionColumn;
 
     @FXML
-    private TableColumn<?, ?> discountLabel;
+    public TableColumn<?, ?> discountLabel;
 
     @FXML
-    private Button exitButton;
+    public Button exitButton;
 
     @FXML
-    private Button globalDiscountButton;
+    public Button globalDiscountButton;
 
     @FXML
-    private TableView<?> itemsTableView;
+    public TableView<?> itemsTableView;
 
     @FXML
-    private Label ivaLabel;
+    public Label ivaLabel;
 
     @FXML
-    private TableColumn<?, ?> priceColumn;
+    public TableColumn<?, ?> priceColumn;
 
     @FXML
-    private Button removeCashButton;
+    public Button removeCashButton;
 
     @FXML
-    private Button sendToWaitButton;
+    public Button sendToWaitButton;
 
     @FXML
-    private Label subtotalLabel;
+    public Label subtotalLabel;
 
     @FXML
-    private TableColumn<?, ?> totalColumn;
+    public TableColumn<?, ?> totalColumn;
 
     @FXML
-    private Label totalDollarLabel;
+    public Label totalDollarLabel;
 
     @FXML
-    private Label totalLabel;
+    public Label totalLabel;
 
     @FXML
-    private TableColumn<?, ?> totalUSDColumn;
+    public TableColumn<?, ?> totalUSDColumn;
 
     @FXML
-    private TableColumn<?, ?> vatColumn;
+    public TableColumn<?, ?> vatColumn;
 
     @FXML
-    private Button viewWaitingButton;
+    public Button viewWaitingButton;
 
     @FXML
-    private Button xReportButton;
+    public Button xReportButton;
 
     @FXML
-    private Button zReportButton;
+    public Button zReportButton;
 
     public POSMainPresenter(POSMainModel model, POSMainView view) {
         super(model, view);
@@ -110,11 +115,53 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
 
     @Override
     public void initializeComponents() {
+        setButtonsIcons("MONEY",chargeButton);
+        setButtonsIcons("MINUS_CIRCLE",deleteCurrentButton);
+        setButtonsIcons("USER",clientsButton);
+        setButtonsIcons("HAND_PAPER_ALT",removeCashButton);
+        setButtonsIcons("CLOCK_ALT",sendToWaitButton);
+        setButtonsIcons("EYE",viewWaitingButton);
+        setButtonsIcons("TRASH",deleteAllButton);
+        setButtonsIcons("FILE_TEXT",creditNoteButton);
+        setButtonsIcons("USD",globalDiscountButton);
+        setButtonsIcons("SIGN_OUT",exitButton);
+        setButtonsIcons("BAR_CHART",xReportButton);
+        setButtonsIcons("BAR_CHART",zReportButton);
+
+        Platform.runLater(() -> {
+            // focus on barcode text.
+            barcodeTextField.requestFocus();
+            //Get scene for keyreleased event
+            Scene principalscene = barcodeTextField.getScene();
+            principalscene.setOnKeyReleased(this::handleKeyReleased);
+        });
 
     }
+
 
     @Override
     public void entryActions() {
 
+    }
+    public void handleKeyReleased(KeyEvent event) {
+        KeyCode keyCode = event.getCode();
+        switch (keyCode) {
+            case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
+            case BACK_SPACE -> {System.out.println("Se presionó BACKSPACE (Borrar)");}
+            case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
+            case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
+            case F4 -> {System.out.println("Se presionó F4 (A espera)");}
+            case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
+            case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
+            case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
+            case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
+            case ESCAPE -> {System.out.println("Se presionó ESC (Salir)");}
+            case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
+            case END -> {System.out.println("Se presionó END (Reporte Z)");}
+        }
+    }
+    public void setButtonsIcons(String iconname, Button buttonname ){
+        Label iconLabel = POSIcons.getGraphic(iconname);
+        buttonname.setGraphic(iconLabel);
     }
 }
