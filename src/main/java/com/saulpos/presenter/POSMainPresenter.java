@@ -9,20 +9,29 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+//
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import com.saulpos.view.POSIcons;
+import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.bean.Product;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import java.util.List;
+import javafx.scene.control.cell.PropertyValueFactory;
+
+//
+
 
 public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainView> {
+
+
 
     // Create the FXML components to bind
     @FXML
     public VBox mainPOSVBox;
-
-    @FXML
-    public TableColumn<?, ?> amountColumn;
 
     @FXML
     public TextField barcodeTextField;
@@ -44,27 +53,31 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
 
     @FXML
     public Button deleteCurrentButton;
-
     @FXML
-    public TableColumn<?, ?> descriptionColumn;
-
+    public TableView<Product> itemsTableView;
     @FXML
-    public TableColumn<?, ?> discountLabel;
+    public TableColumn<Product, String> descriptionColumn;
+    @FXML
+    public TableColumn<Product, Integer> amountColumn;
+    @FXML
+    public TableColumn<Product, Double> discountLabel;
+    @FXML
+    public TableColumn<Product, Double> priceColumn;
+    @FXML
+    public TableColumn<Product, Double> vatColumn;
+    @FXML
+    public TableColumn<Product, Double> totalColumn;
+    @FXML
+    public TableColumn<Product, Double> totalUSDColumn;
+
 
     @FXML
     public Button exitButton;
 
     @FXML
     public Button globalDiscountButton;
-
-    @FXML
-    public TableView<?> itemsTableView;
-
     @FXML
     public Label ivaLabel;
-
-    @FXML
-    public TableColumn<?, ?> priceColumn;
 
     @FXML
     public Button removeCashButton;
@@ -75,8 +88,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
     @FXML
     public Label subtotalLabel;
 
-    @FXML
-    public TableColumn<?, ?> totalColumn;
+
 
     @FXML
     public Label totalDollarLabel;
@@ -84,11 +96,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
     @FXML
     public Label totalLabel;
 
-    @FXML
-    public TableColumn<?, ?> totalUSDColumn;
 
-    @FXML
-    public TableColumn<?, ?> vatColumn;
 
     @FXML
     public Button viewWaitingButton;
@@ -99,8 +107,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
     @FXML
     public Button zReportButton;
 
+    //Aqui
+    private final HibernateDataProvider hibernateDataProvider;
     public POSMainPresenter(POSMainModel model, POSMainView view) {
         super(model, view);
+        this.hibernateDataProvider = new HibernateDataProvider();
+
     }
 
     @Override
@@ -134,6 +146,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
             //Get scene for keyreleased event
             Scene principalscene = barcodeTextField.getScene();
             principalscene.setOnKeyReleased(this::handleKeyReleased);
+
+
+
         });
 
     }
@@ -164,4 +179,16 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
         Label iconLabel = POSIcons.getGraphic(iconname);
         buttonname.setGraphic(iconLabel);
     }
+
 }
+/*            // Obtener y mostrar la lista de products
+            List<Product> products = hibernateDataProvider.getAllItems(Product.class);
+            for (Product product : products) {
+                System.out.println("Product ID: " + product.getId());
+                System.out.println("Barcode: " + product.getBarcode());
+                System.out.println("Brand: " + product.getBrand());
+                System.out.println("Description: " + product.getDescription());
+                // Otros campos...
+                System.out.println("-------------------------");
+            }
+            */
