@@ -50,6 +50,7 @@ public class UserB extends BeanImplementation<UserB> {
 
     @DisplayOrder(orderValue = 4)
     @TableViewColumn
+    @ManyToOne
     private final SimpleObjectProperty<Profile> profile = new SimpleObjectProperty<>();
 
     @DisplayOrder(orderValue = 5)

@@ -69,7 +69,8 @@ public class MenuModel extends BeanImplementation<MenuModel> implements Comparab
         this.name.set(name);
     }
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "predecessor_id")
     public MenuModel getPredecessor() {
         return predecessor.get();
     }
