@@ -35,6 +35,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 public class DatabaseConnection {
@@ -130,7 +131,7 @@ public class DatabaseConnection {
             );
         }else if (AbstractDataProvider.SearchType.EQUAL.equals(type)){
             restrictions.add(
-                    builder.equal(root.get(field.getName()), bean.getId())
+                    builder.equal(root.get(field.getName()), bean)
             );
         }
     }
@@ -263,7 +264,54 @@ public class DatabaseConnection {
         return names;
     }
 
-    public void delete(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public static void ensureManaged(EntityManager em, Object entity) {
+        if (entity == null) {
+            return;
+        }
+
+        if (em.contains(entity)) {
+            return;
+        }
+
+        Class<?> clazz = entity.getClass();
+
+        // Merge the entity itself if it is detached
+        if (em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity) != null) {
+            entity = em.merge(entity);
+        }
+
+        // Traverse fields to find associations
+        for (Field field : clazz.getDeclaredFields()) {
+            if (Collection.class.isAssignableFrom(field.getType())) {
+                // Handle collections of entities
+                field.setAccessible(true);
+                try {
+                    Collection<?> collection = (Collection<?>) field.get(entity);
+                    if (collection != null) {
+                        for (Object item : collection) {
+                            ensureManaged(em, item);
+                        }
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Failed to access field: " + field.getName(), e);
+                }
+            } else {
+                // Handle single entity associations
+                field.setAccessible(true);
+                try {
+                    Object fieldValue = field.get(entity);
+                    if (fieldValue != null && fieldValue.getClass().isAnnotationPresent(Entity.class)) {
+                        fieldValue = em.merge(fieldValue);
+                        field.set(entity, fieldValue);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RuntimeException("Failed to access field: " + field.getName(), e);
+                }
+            }
+        }
+    }
+
+    public void delete(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.remove(entry);
@@ -275,14 +323,14 @@ public class DatabaseConnection {
         }
     }
 
-    public void update(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void update(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.getTransaction().begin();
-            if (entry.getId() == 0) {
+
+            ensureManaged(entityManager, entry);
+            if (entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entry) == null) {
                 entityManager.persist(entry);
-            } else {
-                entityManager.merge(entry);
             }
             entityManager.getTransaction().commit();
         } finally {
@@ -292,7 +340,7 @@ public class DatabaseConnection {
         }
     }
 
-    public void saveOrUpdate(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void saveOrUpdate(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManagerFactory.createEntityManager().merge(entry);
