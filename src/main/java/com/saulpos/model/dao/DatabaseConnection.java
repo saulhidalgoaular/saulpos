@@ -263,7 +263,7 @@ public class DatabaseConnection {
         return names;
     }
 
-    public void delete(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void delete(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.remove(entry);
@@ -275,11 +275,15 @@ public class DatabaseConnection {
         }
     }
 
-    public void update(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void update(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.getTransaction().begin();
-            entityManager.persist(entry);
+            if (entry.getId() == 0) {
+                entityManager.persist(entry);
+            } else {
+                entityManager.merge(entry);
+            }
             entityManager.getTransaction().commit();
         } finally {
             if (entityManager != null){
@@ -288,7 +292,7 @@ public class DatabaseConnection {
         }
     }
 
-    public void saveOrUpdate(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void saveOrUpdate(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManagerFactory.createEntityManager().merge(entry);
