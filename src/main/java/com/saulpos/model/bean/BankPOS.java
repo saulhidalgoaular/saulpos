@@ -59,7 +59,7 @@ public class BankPOS extends BeanImplementation<BankPOS> {
         this.POSType.set(POSType);
     }
 
-    @OneToOne
+    @ManyToOne
     @NotNull
     public Cashier getCashier() {
         return cashier.get();

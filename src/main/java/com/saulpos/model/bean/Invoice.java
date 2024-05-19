@@ -218,7 +218,7 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.zReportNumber.set(zReportNumber);
     }
 
-    @OneToOne
+    @ManyToOne
     public UserB getUser() {
         return user.get();
     }
