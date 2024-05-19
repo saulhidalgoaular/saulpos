@@ -23,37 +23,28 @@ import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.view.*;
 import com.saulpos.model.MainModel;
-import com.saulpos.model.bean.MenuModel;
-import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.Report;
 import com.saulpos.model.bean.ReportColumn;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.exception.SaulPosException;
 import com.saulpos.model.report.DynamicReportsModel;
+import com.saulpos.view.AbstractView;
 import com.saulpos.view.Utils;
-import com.saulpos.view.menu.CheckBoxTreeItemMenuGenerator;
 import de.jensd.fx.glyphs.GlyphsDude;
 import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
-import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.TreeView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.VBox;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ManageReportMenuAction extends CrudMenuAction{
 
-    private Utils.ViewDef viewDef;
+    private AbstractView viewDef;
 
     public ManageReportMenuAction() {
         super(Report.class);
@@ -141,7 +132,8 @@ public class ManageReportMenuAction extends CrudMenuAction{
                     }
                 };
                 CrudPresenter crud = crudGenerator.generate();
-                Utils.goForward(new Utils.ViewDef(crud.getView().getMainView()), mainPane);
+                AbstractView view = new AbstractView(crud.getView().getMainView());
+                Utils.goForward(view, mainPane);
 
                 return null;
             }
@@ -181,7 +173,7 @@ public class ManageReportMenuAction extends CrudMenuAction{
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
-        viewDef = new Utils.ViewDef(crud.getView().getMainView());
+        viewDef = new AbstractView(crud.getView().getMainView());
         Utils.goForward(viewDef, mainPane);
     }
 }

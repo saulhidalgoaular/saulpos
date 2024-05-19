@@ -15,12 +15,10 @@
  */
 package com.saulpos.view;
 
-import com.saulpos.presenter.AbstractPresenter;
 import javafx.animation.Interpolator;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.layout.AnchorPane;
@@ -32,56 +30,27 @@ import java.util.ArrayList;
 
 public class Utils {
 
-    public static class ViewDef{
-        private String fxmlPath;
-
-        private AbstractPresenter presenter;
-        private Node rootNode;
-        
-        public ViewDef(String fxmlPath, AbstractPresenter presenter){
-            this.fxmlPath = fxmlPath;
-            this.presenter = presenter;
-        }
-
-        public ViewDef(Node rootNode) {
-            this.rootNode = rootNode;
-        }
-        
-        public Node getRoot() throws IOException {
-            if (fxmlPath != null){
-                FXMLLoader loader = new FXMLLoader(presenter.getClass().getResource(fxmlPath), presenter.getModel().getLanguage());
-
-                loader.setController(presenter);
-
-                final Parent root = loader.load();
-                return root;
-            }else{
-                return rootNode;
-            }
-        }
-    }
-
-    public static void goForward(final ViewDef viewDef,
+    public static void goForward(final AbstractView viewDef,
                                  final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane, mainPane.getScene().getWidth(), .0, true);
     }
 
-    public static void goBack(final ViewDef viewDef,
+    public static void goBack(final AbstractView viewDef,
                        final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane, (mainPane.getScene().getWidth()) * (-1), .0, false);
     }
 
-    public static void goBackRemove(final ViewDef viewDef,
+    public static void goBackRemove(final AbstractView viewDef,
                              final Class classInstance, final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane,.0, mainPane.getScene().getWidth(), true);
     }
 
-    public static void goForwardRemove(final ViewDef viewDef,
+    public static void goForwardRemove(final AbstractView viewDef,
                                 final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane, mainPane.getScene().getWidth(), .0, true);
     }
 
-    public static void goTo(final ViewDef viewDef,
+    public static void goTo(final AbstractView viewDef,
                      final Pane mainPane, final double from,
                      final double to, final boolean remove) throws IOException {
         Parent rootPane = mainPane;

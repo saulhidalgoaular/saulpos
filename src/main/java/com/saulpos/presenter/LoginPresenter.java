@@ -29,10 +29,8 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
-import com.saulpos.view.MainView;
 import com.saulpos.view.POSMainView;
 import com.saulpos.view.Utils;
-import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
@@ -41,14 +39,14 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
+public class LoginPresenter extends AbstractPresenter<LoginModel> {
     @FXML
     public VBox mainVBox;
 
     private Form form;
 
-    public LoginPresenter(LoginModel model, LoginView view) {
-        super(model, view);
+    public LoginPresenter(LoginModel model) {
+        super(model);
     }
 
     @Override
@@ -96,12 +94,13 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 if (MenuModel.MenuType.POS.equals(model.getSystemType())){
                     // Load POS Model if it was selected.
                     POSMainModel mainModel = new POSMainModel(userB);
-                    POSMainPresenter mainPresenter = new POSMainPresenter(mainModel, new POSMainView());
-                    Utils.goForward(new Utils.ViewDef("/posmain.fxml", mainPresenter), mainVBox);
+                    POSMainPresenter mainPresenter = new POSMainPresenter(mainModel);
+                    POSMainView posMainView = new POSMainView("/posmain.fxml", mainPresenter);
+                    Utils.goForward(posMainView, mainVBox);
                 }else{
                     MainModel mainModel = new MainModel(userB);
-                    MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
-                    Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
+                    MainPresenter mainPresenter = new MainPresenter(mainModel);
+                    Utils.goForward(new LoginView("/main.fxml", mainPresenter), mainVBox);
                 }
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Invalid username or password").showAndWait();

@@ -16,21 +16,20 @@
 package com.saulpos.presenter;
 
 import com.saulpos.model.MainModel;
-import com.saulpos.view.MainView;
 import com.saulpos.view.ParentPane;
 import com.saulpos.view.menu.MenuBarGenerator;
 import javafx.fxml.FXML;
 import javafx.scene.control.MenuBar;
 import javafx.scene.layout.VBox;
 
-public class MainPresenter extends AbstractPresenter<MainModel, MainView> {
+public class MainPresenter extends AbstractPresenter<MainModel> {
 
     @FXML
     public VBox mainVBox;
     private final ParentPane pane = new ParentPane();
 
-    public MainPresenter(MainModel model, MainView view) {
-        super(model, view);
+    public MainPresenter(MainModel model) {
+        super(model);
     }
 
     @Override

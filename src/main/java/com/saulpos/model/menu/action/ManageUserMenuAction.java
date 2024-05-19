@@ -23,6 +23,7 @@ import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.AbstractView;
 import com.saulpos.view.Utils;
 import javafx.scene.layout.Pane;
 
@@ -52,6 +53,6 @@ public class ManageUserMenuAction extends CrudMenuAction{
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
-        Utils.goForward(new Utils.ViewDef(crud.getView().getMainView()), mainPane);
+        Utils.goForward(new AbstractView(crud.getView().getMainView()), mainPane);
     }
 }

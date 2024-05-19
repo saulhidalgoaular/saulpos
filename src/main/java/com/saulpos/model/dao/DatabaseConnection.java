@@ -34,7 +34,8 @@ import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DatabaseConnection {
     private static DatabaseConnection INSTANCE = null;
@@ -278,7 +279,7 @@ public class DatabaseConnection {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.getTransaction().begin();
-            entityManager.merge(entry);
+            entityManager.persist(entry);
             entityManager.getTransaction().commit();
         } finally {
             if (entityManager != null){

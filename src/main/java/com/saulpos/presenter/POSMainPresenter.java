@@ -1,31 +1,21 @@
 package com.saulpos.presenter;
 
 import com.saulpos.model.POSMainModel;
-import com.saulpos.view.POSMainView;
-import javafx.fxml.FXML;
-import javafx.scene.layout.VBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-//
+import com.saulpos.model.bean.Product;
+import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.POSIcons;
 import javafx.application.Platform;
+import javafx.fxml.FXML;
 import javafx.scene.Scene;
+import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import com.saulpos.view.POSIcons;
-import com.saulpos.model.dao.HibernateDataProvider;
-import com.saulpos.model.bean.Product;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import java.util.List;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.layout.VBox;
 
 //
 
 
-public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainView> {
+public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
 
 
@@ -109,8 +99,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
-    public POSMainPresenter(POSMainModel model, POSMainView view) {
-        super(model, view);
+
+    public POSMainPresenter(POSMainModel model) {
+        super(model);
         this.hibernateDataProvider = new HibernateDataProvider();
 
     }
