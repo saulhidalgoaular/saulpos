@@ -1,10 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.*?>
-
-<VBox fx:id="mainVBox" alignment="BOTTOM_CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/17.0.2-ea" xmlns:fx="http://javafx.com/fxml/1">
+<?import javafx.scene.text.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" alignment="BOTTOM_CENTER" spacing="20.0" xmlns="http://javafx.com/javafx/22">
     <padding>
-        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+        <Insets bottom="20.0" left="20.0" right="20.0" top="20.0">
+        </Insets>
     </padding>
+
+    <HBox VBox.vgrow="ALWAYS">
+        <!-- Left Panel -->
+        <VBox alignment="CENTER" style="-fx-background-color: #263238;">
+            <VBox alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
+                <ImageView fx:id="logo" fitHeight="80" fitWidth="80"/>
+                <Text style="-fx-fill: white; -fx-font-size: 24px;" text="SaulPOS"/>
+                <Text style="-fx-fill: white;" text="Venue Management System"/>
+                <Text style="-fx-fill: white; -fx-font-size: 14px; -fx-text-alignment: center;"
+                      text="A powerful, yet easy-to-use application for managing venue geospatial data."
+                      wrappingWidth="300"/>
+            </VBox>
+            <Text style="-fx-fill: white; -fx-font-size: 10px; -fx-alignment: bottom-center;" text="Version 2.1"/>
+        </VBox>
+
+        <!-- Right Panel -->
+        <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
+            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 20;">
+                <Text style="-fx-font-size: 24px;" text="Log into SaulPOS"/>
+                <Text text="Enter your login details below."/>
+                <VBox fx:id="mainVBox"/>
+                <Button style="-fx-background-color: #37474F; -fx-text-fill: white; -fx-font-size: 14px;"
+                        text="SIGN IN"/>
+            </VBox>
+        </VBox>
+    </HBox>
 </VBox>
