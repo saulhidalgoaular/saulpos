@@ -1,7 +1,10 @@
 package com.saulpos.model;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.model.bean.Invoice;
+import com.saulpos.model.bean.Product;
 import com.saulpos.model.bean.UserB;
+import com.saulpos.model.dao.DatabaseConnection;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -14,6 +17,7 @@ import javafx.util.Duration;
 import java.beans.PropertyVetoException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public class POSMainModel extends AbstractModel{
 
@@ -29,6 +33,8 @@ public class POSMainModel extends AbstractModel{
     private SimpleStringProperty employeeName = new SimpleStringProperty();
 
     private ObservableList<Invoice> invoiceWaiting = FXCollections.observableArrayList();
+
+    private SimpleStringProperty barcodeBar = new SimpleStringProperty();
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
@@ -106,5 +112,49 @@ public class POSMainModel extends AbstractModel{
 
     public SimpleStringProperty employeeNameProperty() {
         return employeeName;
+    }
+
+    public String getBarcodeBar() {
+        return barcodeBar.get();
+    }
+
+    public void setBarcodeBar(String barcodeBar) {
+        this.barcodeBar.set(barcodeBar);
+    }
+
+    public SimpleStringProperty barcodeBarProperty() {
+        return barcodeBar;
+    }
+
+    public ObservableList<Invoice> getInvoiceWaiting() {
+        return invoiceWaiting;
+    }
+
+    public void setInvoiceWaiting(ObservableList<Invoice> invoiceWaiting) {
+        this.invoiceWaiting = invoiceWaiting;
+    }
+
+    public Invoice getInvoiceInProgressProperty() {
+        return invoiceInProgressProperty.get();
+    }
+
+    public void setInvoiceInProgressProperty(Invoice invoiceInProgressProperty) {
+        this.invoiceInProgressProperty.set(invoiceInProgressProperty);
+    }
+
+    public SimpleObjectProperty<Invoice> invoiceInProgressPropertyProperty() {
+        return invoiceInProgressProperty;
+    }
+
+    public void addItem() throws Exception {
+        Product product = new Product();
+        product.setBarcode(barcodeBar.getValue());
+        final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
+        if (list.size() == 1) {
+            invoiceInProgressProperty.get().getProducts().add(
+                    list.get(0)
+            );
+            barcodeBar.setValue("");
+        }
     }
 }

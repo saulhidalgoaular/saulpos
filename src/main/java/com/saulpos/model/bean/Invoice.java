@@ -19,6 +19,8 @@ import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
@@ -69,6 +71,8 @@ public class Invoice extends BeanImplementation<Invoice> {
     private final SimpleObjectProperty<Assignment> assignment = new SimpleObjectProperty();
 
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
+
+    private ObservableList<Product> products = FXCollections.observableArrayList();
 
     @OneToOne
     public Cashier getPrinter() {
@@ -272,4 +276,12 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.status.set(status);
     }
 
+    @ManyToMany
+    public ObservableList<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(ObservableList<Product> products) {
+        this.products = products;
+    }
 }

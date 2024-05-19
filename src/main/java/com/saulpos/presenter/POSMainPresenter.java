@@ -4,6 +4,7 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -114,6 +115,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         clockLabel.textProperty().bind(model.clockValueProperty());
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
+        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
+        Bindings.bindContent(itemsTableView.getItems(), model.getInvoiceInProgressProperty().getProducts());
     }
 
     @Override
@@ -133,6 +136,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
 
         });
+
+        descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
+        //priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty());
 
     }
 
@@ -156,6 +162,13 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case ESCAPE -> {System.out.println("Se presionó ESC (Salir)");}
             case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
+            case ENTER -> {
+                try {
+                    model.addItem();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
