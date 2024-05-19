@@ -11,29 +11,35 @@
         </Insets>
     </padding>
 
-    <HBox VBox.vgrow="ALWAYS">
+    <HBox fx:id="centralPane" VBox.vgrow="ALWAYS">
         <!-- Left Panel -->
         <VBox alignment="CENTER" style="-fx-background-color: #263238;">
-            <VBox alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
+            <VBox fx:id="leftPane" alignment="CENTER" spacing="20" VBox.vgrow="ALWAYS">
                 <ImageView fx:id="logo" fitHeight="80" fitWidth="80"/>
                 <Text style="-fx-fill: white; -fx-font-size: 24px;" text="SaulPOS"/>
-                <Text style="-fx-fill: white;" text="Venue Management System"/>
+                <Text style="-fx-fill: white;" text="Point of Sale Sofware"/>
                 <Text style="-fx-fill: white; -fx-font-size: 14px; -fx-text-alignment: center;"
-                      text="A powerful, yet easy-to-use application for managing venue geospatial data."
+                      text="A powerful, yet easy-to-use Point of Sale software designed for small and medium-sized companies."
                       wrappingWidth="300"/>
             </VBox>
-            <Text style="-fx-fill: white; -fx-font-size: 10px; -fx-alignment: bottom-center;" text="Version 2.1"/>
+            <Text style="-fx-fill: white; -fx-font-size: 10px; -fx-alignment: bottom-center;" text="Version 0.1"/>
         </VBox>
 
         <!-- Right Panel -->
-        <VBox alignment="CENTER" HBox.hgrow="ALWAYS">
-            <VBox alignment="CENTER" spacing="10" style="-fx-padding: 20;">
-                <Text style="-fx-font-size: 24px;" text="Log into SaulPOS"/>
-                <Text text="Enter your login details below."/>
-                <VBox fx:id="mainVBox"/>
-                <Button style="-fx-background-color: #37474F; -fx-text-fill: white; -fx-font-size: 14px;"
-                        text="SIGN IN"/>
-            </VBox>
+        <VBox fx:id="rightPane" alignment="TOP_CENTER" HBox.hgrow="ALWAYS">
+            <HBox fx:id="systemHBox" alignment="CENTER_RIGHT"/>
+            <HBox VBox.vgrow="ALWAYS">
+                <children>
+                    <VBox alignment="CENTER" spacing="10" style="-fx-padding: 20;" HBox.hgrow="ALWAYS">
+                        <Text style="-fx-font-size: 24px;" text="Log into SaulPOS"/>
+                        <Text text="Enter your login details below."/>
+                        <VBox fx:id="mainVBox"/>
+                        <Button onAction="#signIn"
+                                style="-fx-background-color: #37474F; -fx-text-fill: white; -fx-font-size: 14px;"
+                                text="SIGN IN"/>
+                    </VBox>
+                </children>
+            </HBox>
         </VBox>
     </HBox>
 </VBox>

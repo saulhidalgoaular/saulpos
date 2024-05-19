@@ -19,6 +19,7 @@ module com.saulpos {
     exports com.saulpos;
     exports com.saulpos.model.bean;
     exports com.saulpos.presenter;
-    opens com.saulpos to javafx.graphics, org.hibernate.orm.core;
+    opens com.saulpos to javafx.graphics, org.hibernate.orm.core, javafx.fxml;
+    opens com.saulpos.presenter to javafx.fxml;
     opens com.saulpos.model.bean to org.hibernate.orm.core;
 }

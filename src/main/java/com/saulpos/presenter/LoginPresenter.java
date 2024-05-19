@@ -18,7 +18,6 @@ package com.saulpos.presenter;
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
-import com.dlsc.formsfx.view.controls.SimpleComboBoxControl;
 import com.dlsc.formsfx.view.controls.SimplePasswordControl;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.dlsc.formsfx.view.renderer.GroupRenderer;
@@ -31,11 +30,11 @@ import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.POSMainView;
 import com.saulpos.view.Utils;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -45,13 +44,28 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
 
     private Form form;
 
+    private Form systemForm;
+
+    @FXML
+    private VBox rightPane;
+
+    @FXML
+    private VBox leftPane;
+
+    @FXML
+    private HBox centralPane;
+
+    @FXML
+    private HBox systemHBox;
+
     public LoginPresenter(LoginModel model) {
         super(model);
     }
 
     @Override
     public void addBinding() {
-
+        leftPane.prefWidthProperty().bind(centralPane.widthProperty().divide(2));
+        rightPane.prefWidthProperty().bind(centralPane.widthProperty().divide(2));
     }
 
     @Override
@@ -63,25 +77,27 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
                                 .label("Username"),
                         Field.ofPasswordType(model.passwordProperty())
                                 .label("Password")
-                                .required("This field can’t be empty"),
-                        Field.ofSingleSelectionType(model.allSystemTypeProperty(), model.systemTypeProperty())
-                                .label("System")
+                                .required("This field can’t be empty")
                 )
         ).title("Login");
 
         FormRenderer formRendered = new FormRenderer(form);
         PasswordField passwordField = (PasswordField) ((StackPane) ((SimplePasswordControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(1)).getChildren().get(1)).getChildren().get(0);
-        ComboBox comboBoxField = (ComboBox) ((StackPane) ((SimpleComboBoxControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(2)).getChildren().get(1)).getChildren().get(0);
+
         passwordField.setOnAction(actionEvent -> checkLogin());
-        comboBoxField.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.ENTER){
-                checkLogin();
-            }
-        });
+        systemForm = Form.of(
+                Group.of(
+                        Field.ofSingleSelectionType(model.allSystemTypeProperty(), model.systemTypeProperty())
+                                .label("")
+                )
+        ).title("System");
+        FormRenderer systemFormGroup = new FormRenderer(systemForm);
+        systemFormGroup.prefWidthProperty().set(300);
+
         mainVBox.getChildren().add(
                 formRendered
         );
-
+        systemHBox.getChildren().add(systemFormGroup);
     }
 
     public void checkLogin() {
@@ -110,6 +126,10 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
         }
     }
 
+    @FXML
+    void signIn(ActionEvent event) {
+        checkLogin();
+    }
 
     @Override
     public void initializeComponents() {
