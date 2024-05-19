@@ -169,7 +169,27 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     throw new RuntimeException(e);
                 }
             }
+            case UP -> {
+                moveFocus(-1);
+            }
+            case DOWN -> {
+                moveFocus(1);
+            }
         }
+    }
+
+    private void moveFocus(int delta) {
+        final int currentIndex = itemsTableView.getSelectionModel().getSelectedIndex();
+        if (currentIndex == -1) {
+            itemsTableView.getSelectionModel().select(0);
+        }
+        int newIndex = currentIndex + delta;
+        if (newIndex < 0) {
+            newIndex = itemsTableView.getItems().size() - 1;
+        } else if (newIndex >= itemsTableView.getItems().size()) {
+            newIndex = 0;
+        }
+        itemsTableView.getSelectionModel().select(newIndex);
     }
 
 }
