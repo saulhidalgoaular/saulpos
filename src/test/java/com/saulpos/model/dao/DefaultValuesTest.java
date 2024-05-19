@@ -18,6 +18,9 @@ public class DefaultValuesTest {
 
     @Test
     public void mainTest() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+
+        DatabaseConnection.getInstance().initialize();
+
         HibernateDataProvider hibernateDataProvider = new HibernateDataProvider();
         for (Object object : hibernateDataProvider.getAllItems(UserB.class)){
             final AbstractBean bean = (AbstractBean) object;

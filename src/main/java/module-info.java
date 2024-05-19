@@ -12,12 +12,13 @@ module com.saulpos {
     requires org.hibernate.orm.core;
     requires org.apache.commons.codec;
     requires com.dlsc.formsfx;
-    requires com.saulpos.crud;
     requires dynamicreports.core;
     requires jasperreports;
+    requires com.saulpos.javafxcrudgenerator;
 
     exports com.saulpos;
     exports com.saulpos.model.bean;
     exports com.saulpos.presenter;
-    opens com.saulpos to javafx.graphics;
+    opens com.saulpos to javafx.graphics, org.hibernate.orm.core;
+    opens com.saulpos.model.bean to org.hibernate.orm.core;
 }
