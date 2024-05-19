@@ -3,7 +3,6 @@ package com.saulpos.presenter;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
-import com.saulpos.view.POSIcons;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -34,6 +33,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Label clockLabel;
+
+    @FXML
+    public Label dateLabel;
 
     @FXML
     public Button creditNoteButton;
@@ -86,7 +88,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Label totalLabel;
 
-
+    @FXML
+    private Label employeeLabel;
 
     @FXML
     public Button viewWaitingButton;
@@ -108,7 +111,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @Override
     public void addBinding() {
-
+        clockLabel.textProperty().bind(model.clockValueProperty());
+        dateLabel.textProperty().bind(model.dateValueProperty());
+        employeeLabel.textProperty().bind(model.employeeNameProperty());
     }
 
     @Override
@@ -118,18 +123,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @Override
     public void initializeComponents() {
-        setButtonsIcons("MONEY",chargeButton);
-        setButtonsIcons("MINUS_CIRCLE",deleteCurrentButton);
-        setButtonsIcons("USER",clientsButton);
-        setButtonsIcons("HAND_PAPER_ALT",removeCashButton);
-        setButtonsIcons("CLOCK_ALT",sendToWaitButton);
-        setButtonsIcons("EYE",viewWaitingButton);
-        setButtonsIcons("TRASH",deleteAllButton);
-        setButtonsIcons("FILE_TEXT",creditNoteButton);
-        setButtonsIcons("USD",globalDiscountButton);
-        setButtonsIcons("SIGN_OUT",exitButton);
-        setButtonsIcons("BAR_CHART",xReportButton);
-        setButtonsIcons("BAR_CHART",zReportButton);
 
         Platform.runLater(() -> {
             // focus on barcode text.
@@ -137,7 +130,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             //Get scene for keyreleased event
             Scene principalscene = barcodeTextField.getScene();
             principalscene.setOnKeyReleased(this::handleKeyReleased);
-
 
 
         });
@@ -165,10 +157,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
         }
-    }
-    public void setButtonsIcons(String iconname, Button buttonname ){
-        Label iconLabel = POSIcons.getGraphic(iconname);
-        buttonname.setGraphic(iconLabel);
     }
 
 }

@@ -29,18 +29,16 @@ public class AbstractView<P extends AbstractPresenter> {
     P presenter;
 
     public AbstractView(String fxmlPath, P presenter) {
-        this();
         this.fxmlPath = fxmlPath;
         this.presenter = presenter;
     }
 
     public AbstractView(Node rootNode) {
-        this();
         this.rootNode = rootNode;
     }
 
     public AbstractView() {
-        initialize();
+
     }
 
     public void initialize() {
