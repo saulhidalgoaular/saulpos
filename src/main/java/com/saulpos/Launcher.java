@@ -39,7 +39,8 @@ public class Launcher extends Application {
         DatabaseConnection.getInstance().initialize();
 
         LoginModel loginModel = new LoginModel();
-        LoginPresenter loginPresenter = new LoginPresenter(loginModel, new LoginView());
+        LoginPresenter loginPresenter = new LoginPresenter(loginModel);
+        LoginView loginView = new LoginView("/login.fxml", loginPresenter);
 
         ParentPane parentPane = new ParentPane();
         stage.setTitle("Saul POS");
@@ -84,7 +85,7 @@ public class Launcher extends Application {
         });
 
 
-        Utils.goForward(new Utils.ViewDef("/login.fxml", loginPresenter), parentPane);
+        Utils.goForward(loginView, parentPane);
     }
 
     public static void main(String[] args) {

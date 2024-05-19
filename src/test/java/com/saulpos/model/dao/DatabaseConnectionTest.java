@@ -7,14 +7,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.sql.*;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 class DatabaseConnectionTest {
     @Test
     public void testDbConnection() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         System.out.println("====> test db connection test started;");
 
-        DatabaseConnection.getInstance();
+        DatabaseConnection.getInstance().initialize();
 
         System.out.println("====> test db connection test ended;");
     }

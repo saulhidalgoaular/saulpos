@@ -15,11 +15,22 @@
  */
 package com.saulpos.view;
 
+import com.saulpos.presenter.AbstractPresenter;
+import javafx.scene.Node;
+
 public class LoginView extends AbstractView {
 
-    public LoginView() {
+    public LoginView(String fxmlPath, AbstractPresenter presenter) {
+        super(fxmlPath, presenter);
     }
 
+    public LoginView(Node rootNode) {
+        super(rootNode);
+    }
+
+    public LoginView() {
+        super();
+    }
 
     @Override
     public void initialize() {

@@ -15,7 +15,18 @@
  */
 package com.saulpos.view;
 
+import com.saulpos.presenter.AbstractPresenter;
+import javafx.scene.Node;
+
 public class MainView extends AbstractView {
+
+    public MainView(String fxmlPath, AbstractPresenter presenter) {
+        super(fxmlPath, presenter);
+    }
+
+    public MainView(Node rootNode) {
+        super(rootNode);
+    }
 
     public MainView() {
     }

@@ -16,7 +16,6 @@
 package com.saulpos.presenter;
 
 import com.saulpos.model.AbstractModel;
-import com.saulpos.view.AbstractView;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.layout.AnchorPane;
@@ -28,17 +27,15 @@ import java.util.ResourceBundle;
  * Created by Saul on 10/23/2016.
  */
 public abstract class AbstractPresenter
-        <M extends AbstractModel, V extends AbstractView> implements Initializable{
+        <M extends AbstractModel> implements Initializable {
     final protected M model;
-    final protected V view;
     protected AbstractPresenter father;
 
     @FXML
     public AnchorPane mainPane;
 
-    public AbstractPresenter(M model, V view) {
+    public AbstractPresenter(M model) {
         this.model = model;
-        this.view = view;
     }
 
     /**

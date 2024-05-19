@@ -30,11 +30,12 @@ public class LogoutMenuAction implements MenuAction {
         //Utils.goForward(new Utils.ViewDef("/login.fxml"), );
 
         LoginModel loginModel = new LoginModel();
-        LoginPresenter loginPresenter = new LoginPresenter(loginModel, new LoginView());
+        LoginPresenter loginPresenter = new LoginPresenter(loginModel);
+        LoginView loginView = new LoginView("/login.fxml", loginPresenter);
 
         ((VBox)(mainPane.getParent())).getChildren().remove(0);
 
-        Utils.goForward(new Utils.ViewDef("/login.fxml", loginPresenter), mainPane);
+        Utils.goForward(loginView, mainPane);
 
     }
 }

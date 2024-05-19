@@ -18,7 +18,6 @@ package com.saulpos.presenter;
 import com.dlsc.formsfx.model.structure.Field;
 import com.dlsc.formsfx.model.structure.Form;
 import com.dlsc.formsfx.model.structure.Group;
-import com.dlsc.formsfx.view.controls.SimpleComboBoxControl;
 import com.dlsc.formsfx.view.controls.SimplePasswordControl;
 import com.dlsc.formsfx.view.renderer.FormRenderer;
 import com.dlsc.formsfx.view.renderer.GroupRenderer;
@@ -29,31 +28,44 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
-import com.saulpos.view.MainView;
 import com.saulpos.view.POSMainView;
 import com.saulpos.view.Utils;
-import javafx.collections.FXCollections;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.PasswordField;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
-public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
+public class LoginPresenter extends AbstractPresenter<LoginModel> {
     @FXML
     public VBox mainVBox;
 
     private Form form;
 
-    public LoginPresenter(LoginModel model, LoginView view) {
-        super(model, view);
+    private Form systemForm;
+
+    @FXML
+    private VBox rightPane;
+
+    @FXML
+    private VBox leftPane;
+
+    @FXML
+    private HBox centralPane;
+
+    @FXML
+    private HBox systemHBox;
+
+    public LoginPresenter(LoginModel model) {
+        super(model);
     }
 
     @Override
     public void addBinding() {
-
+        leftPane.prefWidthProperty().bind(centralPane.widthProperty().divide(2));
+        rightPane.prefWidthProperty().bind(centralPane.widthProperty().divide(2));
     }
 
     @Override
@@ -65,25 +77,27 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                                 .label("Username"),
                         Field.ofPasswordType(model.passwordProperty())
                                 .label("Password")
-                                .required("This field can’t be empty"),
-                        Field.ofSingleSelectionType(model.allSystemTypeProperty(), model.systemTypeProperty())
-                                .label("System")
+                                .required("This field can’t be empty")
                 )
         ).title("Login");
 
         FormRenderer formRendered = new FormRenderer(form);
         PasswordField passwordField = (PasswordField) ((StackPane) ((SimplePasswordControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(1)).getChildren().get(1)).getChildren().get(0);
-        ComboBox comboBoxField = (ComboBox) ((StackPane) ((SimpleComboBoxControl) ((GridPane) ((GroupRenderer) formRendered.getChildren().get(0)).getChildren().get(0)).getChildren().get(2)).getChildren().get(1)).getChildren().get(0);
+
         passwordField.setOnAction(actionEvent -> checkLogin());
-        comboBoxField.setOnKeyReleased(e -> {
-            if (e.getCode() == KeyCode.ENTER){
-                checkLogin();
-            }
-        });
+        systemForm = Form.of(
+                Group.of(
+                        Field.ofSingleSelectionType(model.allSystemTypeProperty(), model.systemTypeProperty())
+                                .label("")
+                )
+        ).title("System");
+        FormRenderer systemFormGroup = new FormRenderer(systemForm);
+        systemFormGroup.prefWidthProperty().set(300);
+
         mainVBox.getChildren().add(
                 formRendered
         );
-
+        systemHBox.getChildren().add(systemFormGroup);
     }
 
     public void checkLogin() {
@@ -96,12 +110,13 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
                 if (MenuModel.MenuType.POS.equals(model.getSystemType())){
                     // Load POS Model if it was selected.
                     POSMainModel mainModel = new POSMainModel(userB);
-                    POSMainPresenter mainPresenter = new POSMainPresenter(mainModel, new POSMainView());
-                    Utils.goForward(new Utils.ViewDef("/posmain.fxml", mainPresenter), mainVBox);
+                    POSMainPresenter mainPresenter = new POSMainPresenter(mainModel);
+                    POSMainView posMainView = new POSMainView("/posmain.fxml", mainPresenter);
+                    Utils.goForward(posMainView, mainVBox);
                 }else{
                     MainModel mainModel = new MainModel(userB);
-                    MainPresenter mainPresenter = new MainPresenter(mainModel, new MainView());
-                    Utils.goForward(new Utils.ViewDef("/main.fxml", mainPresenter), mainVBox);
+                    MainPresenter mainPresenter = new MainPresenter(mainModel);
+                    Utils.goForward(new LoginView("/main.fxml", mainPresenter), mainVBox);
                 }
             } else {
                 DialogBuilder.createError("Error", "Invalid username or password", "Invalid username or password").showAndWait();
@@ -111,6 +126,10 @@ public class LoginPresenter extends AbstractPresenter<LoginModel, LoginView> {
         }
     }
 
+    @FXML
+    void signIn(ActionEvent event) {
+        checkLogin();
+    }
 
     @Override
     public void initializeComponents() {

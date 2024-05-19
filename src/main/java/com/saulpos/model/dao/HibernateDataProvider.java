@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.List;
+import com.saulpos.model.bean.Product;
 
 
 public class HibernateDataProvider implements AbstractDataProvider {
@@ -66,6 +67,7 @@ public class HibernateDataProvider implements AbstractDataProvider {
     public List<Object[]> getItems(String query) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException{
         return DatabaseConnection.getInstance().runQuery(query);
     }
+
 
 
 }

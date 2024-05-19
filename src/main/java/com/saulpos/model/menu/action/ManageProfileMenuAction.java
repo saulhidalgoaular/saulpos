@@ -23,8 +23,10 @@ import com.saulpos.javafxcrudgenerator.view.CustomButton;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.javafxcrudgenerator.view.NodeConstructor;
 import com.saulpos.model.MainModel;
-import com.saulpos.model.bean.*;
+import com.saulpos.model.bean.MenuModel;
+import com.saulpos.model.bean.Profile;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.AbstractView;
 import com.saulpos.view.Utils;
 import com.saulpos.view.menu.CheckBoxTreeItemMenuGenerator;
 import de.jensd.fx.glyphs.GlyphsDude;
@@ -33,7 +35,10 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
+import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -42,7 +47,7 @@ import java.io.IOException;
 
 public class ManageProfileMenuAction extends CrudMenuAction{
 
-    private Utils.ViewDef viewDef;
+    private AbstractView viewDef;
 
     public ManageProfileMenuAction() {
         super(Profile.class);
@@ -107,7 +112,7 @@ public class ManageProfileMenuAction extends CrudMenuAction{
 
                 vBox.getChildren().addAll(label, treeView, buttonsHBox);
 
-                Utils.goForward(new Utils.ViewDef(vBox), mainPane);
+                Utils.goForward(new AbstractView(vBox), mainPane);
                 return null;
             }
         };
@@ -116,7 +121,8 @@ public class ManageProfileMenuAction extends CrudMenuAction{
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
-        viewDef = new Utils.ViewDef(crud.getView().getMainView());
+
+        viewDef = new AbstractView(crud.getView().getMainView());
         Utils.goForward(viewDef, mainPane);
     }
 }

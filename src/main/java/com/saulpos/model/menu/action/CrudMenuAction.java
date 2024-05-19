@@ -19,8 +19,11 @@ import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.model.MainModel;
-import com.saulpos.model.bean.*;
+import com.saulpos.model.bean.Cashier;
+import com.saulpos.model.bean.Profile;
+import com.saulpos.model.bean.Shift;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.AbstractView;
 import com.saulpos.view.Utils;
 import javafx.scene.layout.Pane;
 
@@ -44,6 +47,6 @@ public class CrudMenuAction implements MenuAction {
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
-        Utils.goForward(new Utils.ViewDef(crud.getView().getMainView()), mainPane);
+        Utils.goForward(new AbstractView(crud.getView().getMainView()), mainPane);
     }
 }

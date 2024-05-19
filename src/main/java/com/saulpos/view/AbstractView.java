@@ -15,6 +15,60 @@
  */
 package com.saulpos.view;
 
-public abstract class AbstractView {
-    public abstract void initialize();
+import com.saulpos.presenter.AbstractPresenter;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+
+import java.io.IOException;
+import java.net.URL;
+
+public class AbstractView<P extends AbstractPresenter> {
+    String fxmlPath;
+    Node rootNode;
+    P presenter;
+
+    public AbstractView(String fxmlPath, P presenter) {
+        this();
+        this.fxmlPath = fxmlPath;
+        this.presenter = presenter;
+    }
+
+    public AbstractView(Node rootNode) {
+        this();
+        this.rootNode = rootNode;
+    }
+
+    public AbstractView() {
+        initialize();
+    }
+
+    public void initialize() {
+
+    }
+
+    public String getFxmlPath() {
+        return fxmlPath;
+    }
+
+    public URL getFxmlUrl() {
+        return AbstractView.class.getResource(fxmlPath);
+    }
+
+    public Node getRootNode() {
+        return rootNode;
+    }
+
+    public Node getRoot() throws IOException {
+        if (getFxmlPath() != null) {
+            FXMLLoader loader = new FXMLLoader(getFxmlUrl(), presenter.getModel().getLanguage());
+
+            loader.setController(presenter);
+
+            final Parent root = loader.load();
+            return root;
+        } else {
+            return getRootNode();
+        }
+    }
 }

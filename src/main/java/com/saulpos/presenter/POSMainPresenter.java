@@ -1,101 +1,109 @@
 package com.saulpos.presenter;
 
 import com.saulpos.model.POSMainModel;
-import com.saulpos.view.POSMainView;
+import com.saulpos.model.bean.Product;
+import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.POSIcons;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
 
-public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainView> {
+//
+
+
+public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
+
+
 
     // Create the FXML components to bind
     @FXML
     public VBox mainPOSVBox;
 
     @FXML
-    private TableColumn<?, ?> amountColumn;
+    public TextField barcodeTextField;
 
     @FXML
-    private TextField barcodeTextField;
+    public Button chargeButton;
 
     @FXML
-    private Button chargeButton;
+    public Button clientsButton;
 
     @FXML
-    private Button clientsButton;
+    public Label clockLabel;
 
     @FXML
-    private Label clockLabel;
+    public Button creditNoteButton;
 
     @FXML
-    private Button creditNoteButton;
+    public Button deleteAllButton;
 
     @FXML
-    private Button deleteAllButton;
+    public Button deleteCurrentButton;
+    @FXML
+    public TableView<Product> itemsTableView;
+    @FXML
+    public TableColumn<Product, String> descriptionColumn;
+    @FXML
+    public TableColumn<Product, Integer> amountColumn;
+    @FXML
+    public TableColumn<Product, Double> discountLabel;
+    @FXML
+    public TableColumn<Product, Double> priceColumn;
+    @FXML
+    public TableColumn<Product, Double> vatColumn;
+    @FXML
+    public TableColumn<Product, Double> totalColumn;
+    @FXML
+    public TableColumn<Product, Double> totalUSDColumn;
+
 
     @FXML
-    private Button deleteCurrentButton;
+    public Button exitButton;
 
     @FXML
-    private TableColumn<?, ?> descriptionColumn;
+    public Button globalDiscountButton;
+    @FXML
+    public Label ivaLabel;
 
     @FXML
-    private TableColumn<?, ?> discountLabel;
+    public Button removeCashButton;
 
     @FXML
-    private Button exitButton;
+    public Button sendToWaitButton;
 
     @FXML
-    private Button globalDiscountButton;
+    public Label subtotalLabel;
+
+
 
     @FXML
-    private TableView<?> itemsTableView;
+    public Label totalDollarLabel;
 
     @FXML
-    private Label ivaLabel;
+    public Label totalLabel;
+
+
 
     @FXML
-    private TableColumn<?, ?> priceColumn;
+    public Button viewWaitingButton;
 
     @FXML
-    private Button removeCashButton;
+    public Button xReportButton;
 
     @FXML
-    private Button sendToWaitButton;
+    public Button zReportButton;
 
-    @FXML
-    private Label subtotalLabel;
+    //Aqui
+    private final HibernateDataProvider hibernateDataProvider;
 
-    @FXML
-    private TableColumn<?, ?> totalColumn;
+    public POSMainPresenter(POSMainModel model) {
+        super(model);
+        this.hibernateDataProvider = new HibernateDataProvider();
 
-    @FXML
-    private Label totalDollarLabel;
-
-    @FXML
-    private Label totalLabel;
-
-    @FXML
-    private TableColumn<?, ?> totalUSDColumn;
-
-    @FXML
-    private TableColumn<?, ?> vatColumn;
-
-    @FXML
-    private Button viewWaitingButton;
-
-    @FXML
-    private Button xReportButton;
-
-    @FXML
-    private Button zReportButton;
-
-    public POSMainPresenter(POSMainModel model, POSMainView view) {
-        super(model, view);
     }
 
     @Override
@@ -110,11 +118,68 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel, POSMainVie
 
     @Override
     public void initializeComponents() {
+        setButtonsIcons("MONEY",chargeButton);
+        setButtonsIcons("MINUS_CIRCLE",deleteCurrentButton);
+        setButtonsIcons("USER",clientsButton);
+        setButtonsIcons("HAND_PAPER_ALT",removeCashButton);
+        setButtonsIcons("CLOCK_ALT",sendToWaitButton);
+        setButtonsIcons("EYE",viewWaitingButton);
+        setButtonsIcons("TRASH",deleteAllButton);
+        setButtonsIcons("FILE_TEXT",creditNoteButton);
+        setButtonsIcons("USD",globalDiscountButton);
+        setButtonsIcons("SIGN_OUT",exitButton);
+        setButtonsIcons("BAR_CHART",xReportButton);
+        setButtonsIcons("BAR_CHART",zReportButton);
+
+        Platform.runLater(() -> {
+            // focus on barcode text.
+            barcodeTextField.requestFocus();
+            //Get scene for keyreleased event
+            Scene principalscene = barcodeTextField.getScene();
+            principalscene.setOnKeyReleased(this::handleKeyReleased);
+
+
+
+        });
 
     }
+
 
     @Override
     public void entryActions() {
 
     }
+    public void handleKeyReleased(KeyEvent event) {
+        KeyCode keyCode = event.getCode();
+        switch (keyCode) {
+            case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
+            case BACK_SPACE -> {System.out.println("Se presionó BACKSPACE (Borrar)");}
+            case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
+            case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
+            case F4 -> {System.out.println("Se presionó F4 (A espera)");}
+            case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
+            case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
+            case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
+            case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
+            case ESCAPE -> {System.out.println("Se presionó ESC (Salir)");}
+            case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
+            case END -> {System.out.println("Se presionó END (Reporte Z)");}
+        }
+    }
+    public void setButtonsIcons(String iconname, Button buttonname ){
+        Label iconLabel = POSIcons.getGraphic(iconname);
+        buttonname.setGraphic(iconLabel);
+    }
+
 }
+/*            // Obtener y mostrar la lista de products
+            List<Product> products = hibernateDataProvider.getAllItems(Product.class);
+            for (Product product : products) {
+                System.out.println("Product ID: " + product.getId());
+                System.out.println("Barcode: " + product.getBarcode());
+                System.out.println("Brand: " + product.getBrand());
+                System.out.println("Description: " + product.getDescription());
+                // Otros campos...
+                System.out.println("-------------------------");
+            }
+            */
