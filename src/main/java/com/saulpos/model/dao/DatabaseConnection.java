@@ -264,7 +264,7 @@ public class DatabaseConnection {
         return names;
     }
 
-    public static void ensureManaged(EntityManager em, Object entity) {
+    public static void ensureManaged(EntityManager em, BeanImplementation entity) {
         if (entity == null) {
             return;
         }
@@ -290,7 +290,9 @@ public class DatabaseConnection {
                     Collection<?> collection = (Collection<?>) field.get(entity);
                     if (collection != null) {
                         for (Object item : collection) {
-                            ensureManaged(em, item);
+                            if (item instanceof BeanImplementation) {
+                                ensureManaged(em, (BeanImplementation) item);
+                            }
                         }
                     }
                 } catch (IllegalAccessException e) {
@@ -312,7 +314,7 @@ public class DatabaseConnection {
         }
     }
 
-    public void delete(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void delete(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.remove(entry);
@@ -324,16 +326,17 @@ public class DatabaseConnection {
         }
     }
 
-    public void update(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void update(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManager.getTransaction().begin();
 
             ensureManaged(entityManager, entry);
-
             Object identifier = entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entry);
             if (identifier == null || identifier.equals(0)) {
                 entityManager.persist(entry);
+            } else {
+                entityManager.merge(entry);
             }
             entityManager.getTransaction().commit();
         } finally {
@@ -343,7 +346,7 @@ public class DatabaseConnection {
         }
     }
 
-    public void saveOrUpdate(Object entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
+    public void saveOrUpdate(BeanImplementation entry) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         try{
             entityManagerFactory.createEntityManager().merge(entry);

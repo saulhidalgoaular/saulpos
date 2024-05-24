@@ -3,8 +3,8 @@ package com.saulpos.presenter;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
-import com.saulpos.view.POSIcons;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -34,6 +34,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Label clockLabel;
+
+    @FXML
+    public Label dateLabel;
 
     @FXML
     public Button creditNoteButton;
@@ -86,7 +89,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Label totalLabel;
 
-
+    @FXML
+    private Label employeeLabel;
 
     @FXML
     public Button viewWaitingButton;
@@ -108,7 +112,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @Override
     public void addBinding() {
-
+        clockLabel.textProperty().bind(model.clockValueProperty());
+        dateLabel.textProperty().bind(model.dateValueProperty());
+        employeeLabel.textProperty().bind(model.employeeNameProperty());
+        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
+        Bindings.bindContent(itemsTableView.getItems(), model.getInvoiceInProgressProperty().getProducts());
     }
 
     @Override
@@ -118,18 +126,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @Override
     public void initializeComponents() {
-        setButtonsIcons("MONEY",chargeButton);
-        setButtonsIcons("MINUS_CIRCLE",deleteCurrentButton);
-        setButtonsIcons("USER",clientsButton);
-        setButtonsIcons("HAND_PAPER_ALT",removeCashButton);
-        setButtonsIcons("CLOCK_ALT",sendToWaitButton);
-        setButtonsIcons("EYE",viewWaitingButton);
-        setButtonsIcons("TRASH",deleteAllButton);
-        setButtonsIcons("FILE_TEXT",creditNoteButton);
-        setButtonsIcons("USD",globalDiscountButton);
-        setButtonsIcons("SIGN_OUT",exitButton);
-        setButtonsIcons("BAR_CHART",xReportButton);
-        setButtonsIcons("BAR_CHART",zReportButton);
 
         Platform.runLater(() -> {
             // focus on barcode text.
@@ -139,8 +135,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             principalscene.setOnKeyReleased(this::handleKeyReleased);
 
 
-
         });
+
+        descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
+        //priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty());
 
     }
 
@@ -164,11 +162,34 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case ESCAPE -> {System.out.println("Se presionó ESC (Salir)");}
             case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
+            case ENTER -> {
+                try {
+                    model.addItem();
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case UP -> {
+                moveFocus(-1);
+            }
+            case DOWN -> {
+                moveFocus(1);
+            }
         }
     }
-    public void setButtonsIcons(String iconname, Button buttonname ){
-        Label iconLabel = POSIcons.getGraphic(iconname);
-        buttonname.setGraphic(iconLabel);
+
+    private void moveFocus(int delta) {
+        final int currentIndex = itemsTableView.getSelectionModel().getSelectedIndex();
+        if (currentIndex == -1) {
+            itemsTableView.getSelectionModel().select(0);
+        }
+        int newIndex = currentIndex + delta;
+        if (newIndex < 0) {
+            newIndex = itemsTableView.getItems().size() - 1;
+        } else if (newIndex >= itemsTableView.getItems().size()) {
+            newIndex = 0;
+        }
+        itemsTableView.getSelectionModel().select(newIndex);
     }
 
 }

@@ -182,7 +182,7 @@ public class UserB extends BeanImplementation<UserB> {
     }
 
     public void hashPassword() {
-        if (password.getValue() == null || password.getValue().isBlank()){
+        if (password.getValue() == null) {
             return;
         }
         passwordHashed.set(

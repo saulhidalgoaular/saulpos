@@ -113,6 +113,7 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
                     POSMainPresenter mainPresenter = new POSMainPresenter(mainModel);
                     POSMainView posMainView = new POSMainView("/posmain.fxml", mainPresenter);
                     Utils.goForward(posMainView, mainVBox);
+                    posMainView.initialize();
                 }else{
                     MainModel mainModel = new MainModel(userB);
                     MainPresenter mainPresenter = new MainPresenter(mainModel);
