@@ -276,8 +276,9 @@ public class DatabaseConnection {
         Class<?> clazz = entity.getClass();
 
         // Merge the entity itself if it is detached
-        if (em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity) != null) {
-            //entity = em.merge(entity);
+        Object identifier = em.getEntityManagerFactory().getPersistenceUnitUtil().getIdentifier(entity);
+        if (identifier != null && !identifier.equals(0)) {
+            entity = em.merge(entity);
         }
 
         // Traverse fields to find associations
@@ -331,7 +332,8 @@ public class DatabaseConnection {
             entityManager.getTransaction().begin();
 
             ensureManaged(entityManager, entry);
-            if (entry.getId() == 0) {
+            Object identifier = entityManagerFactory.getPersistenceUnitUtil().getIdentifier(entry);
+            if (identifier == null || identifier.equals(0)) {
                 entityManager.persist(entry);
             } else {
                 entityManager.merge(entry);
