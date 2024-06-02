@@ -232,7 +232,7 @@ public class Product extends BeanImplementation<Product> {
         this.storage.set(storage);
     }
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     public Set<Price> getPrice() {
         return price.get();
     }
