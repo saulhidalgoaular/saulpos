@@ -245,4 +245,8 @@ public class Product extends BeanImplementation<Product> {
         this.price.set(price);
     }
 
+    @Override
+    public String toString() {
+        return description.get();
+    }
 }

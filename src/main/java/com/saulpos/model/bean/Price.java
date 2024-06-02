@@ -30,7 +30,9 @@ import java.time.LocalDate;
 public class Price extends BeanImplementation<Price> {
     private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
     private final SimpleDoubleProperty price = new SimpleDoubleProperty();
-    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDate> fromDate = new SimpleObjectProperty<>();
+
+    private final ObjectProperty<LocalDate> toDate = new SimpleObjectProperty<>();
 
     @NotNull
     @OneToOne
@@ -64,16 +66,32 @@ public class Price extends BeanImplementation<Price> {
     }
 
     @NotNull
-    public LocalDate getDate() {
-        return date.get();
+    public LocalDate getFromDate() {
+        return fromDate.get();
     }
 
-    public ObjectProperty<LocalDate> dateProperty() {
-        return date;
+    public ObjectProperty<LocalDate> fromDateProperty() {
+        return fromDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date.set(date);
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate.set(fromDate);
     }
 
+    public LocalDate getToDate() {
+        return toDate.get();
+    }
+
+    public ObjectProperty<LocalDate> toDateProperty() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate.set(toDate);
+    }
+
+    @Override
+    public String toString() {
+        return price.toString();
+    }
 }
