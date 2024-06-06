@@ -50,7 +50,6 @@ public class Product extends BeanImplementation<Product> {
     @TableViewColumn
     private final ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
     @TableViewColumn
-    @Readonly
     private final SimpleIntegerProperty existence = new SimpleIntegerProperty();
     @TableViewColumn
     private final SimpleBooleanProperty blocked = new SimpleBooleanProperty();
@@ -245,4 +244,8 @@ public class Product extends BeanImplementation<Product> {
         this.price.set(price);
     }
 
+    @Override
+    public String toString() {
+        return description.get();
+    }
 }
