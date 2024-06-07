@@ -4,6 +4,7 @@ import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Discount;
+import com.saulpos.model.bean.Price;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.LoginView;
@@ -24,6 +25,7 @@ import javafx.scene.layout.VBox;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 //
 
@@ -159,7 +161,15 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         resetAllTotal();
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> {
-            return new SimpleDoubleProperty(cell.getValue().getPrice().stream().findFirst().get().getPrice()).asObject();
+            //Calculate price for current day.
+            Set<Price> priceSet = cell.getValue().getPrice();
+            for(Price price: priceSet){
+                LocalDate now = LocalDate.now();
+                if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
+                    return new SimpleDoubleProperty(price.getPrice()).asObject();
+                }
+            }
+            return new SimpleDoubleProperty(0f).asObject();
         });
         amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
         discountLabel.setCellValueFactory(cell ->{
@@ -175,30 +185,24 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
         });
         vatColumn.setCellValueFactory(cell ->{
-            double price = cell.getValue().getPrice().stream().findFirst().get().getPrice();
+            double price = priceColumn.getCellObservableValue(cell.getValue()).getValue();
             double vat = (price * vatRate)/100;
             return new SimpleDoubleProperty(vat).asObject();
         });
         totalColumn.setCellValueFactory(cell ->{
             //price + vat = total column
-            double price = cell.getValue().getPrice().stream().findFirst().get().getPrice();
-            double vat = (price * vatRate)/100;
+            double price = priceColumn.getCellObservableValue(cell.getValue()).getValue();
+            double vat = vatColumn.getCellObservableValue(cell.getValue()).getValue();
             return new SimpleDoubleProperty(price + vat).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            // (totalPrice * unit number) - discount price
-            double price = cell.getValue().getPrice().stream().findFirst().get().getPrice();
-            double vat = (price * 15)/100;
-//            double discountPercent = 0f;
-//            Discount discount = cell.getValue().getDiscount();
-//            LocalDate now = LocalDate.now();
-//            if(now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
-//                discountPercent = cell.getValue().getDiscount().getPercentage();
-//                return cell.getValue().getDiscount().percentageProperty().asObject();
-//            }else{
-//                return new SimpleDoubleProperty(0.0).asObject();
-//            }
-            return new SimpleDoubleProperty((price + vat)*1).asObject();
+            // (totalColumnPrice * unit number) - discount rate
+            double totalColumnPrice = totalColumn.getCellObservableValue(cell.getValue()).getValue();
+            int unit = amountColumn.getCellObservableValue(cell.getValue()).getValue();
+            String str = discountLabel.getCellObservableValue(cell.getValue()).getValue();
+            double discountPercent = Double.parseDouble(str.substring(0, str.length()-1));
+            double result = (totalColumnPrice * unit) - (((totalColumnPrice * unit) * discountPercent) / 100);
+            return new SimpleDoubleProperty(result).asObject();
         });
     }
 
