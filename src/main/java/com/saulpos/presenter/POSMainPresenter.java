@@ -13,7 +13,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.value.ObservableValue;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -22,6 +22,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
 import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.Map;
 
 //
 
@@ -64,7 +66,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public TableColumn<Product, Integer> amountColumn;
     @FXML
-    public TableColumn<Product, Double> discountLabel;
+    public TableColumn<Product, String> discountLabel;
     @FXML
     public TableColumn<Product, Double> priceColumn;
     @FXML
@@ -111,6 +113,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Button zReportButton;
+    private final double vatRate = 15f;
+    private enum totalType {
+        SubTotal, IVA, Total, totalUSD
+    }
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
@@ -147,7 +153,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
 
         });
-
+        exitButton.setOnAction(e->{
+            logout();
+        });
+        resetAllTotal();
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> {
             return new SimpleDoubleProperty(cell.getValue().getPrice().stream().findFirst().get().getPrice()).asObject();
@@ -158,17 +167,22 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             Discount discount = cell.getValue().getDiscount();
             LocalDate now = LocalDate.now();
             if(now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
-                return cell.getValue().getDiscount().percentageProperty().asObject();
+                double discountAmount = cell.getValue().getDiscount().getPercentage();
+                return new SimpleStringProperty(String.valueOf(discountAmount) + "%");
             }else{
-                return new SimpleDoubleProperty(0.0).asObject();
+                return new SimpleStringProperty("0.0%");
             }
 
         });
-        vatColumn.setCellValueFactory(cell -> new SimpleDoubleProperty(15.00).asObject());
+        vatColumn.setCellValueFactory(cell ->{
+            double price = cell.getValue().getPrice().stream().findFirst().get().getPrice();
+            double vat = (price * vatRate)/100;
+            return new SimpleDoubleProperty(vat).asObject();
+        });
         totalColumn.setCellValueFactory(cell ->{
             //price + vat = total column
             double price = cell.getValue().getPrice().stream().findFirst().get().getPrice();
-            double vat = (price * 15)/100;
+            double vat = (price * vatRate)/100;
             return new SimpleDoubleProperty(price + vat).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
@@ -204,6 +218,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
                     int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
                     itemsTableView.getItems().remove(selectedIndex);
+                    updateAllTotal();
                     System.out.println("Invoice product list after deletion: " +
                             model.invoiceInProgressPropertyProperty().getValue().getProducts().size());
                 }
@@ -225,6 +240,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 try {
                     if(!barcodeTextField.getText().isEmpty()){
                         model.addItem();
+                        updateAllTotal();
                         System.out.println("Invoice product list after add: " +
                                 model.invoiceInProgressPropertyProperty().getValue().getProducts().size());
 //                        Product p = model.getInvoiceInProgressProperty().getProducts().getLast();
@@ -268,6 +284,42 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         } catch (Exception e){
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
+    }
+
+    private void updateAllTotal(){
+        if(itemsTableView.getItems().size() == 0){
+            resetAllTotal();
+        }else {
+            Map<String, String> map = calculateTotalType();
+            subtotalLabel.setText(map.get(totalType.SubTotal.name()));
+            ivaLabel.setText(map.get(totalType.IVA.name()));
+            totalLabel.setText(map.get(totalType.Total.name()));
+            totalDollarLabel.setText(map.get(totalType.totalUSD.name()));
+        }
+    }
+
+    private Map<String, String> calculateTotalType(){ //calculateAllTotal
+        Map<String, String> totalCalculationMap = new HashMap<>();
+        double subTotalResult = 0f, vatResult = 0f, totalResult = 0f, totalUSDResult = 0f;
+        if(itemsTableView.getItems().size()>0){
+            for(Product p: itemsTableView.getItems()){
+                subTotalResult += priceColumn.getCellObservableValue(p).getValue();
+                vatResult += vatColumn.getCellObservableValue(p).getValue();
+                totalResult += totalColumn.getCellObservableValue(p).getValue();
+                totalUSDResult += totalUSDColumn.getCellObservableValue(p).getValue();
+            }
+            totalCalculationMap.put(totalType.SubTotal.name(), String.valueOf(subTotalResult));
+            totalCalculationMap.put(totalType.IVA.name(), String.valueOf(vatResult));
+            totalCalculationMap.put(totalType.Total.name(), String.valueOf(totalResult));
+            totalCalculationMap.put(totalType.totalUSD.name(), String.valueOf(totalUSDResult));
+        }
+        return totalCalculationMap;
+    }
+    private void resetAllTotal(){
+        totalDollarLabel.setText("0.0");
+        totalLabel.setText("0.0");
+        ivaLabel.setText("0.0");
+        subtotalLabel.setText("0.0");
     }
 
 }
