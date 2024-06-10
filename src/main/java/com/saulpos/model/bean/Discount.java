@@ -15,8 +15,10 @@
  */
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -27,13 +29,16 @@ import java.time.LocalDate;
 @Table
 public class Discount extends BeanImplementation<Discount> {
 
+    @DisplayOrder(orderValue = 1)
     private final SimpleStringProperty description=new SimpleStringProperty();
-
+    @DisplayOrder(orderValue = 2)
     private final ObjectProperty<LocalDate> startingDate=new SimpleObjectProperty<>();
-
+    @DisplayOrder(orderValue = 3)
     private final ObjectProperty<LocalDate> endingDate = new SimpleObjectProperty<>();
-
+    @DisplayOrder(orderValue = 4)
     private final SimpleDoubleProperty percentage=new SimpleDoubleProperty();
+    @DisplayOrder(orderValue = 5)
+    private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
 
     public Discount() {
 
@@ -80,4 +85,25 @@ public class Discount extends BeanImplementation<Discount> {
         return percentage;
     }
 
+    @NotNull
+    @OneToOne(mappedBy = "discount")
+    public Product getProduct() {
+        return product.get();
+    }
+
+    public SimpleObjectProperty<Product> productProperty() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product.set(product);
+    }
+
+    @Override
+    public String toString() {
+        if(getBeanStatus().equals(BeanStatus.Deleted)){
+            return "0.0%";
+        }
+       return String.valueOf(percentage.get() + "%");
+    }
 }
