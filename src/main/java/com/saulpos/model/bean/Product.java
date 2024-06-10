@@ -204,7 +204,8 @@ public class Product extends BeanImplementation<Product> {
     }
 
     @NotNull
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "discount_id", referencedColumnName = "id")
     public Discount getDiscount() {
         return discount.get();
     }

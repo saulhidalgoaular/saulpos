@@ -97,6 +97,6 @@ public class Price extends BeanImplementation<Price> {
 
     @Override
     public String toString() {
-        return price.toString();
+        return String.valueOf(price.get());
     }
 }
