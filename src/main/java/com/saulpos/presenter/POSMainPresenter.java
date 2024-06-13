@@ -3,8 +3,6 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
-import com.saulpos.model.bean.Discount;
-import com.saulpos.model.bean.Price;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.LoginView;
@@ -12,9 +10,7 @@ import com.saulpos.view.ParentPane;
 import com.saulpos.view.Utils;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -22,10 +18,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
 
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 //
 
@@ -85,7 +79,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Button globalDiscountButton;
     @FXML
-    public Label ivaLabel;
+    public Label vatLabel;
 
     @FXML
     public Button removeCashButton;
@@ -95,8 +89,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Label subtotalLabel;
-
-
 
     @FXML
     public Label totalDollarLabel;
@@ -115,7 +107,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Button zReportButton;
-    private final double vatRate = 15f;
+
+
     private enum totalType {
         SubTotal, IVA, Total, totalUSD
     }
@@ -135,7 +128,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
-        Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgressProperty().getProducts());
+        Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
     }
 
     @Override
@@ -158,52 +151,23 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         exitButton.setOnAction(e->{
             logout();
         });
-        resetAllTotal();
-        descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
-        priceColumn.setCellValueFactory(cell -> {
-            //Calculate price for current day.
-            Set<Price> priceSet = cell.getValue().getPrice();
-            for(Price price: priceSet){
-                LocalDate now = LocalDate.now();
-                if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
-                    return new SimpleDoubleProperty(price.getPrice()).asObject();
-                }
-            }
-            return new SimpleDoubleProperty(0f).asObject();
-        });
-        amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
-        discountLabel.setCellValueFactory(cell ->{
-            //check if discount is available till now?
-            Discount discount = cell.getValue().getDiscount();
-            LocalDate now = LocalDate.now();
-            if(now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
-                double discountAmount = cell.getValue().getDiscount().getPercentage();
-                return new SimpleStringProperty(String.valueOf(discountAmount) + "%");
-            }else{
-                return new SimpleStringProperty("0.0%");
-            }
 
-        });
-        vatColumn.setCellValueFactory(cell ->{
-            double price = priceColumn.getCellObservableValue(cell.getValue()).getValue();
-            double vat = (price * vatRate)/100;
-            return new SimpleDoubleProperty(vat).asObject();
-        });
-        totalColumn.setCellValueFactory(cell ->{
-            //price + vat = total column
-            double price = priceColumn.getCellObservableValue(cell.getValue()).getValue();
-            double vat = vatColumn.getCellObservableValue(cell.getValue()).getValue();
-            return new SimpleDoubleProperty(price + vat).asObject();
-        });
-        totalUSDColumn.setCellValueFactory(cell -> {
-            // (totalColumnPrice * unit number) - discount rate
-            double totalColumnPrice = totalColumn.getCellObservableValue(cell.getValue()).getValue();
-            int unit = amountColumn.getCellObservableValue(cell.getValue()).getValue();
-            String str = discountLabel.getCellObservableValue(cell.getValue()).getValue();
-            double discountPercent = Double.parseDouble(str.substring(0, str.length()-1));
-            double result = (totalColumnPrice * unit) - (((totalColumnPrice * unit) * discountPercent) / 100);
-            return new SimpleDoubleProperty(result).asObject();
-        });
+        descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
+        priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
+        amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
+        discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
+        vatColumn.setCellValueFactory(cell -> cell.getValue().getVatAmount().asObject());
+        totalColumn.setCellValueFactory(cell ->cell.getValue().getTotalAmount().asObject());
+        totalUSDColumn.setCellValueFactory(cell -> cell.getValue().getTotalAmount().asObject());
+
+        // For this we need to keep the local currency rate in dollars somewhere.
+        // Create another bean that stores the currency rate.
+
+
+        totalLabel.textProperty().bind(Bindings.format("%.2f $", model.totalProperty().asString()));
+        subtotalLabel.textProperty().bind(Bindings.format("%.2f $", model.subtotalProperty().asString()));
+        vatLabel.textProperty().bind(Bindings.format("%.2f $", model.totalVatProperty().asString()));
+        totalDollarLabel.textProperty().bind(Bindings.format("%.2f $", model.totalUSDProperty().asString()));
     }
 
 
@@ -222,9 +186,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
                     int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
                     itemsTableView.getItems().remove(selectedIndex);
-                    updateAllTotal();
+
                     System.out.println("Invoice product list after deletion: " +
-                            model.invoiceInProgressPropertyProperty().getValue().getProducts().size());
+                            model.invoiceInProgressProperty().getValue().getProducts().size());
                 }
             }
             case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
@@ -244,9 +208,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 try {
                     if(!barcodeTextField.getText().isEmpty()){
                         model.addItem();
-                        updateAllTotal();
+
                         System.out.println("Invoice product list after add: " +
-                                model.invoiceInProgressPropertyProperty().getValue().getProducts().size());
+                                model.invoiceInProgressProperty().getValue().getProducts().size());
 //                        Product p = model.getInvoiceInProgressProperty().getProducts().getLast();
 //                        System.out.println("Product price: " + p.getPrice().stream().findFirst().get().getPrice());
                     }
@@ -290,51 +254,4 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         }
     }
 
-    private void updateAllTotal(){
-        if(itemsTableView.getItems().size() == 0){
-            resetAllTotal();
-        }else {
-            Map<String, String> map = calculateTotalType();
-            subtotalLabel.setText(map.get(totalType.SubTotal.name()));
-            ivaLabel.setText(map.get(totalType.IVA.name()));
-            totalLabel.setText(map.get(totalType.Total.name()));
-            totalDollarLabel.setText(map.get(totalType.totalUSD.name()));
-        }
-    }
-
-    private Map<String, String> calculateTotalType(){ //calculateAllTotal
-        Map<String, String> totalCalculationMap = new HashMap<>();
-        double subTotalResult = 0f, vatResult = 0f, totalResult = 0f, totalUSDResult = 0f;
-        if(itemsTableView.getItems().size()>0){
-            for(Product p: itemsTableView.getItems()){
-                subTotalResult += priceColumn.getCellObservableValue(p).getValue();
-                vatResult += vatColumn.getCellObservableValue(p).getValue();
-                totalResult += totalColumn.getCellObservableValue(p).getValue();
-                totalUSDResult += totalUSDColumn.getCellObservableValue(p).getValue();
-            }
-            totalCalculationMap.put(totalType.SubTotal.name(), String.valueOf(subTotalResult));
-            totalCalculationMap.put(totalType.IVA.name(), String.valueOf(vatResult));
-            totalCalculationMap.put(totalType.Total.name(), String.valueOf(totalResult));
-            totalCalculationMap.put(totalType.totalUSD.name(), String.valueOf(totalUSDResult));
-        }
-        return totalCalculationMap;
-    }
-    private void resetAllTotal(){
-        totalDollarLabel.setText("0.0");
-        totalLabel.setText("0.0");
-        ivaLabel.setText("0.0");
-        subtotalLabel.setText("0.0");
-    }
-
 }
-/*            // Obtener y mostrar la lista de products
-            List<Product> products = hibernateDataProvider.getAllItems(Product.class);
-            for (Product product : products) {
-                System.out.println("Product ID: " + product.getId());
-                System.out.println("Barcode: " + product.getBarcode());
-                System.out.println("Brand: " + product.getBrand());
-                System.out.println("Description: " + product.getDescription());
-                // Otros campos...
-                System.out.println("-------------------------");
-            }
-            */
