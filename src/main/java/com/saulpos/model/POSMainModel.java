@@ -8,22 +8,26 @@ import com.saulpos.model.dao.DatabaseConnection;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
 import java.beans.PropertyVetoException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.function.ToDoubleFunction;
+import java.util.stream.Collectors;
 
 public class POSMainModel extends AbstractModel{
 
     private UserB userB;
-    private SimpleObjectProperty<Invoice> invoiceInProgressProperty = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<Invoice> invoiceInProgress = new SimpleObjectProperty<>();
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -37,9 +41,17 @@ public class POSMainModel extends AbstractModel{
 
     private SimpleStringProperty barcodeBar = new SimpleStringProperty();
 
+    private SimpleDoubleProperty total = new SimpleDoubleProperty();
+
+    private SimpleDoubleProperty totalVat = new SimpleDoubleProperty();
+
+    private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty();
+
+    private SimpleDoubleProperty subtotal = new SimpleDoubleProperty();
+
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
-        invoiceInProgressProperty.set(new Invoice());
+        invoiceInProgress.set(new Invoice());
         initialize();
     }
 
@@ -47,7 +59,44 @@ public class POSMainModel extends AbstractModel{
     public void addChangedListeners() {
         // Think where to add the bindings. If we add them in the bean, it
         // might bring inconsistencies while we load it from database.
+        clean();
+    }
 
+    public void clean(){
+
+        total.bind(Bindings.createDoubleBinding(
+                () -> invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
+
+                        ))
+        ));
+
+        totalUSD.bind(Bindings.createDoubleBinding(
+                () -> invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
+
+                        ))
+        ));
+
+        subtotal.bind(Bindings.createDoubleBinding(
+                () -> invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue()
+
+                        ))
+        ));
+
+        totalVat.bind(
+                Bindings.createDoubleBinding(
+                        () -> invoiceInProgress.getValue().getProducts().stream()
+                                .collect(Collectors.summingDouble(
+                                        value -> value.getVatAmount().getValue()
+
+                                ))
+                )
+        );
     }
 
     @Override
@@ -135,16 +184,64 @@ public class POSMainModel extends AbstractModel{
         this.invoiceWaiting = invoiceWaiting;
     }
 
-    public Invoice getInvoiceInProgressProperty() {
-        return invoiceInProgressProperty.get();
+    public Invoice getInvoiceInProgress() {
+        return invoiceInProgress.get();
     }
 
-    public void setInvoiceInProgressProperty(Invoice invoiceInProgressProperty) {
-        this.invoiceInProgressProperty.set(invoiceInProgressProperty);
+    public void setInvoiceInProgress(Invoice invoiceInProgress) {
+        this.invoiceInProgress.set(invoiceInProgress);
     }
 
-    public SimpleObjectProperty<Invoice> invoiceInProgressPropertyProperty() {
-        return invoiceInProgressProperty;
+    public double getTotal() {
+        return total.get();
+    }
+
+    public SimpleDoubleProperty totalProperty() {
+        return total;
+    }
+
+    public void setTotal(double total) {
+        this.total.set(total);
+    }
+
+    public double getTotalVat() {
+        return totalVat.get();
+    }
+
+    public SimpleDoubleProperty totalVatProperty() {
+        return totalVat;
+    }
+
+    public void setTotalVat(double totalVat) {
+        this.totalVat.set(totalVat);
+    }
+
+    public double getTotalUSD() {
+        return totalUSD.get();
+    }
+
+    public SimpleDoubleProperty totalUSDProperty() {
+        return totalUSD;
+    }
+
+    public void setTotalUSD(double totalUSD) {
+        this.totalUSD.set(totalUSD);
+    }
+
+    public double getSubtotal() {
+        return subtotal.get();
+    }
+
+    public SimpleDoubleProperty subtotalProperty() {
+        return subtotal;
+    }
+
+    public void setSubtotal(double subtotal) {
+        this.subtotal.set(subtotal);
+    }
+
+    public SimpleObjectProperty<Invoice> invoiceInProgressProperty() {
+        return invoiceInProgress;
     }
 
     public void addItem() throws Exception {
@@ -152,7 +249,7 @@ public class POSMainModel extends AbstractModel{
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
         if (list.size() == 1) {
-            invoiceInProgressProperty.get().getProducts().add(
+            invoiceInProgress.get().getProducts().add(
                     list.get(0)
             );
             barcodeBar.setValue("");
