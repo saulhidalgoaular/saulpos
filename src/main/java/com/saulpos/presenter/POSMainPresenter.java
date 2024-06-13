@@ -129,6 +129,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
+
+        totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
+        subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
+        vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
+        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.2f"));
     }
 
     @Override
@@ -163,11 +168,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         // For this we need to keep the local currency rate in dollars somewhere.
         // Create another bean that stores the currency rate.
 
-
-        totalLabel.textProperty().bind(Bindings.format("%.2f $", model.totalProperty().asString()));
-        subtotalLabel.textProperty().bind(Bindings.format("%.2f $", model.subtotalProperty().asString()));
-        vatLabel.textProperty().bind(Bindings.format("%.2f $", model.totalVatProperty().asString()));
-        totalDollarLabel.textProperty().bind(Bindings.format("%.2f $", model.totalUSDProperty().asString()));
     }
 
 
@@ -206,7 +206,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
             case ENTER -> {
                 try {
-                    if(!barcodeTextField.getText().isEmpty()){
+                    if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
                         model.addItem();
 
                         System.out.println("Invoice product list after add: " +

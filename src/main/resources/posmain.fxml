@@ -162,7 +162,7 @@
                            </font>
                         </Label>
                         <Label fx:id="subtotalLabel" text="Label" GridPane.columnIndex="1" />
-                        <Label fx:id="ivaLabel" layoutX="230.0" layoutY="17.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                        <Label fx:id="vatLabel" layoutX="230.0" layoutY="17.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                         <Label fx:id="totalLabel" layoutX="230.0" layoutY="47.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
                         <Label fx:id="totalDollarLabel" layoutX="230.0" layoutY="77.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="3" />
                      </children>

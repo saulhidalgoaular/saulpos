@@ -276,26 +276,31 @@ public class Product extends BeanImplementation<Product> {
         return new SimpleDoubleProperty(0f);
     }
 
+    @Transient
     public StringBinding getCurrentDiscountString(){
         return (StringBinding) Bindings.concat(getCurrentDiscount().asString(), new SimpleStringProperty("%"));
     }
 
+    @Transient
     public SimpleDoubleProperty getCurrentDiscount(){
         //check if discount is available till now?
         Discount discount = getDiscount();
         LocalDate now = LocalDate.now();
-        if(now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
+        if(discount != null && now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
             return discount.percentageProperty();
         }
         return new SimpleDoubleProperty(0);
     }
-
+    @Transient
     public DoubleBinding getVatAmount(){
+        if (getVat() == null){
+            return Bindings.createDoubleBinding(() -> .0);
+        }
         SimpleDoubleProperty price = getCurrentPrice();
 
         return price.multiply(getVat().percentageProperty()).divide(100);
     }
-
+    @Transient
     public DoubleBinding getTotalAmount(){
         return getVatAmount().add(getCurrentPrice()).add(getCurrentDiscount().multiply(-1));
     }
