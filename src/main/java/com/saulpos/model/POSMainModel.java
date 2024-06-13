@@ -41,13 +41,13 @@ public class POSMainModel extends AbstractModel{
 
     private SimpleStringProperty barcodeBar = new SimpleStringProperty();
 
-    private SimpleDoubleProperty total = new SimpleDoubleProperty();
+    private SimpleDoubleProperty total = new SimpleDoubleProperty(0);
 
-    private SimpleDoubleProperty totalVat = new SimpleDoubleProperty();
+    private SimpleDoubleProperty totalVat = new SimpleDoubleProperty(0);
 
-    private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty();
+    private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty(0);
 
-    private SimpleDoubleProperty subtotal = new SimpleDoubleProperty();
+    private SimpleDoubleProperty subtotal = new SimpleDoubleProperty(0);
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
@@ -59,49 +59,39 @@ public class POSMainModel extends AbstractModel{
     public void addChangedListeners() {
         // Think where to add the bindings. If we add them in the bean, it
         // might bring inconsistencies while we load it from database.
-        clean();
+
     }
 
-    public void clean(){
-
-        total.bind(Bindings.createDoubleBinding(
-                () -> invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
-
-                        ))
-        ));
-
-        totalUSD.bind(Bindings.createDoubleBinding(
-                () -> invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
-
-                        ))
-        ));
-
-        subtotal.bind(Bindings.createDoubleBinding(
-                () -> invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue()
-
-                        ))
-        ));
-
-        totalVat.bind(
-                Bindings.createDoubleBinding(
-                        () -> invoiceInProgress.getValue().getProducts().stream()
-                                .collect(Collectors.summingDouble(
-                                        value -> value.getVatAmount().getValue()
-
-                                ))
-                )
-        );
-    }
 
     @Override
     public void addListeners() {
+        invoiceInProgress.getValue().getProducts().addListener(new ListChangeListener<Product>() {
+            @Override
+            public void onChanged(Change<? extends Product> change) {
+                total.set(invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
 
+                        )));
+
+                totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
+                        )));
+
+                subtotal.set(invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getCurrentPrice().getValue()
+
+                        )));
+
+                totalVat.set(invoiceInProgress.getValue().getProducts().stream()
+                        .collect(Collectors.summingDouble(
+                                value -> value.getVatAmount().getValue()
+
+                        )));
+            }
+        });
     }
 
     @Override
