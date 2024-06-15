@@ -15,6 +15,7 @@
  */
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -28,9 +29,15 @@ import java.time.LocalDate;
 @Access(AccessType.PROPERTY)
 @Table
 public class Price extends BeanImplementation<Price> {
+    @DisplayOrder(orderValue = 4)
     private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<>();
+    @DisplayOrder(orderValue = 3)
     private final SimpleDoubleProperty price = new SimpleDoubleProperty();
-    private final ObjectProperty<LocalDate> date = new SimpleObjectProperty<>();
+    @DisplayOrder(orderValue = 1)
+    private final ObjectProperty<LocalDate> fromDate = new SimpleObjectProperty<>();
+    @DisplayOrder(orderValue = 2)
+
+    private final ObjectProperty<LocalDate> toDate = new SimpleObjectProperty<>();
 
     @NotNull
     @OneToOne
@@ -64,16 +71,32 @@ public class Price extends BeanImplementation<Price> {
     }
 
     @NotNull
-    public LocalDate getDate() {
-        return date.get();
+    public LocalDate getFromDate() {
+        return fromDate.get();
     }
 
-    public ObjectProperty<LocalDate> dateProperty() {
-        return date;
+    public ObjectProperty<LocalDate> fromDateProperty() {
+        return fromDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date.set(date);
+    public void setFromDate(LocalDate fromDate) {
+        this.fromDate.set(fromDate);
     }
 
+    public LocalDate getToDate() {
+        return toDate.get();
+    }
+
+    public ObjectProperty<LocalDate> toDateProperty() {
+        return toDate;
+    }
+
+    public void setToDate(LocalDate toDate) {
+        this.toDate.set(toDate);
+    }
+
+    @Override
+    public String toString() {
+        return String.valueOf(price.get());
+    }
 }

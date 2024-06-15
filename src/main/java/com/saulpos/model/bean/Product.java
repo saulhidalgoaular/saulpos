@@ -15,11 +15,13 @@
  */
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.annotations.Readonly;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
 
 import java.time.LocalDate;
@@ -50,7 +52,6 @@ public class Product extends BeanImplementation<Product> {
     @TableViewColumn
     private final ObjectProperty<Unit> purchaseUnit = new SimpleObjectProperty<>();
     @TableViewColumn
-    @Readonly
     private final SimpleIntegerProperty existence = new SimpleIntegerProperty();
     @TableViewColumn
     private final SimpleBooleanProperty blocked = new SimpleBooleanProperty();
@@ -62,6 +63,8 @@ public class Product extends BeanImplementation<Product> {
     private final SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
     @TableViewColumn
     private final ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
+
+    private final SimpleObjectProperty<Vat> vat = new SimpleObjectProperty<>();
 
     @NotNull
     public String getDescription() {
@@ -205,7 +208,8 @@ public class Product extends BeanImplementation<Product> {
     }
 
     @NotNull
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "discount_id", referencedColumnName = "id")
     public Discount getDiscount() {
         return discount.get();
     }
@@ -232,7 +236,7 @@ public class Product extends BeanImplementation<Product> {
         this.storage.set(storage);
     }
 
-    @OneToMany
+    @OneToMany(fetch = FetchType.EAGER)
     public Set<Price> getPrice() {
         return price.get();
     }
@@ -245,4 +249,64 @@ public class Product extends BeanImplementation<Product> {
         this.price.set(price);
     }
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "vat_id", referencedColumnName = "id")
+    public Vat getVat() {
+        return vat.get();
+    }
+
+    public SimpleObjectProperty<Vat> vatProperty() {
+        return vat;
+    }
+
+    public void setVat(Vat vat) {
+        this.vat.set(vat);
+    }
+
+    @Transient
+    public SimpleDoubleProperty getCurrentPrice(){
+        //Calculate price for current day.
+        Set<Price> priceSet = getPrice();
+        for(Price price: priceSet){
+            LocalDate now = LocalDate.now();
+            if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
+                return price.priceProperty();
+            }
+        }
+        return new SimpleDoubleProperty(0f);
+    }
+
+    @Transient
+    public StringBinding getCurrentDiscountString(){
+        return (StringBinding) Bindings.concat(getCurrentDiscount().asString(), new SimpleStringProperty("%"));
+    }
+
+    @Transient
+    public SimpleDoubleProperty getCurrentDiscount(){
+        //check if discount is available till now?
+        Discount discount = getDiscount();
+        LocalDate now = LocalDate.now();
+        if(discount != null && now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
+            return discount.percentageProperty();
+        }
+        return new SimpleDoubleProperty(0);
+    }
+    @Transient
+    public DoubleBinding getVatAmount(){
+        if (getVat() == null){
+            return Bindings.createDoubleBinding(() -> .0);
+        }
+        SimpleDoubleProperty price = getCurrentPrice();
+
+        return price.multiply(getVat().percentageProperty()).divide(100);
+    }
+    @Transient
+    public DoubleBinding getTotalAmount(){
+        return getVatAmount().add(getCurrentPrice()).add(getCurrentDiscount().multiply(-1));
+    }
+
+    @Override
+    public String toString() {
+        return description.get();
+    }
 }

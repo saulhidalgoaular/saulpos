@@ -1,16 +1,25 @@
 package com.saulpos.presenter;
 
+import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
+import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.view.LoginView;
+import com.saulpos.view.ParentPane;
+import com.saulpos.view.Utils;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
+
+import java.util.HashMap;
+import java.util.Map;
 
 //
 
@@ -53,7 +62,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public TableColumn<Product, Integer> amountColumn;
     @FXML
-    public TableColumn<Product, Double> discountLabel;
+    public TableColumn<Product, String> discountLabel;
     @FXML
     public TableColumn<Product, Double> priceColumn;
     @FXML
@@ -70,7 +79,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Button globalDiscountButton;
     @FXML
-    public Label ivaLabel;
+    public Label vatLabel;
 
     @FXML
     public Button removeCashButton;
@@ -80,8 +89,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Label subtotalLabel;
-
-
 
     @FXML
     public Label totalDollarLabel;
@@ -101,6 +108,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Button zReportButton;
 
+
+    private enum totalType {
+        SubTotal, IVA, Total, totalUSD
+    }
+
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
 
@@ -116,7 +128,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
-        Bindings.bindContent(itemsTableView.getItems(), model.getInvoiceInProgressProperty().getProducts());
+        Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
+
+        totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
+        subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
+        vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
+        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.2f"));
     }
 
     @Override
@@ -136,9 +153,20 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
 
         });
+        exitButton.setOnAction(e->{
+            logout();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
-        //priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty());
+        priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
+        amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
+        discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
+        vatColumn.setCellValueFactory(cell -> cell.getValue().getVatAmount().asObject());
+        totalColumn.setCellValueFactory(cell ->cell.getValue().getTotalAmount().asObject());
+        totalUSDColumn.setCellValueFactory(cell -> cell.getValue().getTotalAmount().asObject());
+
+        // For this we need to keep the local currency rate in dollars somewhere.
+        // Create another bean that stores the currency rate.
 
     }
 
@@ -151,7 +179,18 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         KeyCode keyCode = event.getCode();
         switch (keyCode) {
             case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
-            case BACK_SPACE -> {System.out.println("Se presionó BACKSPACE (Borrar)");}
+            case BACK_SPACE -> {
+                System.out.println("Se presionó BACKSPACE (Borrar)");
+                // should delete items from item table view
+                if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
+                    && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
+                    int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
+                    itemsTableView.getItems().remove(selectedIndex);
+
+                    System.out.println("Invoice product list after deletion: " +
+                            model.invoiceInProgressProperty().getValue().getProducts().size());
+                }
+            }
             case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
             case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
             case F4 -> {System.out.println("Se presionó F4 (A espera)");}
@@ -159,12 +198,22 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
             case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
             case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
-            case ESCAPE -> {System.out.println("Se presionó ESC (Salir)");}
+            case ESCAPE -> {
+                System.out.println("Se presionó ESC (Salir)");
+                logout();
+            }
             case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
             case ENTER -> {
                 try {
-                    model.addItem();
+                    if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
+                        model.addItem();
+
+                        System.out.println("Invoice product list after add: " +
+                                model.invoiceInProgressProperty().getValue().getProducts().size());
+//                        Product p = model.getInvoiceInProgressProperty().getProducts().getLast();
+//                        System.out.println("Product price: " + p.getPrice().stream().findFirst().get().getPrice());
+                    }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -191,16 +240,18 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         }
         itemsTableView.getSelectionModel().select(newIndex);
     }
+    private void logout() {
+        try {
+            System.out.println("Logging out...");
+            LoginModel loginModel = new LoginModel();
+            LoginPresenter loginPresenter = new LoginPresenter(loginModel);
+            LoginView loginView = new LoginView("/login.fxml", loginPresenter);
+            ParentPane parentPane = (ParentPane) mainPOSVBox.getParent();
+            parentPane.getChildren().remove(0);
+            Utils.goForward(loginView, parentPane);
+        } catch (Exception e){
+            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+        }
+    }
 
 }
-/*            // Obtener y mostrar la lista de products
-            List<Product> products = hibernateDataProvider.getAllItems(Product.class);
-            for (Product product : products) {
-                System.out.println("Product ID: " + product.getId());
-                System.out.println("Barcode: " + product.getBarcode());
-                System.out.println("Brand: " + product.getBrand());
-                System.out.println("Description: " + product.getDescription());
-                // Otros campos...
-                System.out.println("-------------------------");
-            }
-            */
