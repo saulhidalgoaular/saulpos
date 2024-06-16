@@ -10,6 +10,7 @@ import com.saulpos.view.ParentPane;
 import com.saulpos.view.Utils;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
@@ -17,9 +18,6 @@ import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.VBox;
-
-import java.util.HashMap;
-import java.util.Map;
 
 //
 
@@ -108,11 +106,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Button zReportButton;
 
-
-    private enum totalType {
-        SubTotal, IVA, Total, totalUSD
-    }
-
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
 
@@ -161,9 +154,18 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
         amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
         discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
-        vatColumn.setCellValueFactory(cell -> cell.getValue().getVatAmount().asObject());
-        totalColumn.setCellValueFactory(cell ->cell.getValue().getTotalAmount().asObject());
-        totalUSDColumn.setCellValueFactory(cell -> cell.getValue().getTotalAmount().asObject());
+        vatColumn.setCellValueFactory(cell ->{
+            String str = cell.getValue().getVatAmount().asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
+        totalColumn.setCellValueFactory(cell -> {
+            String str = cell.getValue().getTotalAmount().asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
+        totalUSDColumn.setCellValueFactory(cell -> {
+            String str = model.convertToDollar("BDT", cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
 
         // For this we need to keep the local currency rate in dollars somewhere.
         // Create another bean that stores the currency rate.

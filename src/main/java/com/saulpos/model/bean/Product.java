@@ -302,7 +302,8 @@ public class Product extends BeanImplementation<Product> {
     }
     @Transient
     public DoubleBinding getTotalAmount(){
-        return getVatAmount().add(getCurrentPrice()).add(getCurrentDiscount().multiply(-1));
+        DoubleBinding discountAmount = getCurrentPrice().multiply(getCurrentDiscount()).divide(100).negate();
+        return getVatAmount().add(getCurrentPrice()).add(discountAmount);
     }
 
     @Override

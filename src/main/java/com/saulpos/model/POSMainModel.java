@@ -1,6 +1,7 @@
 package com.saulpos.model;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Invoice;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.bean.UserB;
@@ -9,6 +10,7 @@ import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -21,7 +23,6 @@ import java.beans.PropertyVetoException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.function.ToDoubleFunction;
 import java.util.stream.Collectors;
 
 public class POSMainModel extends AbstractModel{
@@ -68,22 +69,21 @@ public class POSMainModel extends AbstractModel{
         invoiceInProgress.getValue().getProducts().addListener(new ListChangeListener<Product>() {
             @Override
             public void onChanged(Change<? extends Product> change) {
-                total.set(invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
-
-                        )));
+                total.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(
+                        value -> value.getTotalAmount().getValue()
+                ).sum());
 
                 totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
                         .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue() + value.getVatAmount().getValue()
-                        )));
-
-                subtotal.set(invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getCurrentPrice().getValue()
+                                value -> convertToDollar("BDT", value.getTotalAmount().getValue()).getValue()
+//                                    value.getCurrentPrice().getValue() + value.getVatAmount().getValue();
 
                         )));
+
+                subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
+                    Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
+                    return value.getCurrentPrice().getValue() - discountAmount;
+                }).sum());
 
                 totalVat.set(invoiceInProgress.getValue().getProducts().stream()
                         .collect(Collectors.summingDouble(
@@ -243,6 +243,21 @@ public class POSMainModel extends AbstractModel{
                     list.get(0)
             );
             barcodeBar.setValue("");
+        }
+    }
+
+    public DoubleBinding convertToDollar(String localCurrencyName, double localCurrency){
+        try{
+            DollarRate dollarRate = new DollarRate();
+            dollarRate.setLocalCurrencyName(localCurrencyName);
+            final List<DollarRate> list = DatabaseConnection.getInstance().listBySample(DollarRate.class, new DollarRate(), AbstractDataProvider.SearchType.EQUAL);
+            if(list.size() == 1){
+                System.out.println(list.get(0));
+                return list.get(0).localCurrencyRateProperty().multiply(localCurrency);
+            }
+            return Bindings.createDoubleBinding(() -> localCurrency);
+        } catch (Exception e){
+            throw new RuntimeException(e);
         }
     }
 }

@@ -43,4 +43,12 @@ public class Vat extends BeanImplementation<Product> {
     public void setPercentage(double percentage) {
         this.percentage.set(percentage);
     }
+
+    @Override
+    public String toString() {
+        if(getBeanStatus().equals(BeanStatus.Deleted)){
+            return "0.0%";
+        }
+        return String.valueOf(percentage.get() + "%");
+    }
 }
