@@ -15,6 +15,8 @@
  */
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.Ignore;
+import com.saulpos.javafxcrudgenerator.annotations.Readonly;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
@@ -23,6 +25,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.*;
+import org.hibernate.annotations.Where;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -62,7 +65,11 @@ public class Product extends BeanImplementation<Product> {
     @TableViewColumn
     private final SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
     @TableViewColumn
-    private final ObjectProperty<Set<Price>> price = new SimpleObjectProperty<>();
+    @Ignore
+    private final ObjectProperty<Set<Price>> priceList = new SimpleObjectProperty<>();
+    @TableViewColumn
+    @Readonly
+    private SimpleDoubleProperty price = new SimpleDoubleProperty(0);
 
     private final SimpleObjectProperty<Vat> vat = new SimpleObjectProperty<>();
 
@@ -210,6 +217,7 @@ public class Product extends BeanImplementation<Product> {
     @NotNull
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "discount_id", referencedColumnName = "id")
+    @Where(clause = "beanStatus = 'Active' ")
     public Discount getDiscount() {
         return discount.get();
     }
@@ -236,21 +244,23 @@ public class Product extends BeanImplementation<Product> {
         this.storage.set(storage);
     }
 
-    @OneToMany(fetch = FetchType.EAGER)
-    public Set<Price> getPrice() {
-        return price.get();
+    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @Where(clause = "beanStatus = 'Active' ")
+    public Set<Price> getPriceList() {
+        return priceList.get();
     }
 
-    public ObjectProperty<Set<Price>> priceProperty() {
-        return price;
+    public ObjectProperty<Set<Price>> priceListProperty() {
+        return priceList;
     }
 
-    public void setPrice(Set<Price> price) {
-        this.price.set(price);
+    public void setPriceList(Set<Price> priceList) {
+        this.priceList.set(priceList);
     }
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "vat_id", referencedColumnName = "id")
+    @Where(clause = "beanStatus = 'Active' ")
     public Vat getVat() {
         return vat.get();
     }
@@ -266,14 +276,30 @@ public class Product extends BeanImplementation<Product> {
     @Transient
     public SimpleDoubleProperty getCurrentPrice(){
         //Calculate price for current day.
-        Set<Price> priceSet = getPrice();
-        for(Price price: priceSet){
-            LocalDate now = LocalDate.now();
-            if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
-                return price.priceProperty();
+        Set<Price> priceSet = getPriceList();
+        if(priceSet != null){
+            for(Price price: priceSet){
+                LocalDate now = LocalDate.now();
+                if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
+                    return price.priceProperty();
+                }
             }
         }
         return new SimpleDoubleProperty(0f);
+    }
+
+    @Transient
+    public double getPrice() {
+        return price.get();
+    }
+
+    public SimpleDoubleProperty priceProperty() {
+        this.price.set(getCurrentPrice().getValue());
+        return price;
+    }
+
+    public void setPrice(double price) {
+        this.price.set(price);
     }
 
     @Transient

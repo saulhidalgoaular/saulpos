@@ -75,7 +75,7 @@ public class POSMainModel extends AbstractModel{
 
                 totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
                         .collect(Collectors.summingDouble(
-                                value -> convertToDollar("BDT", value.getTotalAmount().getValue()).getValue()
+                                value -> convertToDollar("VES", value.getTotalAmount().getValue()).getValue()
 //                                    value.getCurrentPrice().getValue() + value.getVatAmount().getValue();
 
                         )));

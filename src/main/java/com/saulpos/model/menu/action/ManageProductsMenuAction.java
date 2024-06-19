@@ -20,6 +20,7 @@ import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.model.CrudModel;
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.view.*;
 import com.saulpos.model.MainModel;
@@ -44,8 +45,8 @@ import javafx.scene.layout.VBox;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class ManageProductsMenuAction extends CrudMenuAction{
 
@@ -65,7 +66,7 @@ public class ManageProductsMenuAction extends CrudMenuAction{
             @Override
             public Node generateNode(Object... name) {
                 Button customButton = new Button();
-                Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.DIAMOND, crudGeneratorParameter.translate("pricing"), "20px", "10px", ContentDisplay.LEFT);
+                Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.DIAMOND, crudGeneratorParameter.translate("Pricing"), "20px", "10px", ContentDisplay.LEFT);
                 customButton.setGraphic(icon);
                 customButton.setPrefWidth(crudGeneratorParameter.getButtonWidth());
                 return customButton;
@@ -168,8 +169,10 @@ public class ManageProductsMenuAction extends CrudMenuAction{
 
 
                                     // FIXME We are querying the database twice, it is not ideal, but let's leave it like this for now
-                                    product.setPrice(new HashSet<>(dataProvider.getAllItems(Price.class)));
 
+                                    List allItems = dataProvider.getAllItems(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
+                                    Set<Price> set = ((Product) allItems.get(0)).getPriceList();
+                                    product.setPriceList(set);
                                     product.saveOrUpdate();
                                 } catch (Exception e) {
                                     DialogBuilder.createExceptionDialog("Exception saving the item", "SAUL POS", e.getMessage(), e).showAndWait();
