@@ -186,11 +186,13 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 // should delete items from item table view
                 if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
                     && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
-                    int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
-                    itemsTableView.getItems().remove(selectedIndex);
-
-                    System.out.println("Invoice product list after deletion: " +
-                            model.invoiceInProgressProperty().getValue().getProducts().size());
+                    try {
+                        model.removeItem(itemsTableView);
+                        System.out.println("Invoice product list after deletion: " +
+                                model.invoiceInProgressProperty().getValue().getProducts().size());
+                    }catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             case F2 -> {System.out.println("Se presionó F2 (Clientes)");}

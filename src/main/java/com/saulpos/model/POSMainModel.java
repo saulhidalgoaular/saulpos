@@ -17,6 +17,7 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.control.TableView;
 import javafx.util.Duration;
 
 import java.beans.PropertyVetoException;
@@ -238,12 +239,21 @@ public class POSMainModel extends AbstractModel{
         Product product = new Product();
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
-        if (list.size() == 1) {
-            invoiceInProgress.get().getProducts().add(
-                    list.get(0)
-            );
+        if (list.size() == 1 && list.get(0).getExistence() > 0) {
+            invoiceInProgress.get().getProducts().add(list.get(0));
+            list.get(0).setExistence(list.get(0).getExistence() -1);
+            list.get(0).saveOrUpdate();
             barcodeBar.setValue("");
         }
+    }
+
+    public void removeItem(TableView<Product> itemsTableView) throws Exception {
+        int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
+        Product removedProduct = itemsTableView.getItems().get(selectedIndex);
+        removedProduct.setExistence(removedProduct.getExistence() + 1);
+        itemsTableView.getItems().remove(selectedIndex);
+        removedProduct.saveOrUpdate();
+
     }
 
     public DoubleBinding convertToDollar(String localCurrencyName, double localCurrency){
