@@ -5,6 +5,7 @@ import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.presenter.action.ClientButtonAction;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.ParentPane;
 import com.saulpos.view.Utils;
@@ -17,6 +18,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 //
@@ -105,6 +107,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Button zReportButton;
+    @FXML
+    public GridPane clientInfoGrid;
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
@@ -149,6 +153,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         exitButton.setOnAction(e->{
             logout();
         });
+        clientsButton.setOnAction(e->{
+            addClient();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
@@ -163,7 +170,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar("BDT", cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            String str = model.convertToDollar("VES", cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
 
@@ -195,7 +202,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     }
                 }
             }
-            case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
+            case F2 -> {
+                System.out.println("Se presionó F2 (Clientes)");
+                addClient();
+            }
             case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
             case F4 -> {System.out.println("Se presionó F4 (A espera)");}
             case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
@@ -254,6 +264,15 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             parentPane.getChildren().remove(0);
             Utils.goForward(loginView, parentPane);
         } catch (Exception e){
+            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+        }
+    }
+
+    private void addClient(){
+        ClientButtonAction clientButton = new ClientButtonAction();
+        try {
+            clientButton.generateCrudView(mainPOSVBox, model, clientInfoGrid);
+        } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
     }
