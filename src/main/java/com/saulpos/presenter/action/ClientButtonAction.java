@@ -3,12 +3,14 @@ package com.saulpos.presenter.action;
 import com.saulpos.javafxcrudgenerator.CrudGenerator;
 import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.model.Function;
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.view.CustomButton;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.javafxcrudgenerator.view.NodeConstructor;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Client;
+import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.AbstractView;
 import com.saulpos.view.POSMainView;
@@ -23,6 +25,8 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+
+import java.util.List;
 
 public class ClientButtonAction {
     private AbstractView viewDef;
@@ -109,8 +113,34 @@ public class ClientButtonAction {
                 }
             }
         });
+        highlightClientInTableView(clientInfoGrid);
         vBox.getChildren().addAll(label, crudPresenter.getView().getMainView());
         viewDef = new AbstractView(vBox);
         Utils.goForward(viewDef, mainPane);
+    }
+
+    private void highlightClientInTableView(GridPane clientInfoGrid) {
+        if(clientInfoGrid != null){
+           try{
+               Client sample = new Client();
+               sample.setName(((Label) clientInfoGrid.getChildren().get(1)).getText());
+               sample.setAddress(((Label) clientInfoGrid.getChildren().get(3)).getText());
+               sample.setPhone(((Label) clientInfoGrid.getChildren().get(5)).getText());
+               List<Client> list = DatabaseConnection.getInstance().listBySample(Client.class, sample, AbstractDataProvider.SearchType.EQUAL);
+               if(list != null && list.size() == 1){
+                   for(int i = 0; i<crudPresenter.getView().getTableView().getItems().size(); i++){
+                       Client c = (Client) crudPresenter.getView().getTableView().getItems().get(i);
+                       if(c.getId() == list.get(0).getId()){
+                           crudPresenter.getView().getTableView().getSelectionModel().select(i);
+                           break;
+                       }
+                   }
+               }else if(list != null && list.size() > 1){
+                   DialogBuilder.createError("Error", "SAUL POS", "Multiple entity found.").showAndWait();
+               }
+           } catch (Exception e){
+               DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+           }
+        }
     }
 }
