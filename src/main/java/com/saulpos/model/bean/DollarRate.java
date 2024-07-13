@@ -1,11 +1,10 @@
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
-import jakarta.persistence.Access;
-import jakarta.persistence.AccessType;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 
@@ -18,9 +17,14 @@ public class DollarRate extends BeanImplementation<DollarRate> {
     }
 
     @TableViewColumn
+    @DisplayOrder(orderValue = 1)
     private final SimpleStringProperty localCurrencyName = new SimpleStringProperty();
     @TableViewColumn
+    @DisplayOrder(orderValue = 2)
     private final SimpleDoubleProperty localCurrencyRate = new SimpleDoubleProperty();
+    @TableViewColumn
+    @DisplayOrder(orderValue = 3)
+    private final SimpleBooleanProperty activated = new SimpleBooleanProperty(false);
 
     public String getLocalCurrencyName() {
         return localCurrencyName.get();
@@ -46,4 +50,16 @@ public class DollarRate extends BeanImplementation<DollarRate> {
         this.localCurrencyRate.set(localCurrencyRate);
     }
 
+    @Column(columnDefinition="tinyint(1) default 0", nullable = false)
+    public boolean isActivated() {
+        return activated.get();
+    }
+
+    public SimpleBooleanProperty activatedProperty() {
+        return activated;
+    }
+
+    public void setActivated(boolean activated) {
+        this.activated.set(activated);
+    }
 }

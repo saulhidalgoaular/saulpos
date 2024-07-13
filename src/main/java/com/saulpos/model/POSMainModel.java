@@ -1,6 +1,8 @@
 package com.saulpos.model;
 
+import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Invoice;
 import com.saulpos.model.bean.Product;
@@ -50,6 +52,7 @@ public class POSMainModel extends AbstractModel{
     private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty(0);
 
     private SimpleDoubleProperty subtotal = new SimpleDoubleProperty(0);
+    private SimpleObjectProperty<DollarRate> activeDollarRate = new SimpleObjectProperty<>();
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
@@ -76,7 +79,7 @@ public class POSMainModel extends AbstractModel{
 
                 totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
                         .collect(Collectors.summingDouble(
-                                value -> convertToDollar("VES", value.getTotalAmount().getValue()).getValue()
+                                value -> convertToDollar(value.getTotalAmount().getValue()).getValue()
 //                                    value.getCurrentPrice().getValue() + value.getVatAmount().getValue();
 
                         )));
@@ -235,6 +238,18 @@ public class POSMainModel extends AbstractModel{
         return invoiceInProgress;
     }
 
+    public DollarRate getActiveDollarRate() {
+        return activeDollarRate.get();
+    }
+
+    public SimpleObjectProperty<DollarRate> activeDollarRateProperty() {
+        return activeDollarRate;
+    }
+
+    public void setActiveDollarRate(DollarRate activeDollarRate) {
+        this.activeDollarRate.set(activeDollarRate);
+    }
+
     public void addItem() throws Exception {
         Product product = new Product();
         product.setBarcode(barcodeBar.getValue());
@@ -256,18 +271,44 @@ public class POSMainModel extends AbstractModel{
 
     }
 
-    public DoubleBinding convertToDollar(String localCurrencyName, double localCurrency){
-        try{
-            DollarRate dollarRate = new DollarRate();
-            dollarRate.setLocalCurrencyName(localCurrencyName);
-            final List<DollarRate> list = DatabaseConnection.getInstance().listBySample(DollarRate.class, new DollarRate(), AbstractDataProvider.SearchType.EQUAL);
-            if(list.size() == 1){
-                System.out.println(list.get(0));
-                return list.get(0).localCurrencyRateProperty().multiply(localCurrency);
+    public DoubleBinding convertToDollar(double localCurrency){
+        return getActiveDollarRate() != null ?
+            getActiveDollarRate().localCurrencyRateProperty().multiply(localCurrency) :
+                Bindings.createDoubleBinding(() -> localCurrency);
+    }
+
+    public DollarRate findActiveDollarRate() {
+        try {
+            String query = "SELECT * FROM dollarrate WHERE activated=1";
+            List<Object[]> allItems = DatabaseConnection.getInstance().runQuery(query);
+            if(allItems.size() == 1){
+                DollarRate entity= new DollarRate();
+//                DialogBuilder.createInformation("Info", "SAUL POS", "Active size: "+allItems.size()).showAndWait();
+                Object[] objArr = allItems.getFirst();
+                entity.setId(Integer.parseInt(objArr[0].toString()));
+                entity.setBeanStatus(AbstractBeanImplementationSoftDelete.BeanStatus.valueOf(objArr[1].toString()));
+                entity.setCreationTime(LocalDateTime.parse(objArr[2].toString().replace(" ", "T")));
+                if(objArr[3] != null){
+                    entity.setLastModificationTime(LocalDateTime.parse(objArr[3].toString().replace(" ", "T")));
+                }
+                if(objArr[4] != null){
+                    entity.setLocalCurrencyName(objArr[4].toString());
+                }
+                if(objArr[5] != null){
+                    entity.setLocalCurrencyRate(Double.parseDouble(objArr[5].toString()));
+                }
+                entity.setActivated(true);
+                return entity;
+            }else if(allItems.size() == 0){
+                DialogBuilder.createWarning("Warning", "SAUL POS",
+                        "No dollar rate is activated. Please activate one from admin module.").showAndWait();
+            }else{
+                DialogBuilder.createWarning("Warning", "SAUL POS",
+                        "Multiple dollar rate is activated. Please activate only one from admin module.").showAndWait();
             }
-            return Bindings.createDoubleBinding(() -> localCurrency);
-        } catch (Exception e){
-            throw new RuntimeException(e);
+        } catch (Exception e) {
+            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
+        return null;
     }
 }

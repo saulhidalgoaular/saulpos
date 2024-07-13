@@ -3,6 +3,7 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
+import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.presenter.action.ClientButtonAction;
@@ -170,7 +171,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar("VES", cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
 
@@ -221,12 +222,16 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case ENTER -> {
                 try {
                     if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
+                        if(model.getActiveDollarRate() == null){
+                            DollarRate dollarRate = model.findActiveDollarRate();
+                            if(dollarRate != null){
+                                model.setActiveDollarRate(dollarRate);
+                            }
+                        }
                         model.addItem();
 
                         System.out.println("Invoice product list after add: " +
                                 model.invoiceInProgressProperty().getValue().getProducts().size());
-//                        Product p = model.getInvoiceInProgressProperty().getProducts().getLast();
-//                        System.out.println("Product price: " + p.getPrice().stream().findFirst().get().getPrice());
                     }
                 } catch (Exception e) {
                     throw new RuntimeException(e);
