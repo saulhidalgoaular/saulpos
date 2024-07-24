@@ -15,6 +15,7 @@
  */
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -25,11 +26,11 @@ import javafx.beans.property.SimpleStringProperty;
 @Access(AccessType.PROPERTY)
 @Table
 public class Client extends BeanImplementation<Client> {
-
+    @DisplayOrder(orderValue = 1)
     private final SimpleStringProperty name = new SimpleStringProperty();
-
+    @DisplayOrder(orderValue = 2)
     private final SimpleStringProperty address = new SimpleStringProperty();
-
+    @DisplayOrder(orderValue = 3)
     private final SimpleStringProperty phone = new SimpleStringProperty();
 
     public Client() {

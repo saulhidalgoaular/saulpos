@@ -40,7 +40,8 @@ public class Price extends BeanImplementation<Price> {
     private final ObjectProperty<LocalDate> toDate = new SimpleObjectProperty<>();
 
     @NotNull
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name="product_id", nullable=false)
     public Product getProduct() {
         return product.get();
     }

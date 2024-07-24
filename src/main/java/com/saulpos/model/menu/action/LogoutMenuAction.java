@@ -34,8 +34,7 @@ public class LogoutMenuAction implements MenuAction {
         LoginView loginView = new LoginView("/login.fxml", loginPresenter);
 
         ((VBox)(mainPane.getParent())).getChildren().remove(0);
-
-        Utils.goForward(loginView, mainPane);
+        Utils.goForward(loginView, (Pane) mainPane.getParent());
 
     }
 }

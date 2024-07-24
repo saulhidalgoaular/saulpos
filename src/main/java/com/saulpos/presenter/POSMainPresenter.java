@@ -3,19 +3,23 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
+import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.presenter.action.ClientButtonAction;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.ParentPane;
 import com.saulpos.view.Utils;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 import java.util.HashMap;
@@ -107,6 +111,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     @FXML
     public Button zReportButton;
+    @FXML
+    public GridPane clientInfoGrid;
 
 
     private enum totalType {
@@ -156,14 +162,27 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         exitButton.setOnAction(e->{
             logout();
         });
+      
+        clientsButton.setOnAction(e->{
+            addClient();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
         amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
         discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
-        vatColumn.setCellValueFactory(cell -> cell.getValue().getVatAmount().asObject());
-        totalColumn.setCellValueFactory(cell ->cell.getValue().getTotalAmount().asObject());
-        totalUSDColumn.setCellValueFactory(cell -> cell.getValue().getTotalAmount().asObject());
+        vatColumn.setCellValueFactory(cell ->{
+            String str = cell.getValue().getVatAmount().asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
+        totalColumn.setCellValueFactory(cell -> {
+            String str = cell.getValue().getTotalAmount().asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
+        totalUSDColumn.setCellValueFactory(cell -> {
+            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
+        });
 
         // For this we need to keep the local currency rate in dollars somewhere.
         // Create another bean that stores the currency rate.
@@ -191,7 +210,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                             model.invoiceInProgressProperty().getValue().getProducts().size());
                 }
             }
-            case F2 -> {System.out.println("Se presionó F2 (Clientes)");}
+            case F2 -> {
+                System.out.println("Se presionó F2 (Clientes)");
+                addClient();
+            }
             case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
             case F4 -> {System.out.println("Se presionó F4 (A espera)");}
             case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
@@ -207,6 +229,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             case ENTER -> {
                 try {
                     if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
+                        if(model.getActiveDollarRate() == null){
+                            DollarRate dollarRate = model.findActiveDollarRate();
+                            if(dollarRate != null){
+                                model.setActiveDollarRate(dollarRate);
+                            }
+                        }
                         model.addItem();
 
                         System.out.println("Invoice product list after add: " +
@@ -250,6 +278,15 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             parentPane.getChildren().remove(0);
             Utils.goForward(loginView, parentPane);
         } catch (Exception e){
+            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+        }
+    }
+
+    private void addClient(){
+        ClientButtonAction clientButton = new ClientButtonAction();
+        try {
+            clientButton.generateCrudView(mainPOSVBox, model, clientInfoGrid);
+        } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
     }
