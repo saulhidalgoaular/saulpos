@@ -3,7 +3,9 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
+import com.saulpos.model.bean.Client;
 import com.saulpos.model.bean.DollarRate;
+import com.saulpos.model.bean.Invoice;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.presenter.action.ClientButtonAction;
@@ -14,6 +16,8 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -157,6 +161,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         clientsButton.setOnAction(e->{
             addClient();
         });
+        sendToWaitButton.setOnAction(e->{
+            addInvoiceInWaitingState();
+        });
+        viewWaitingButton.setOnAction(e->{
+            restoreWaitingInvoice();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
@@ -208,8 +218,14 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 addClient();
             }
             case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
-            case F4 -> {System.out.println("Se presionó F4 (A espera)");}
-            case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
+            case F4 -> {
+                System.out.println("Se presionó F4 (A espera)");
+                addInvoiceInWaitingState();
+            }
+            case F5 -> {
+                System.out.println("Se presionó F5 (Ver espera)");
+                restoreWaitingInvoice();
+            }
             case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
             case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
             case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
@@ -282,4 +298,82 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         }
     }
 
+    private void addInvoiceInWaitingState(){
+        // Return if there is no product in table view.
+        if(itemsTableView.getItems().size() == 0){
+            DialogBuilder.createError("Error!", "SAUL POS",
+                    "There is no product in product list").showAndWait();
+            return;
+        }
+        System.out.println("Moving Current invoice in waiting state!");
+        //Considering only one invoice can be in waiting state.
+        if(model.getInvoiceWaiting().size() > 0){
+            DialogBuilder.createError("Error!", "SAUL POS",
+                    "Already an invoice in waiting state. Another invoice is not allowed to move in waiting state.").showAndWait();
+        } else if (model.getInvoiceWaiting().size() == 0) {
+            //Move inProgress invoice data into the waiting invoice data in model.
+            Invoice waitingInvoice = new Invoice();
+            waitingInvoice.setStatus(Invoice.InvoiceStatus.Waiting);
+
+            //Move all products from inProgress invoice to waiting invoice & clear products from inProgress invoice
+            ObservableList<Product> products = FXCollections.observableArrayList();
+            products.addAll(model.getInvoiceInProgress().getProducts());
+            waitingInvoice.setProducts(products);
+            model.getInvoiceInProgress().getProducts().clear();
+
+            //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
+            //And hide the clientInfoGrid
+            Client inProgressClient = model.getInvoiceInProgress().getClient();
+            if(inProgressClient != null){
+                Client waitingClient = new Client();
+                waitingClient.setId(inProgressClient.getId());
+                if(inProgressClient.getName() != null){
+                    waitingClient.setName(inProgressClient.getName());
+                }
+                if (inProgressClient.getAddress() != null) {
+                    waitingClient.setAddress(inProgressClient.getAddress());
+                }
+                if (inProgressClient.getPhone() != null) {
+                    waitingClient.setPhone(inProgressClient.getPhone());
+                }
+                waitingInvoice.setClient(waitingClient);
+                model.getInvoiceInProgress().setClient(null);
+                clientInfoGrid.setVisible(false);
+            }
+            // Adding this waitingInvoice into the model & show info dialog.
+            model.getInvoiceWaiting().add(waitingInvoice);
+            DialogBuilder.createInformation("Success!", "SAUL POS",
+                    "Current invoice moved into waiting state!").showAndWait();
+        }
+    }
+
+    private void restoreWaitingInvoice(){
+        System.out.println("Restore waiting invoice from waiting list.");
+        // Return if there is no invoice in waiting state
+        if(model.getInvoiceWaiting().size() == 0){
+            DialogBuilder.createInformation("Info!", "SAUL POS", "No invoice in waiting state.").showAndWait();
+        }else if(model.getInvoiceWaiting().size() == 1){
+            System.out.println("Current invoice product list size: " + model.getInvoiceWaiting().get(0).getProducts().size());
+            //Clear the product list from inProgress invoice and restore products from waiting invoice.
+            Invoice waitingInvoice = model.getInvoiceWaiting().getFirst();
+            model.getInvoiceInProgress().getProducts().clear();
+            model.getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
+
+            //Clear the client info from inProgress invoice and restore client info from waiting invoice.
+            if(waitingInvoice.getClient() == null){
+                model.getInvoiceInProgress().setClient(null);
+                clientInfoGrid.setVisible(false);
+            }else{
+                model.getInvoiceInProgress().setClient(waitingInvoice.getClient());
+                clientInfoGrid.setVisible(true);
+                ((Label) clientInfoGrid.getChildren().get(1)).setText(model.getInvoiceInProgress().getClient().getName());
+                ((Label) clientInfoGrid.getChildren().get(3)).setText(model.getInvoiceInProgress().getClient().getAddress());
+                ((Label) clientInfoGrid.getChildren().get(5)).setText(model.getInvoiceInProgress().getClient().getPhone());
+            }
+            //Clear the waiting invoice list & show info dialog.
+            model.getInvoiceWaiting().clear();
+            DialogBuilder.createInformation("Success!", "SAUL POS",
+                    "Current invoice is restored from waiting state!").showAndWait();
+        }
+    }
 }

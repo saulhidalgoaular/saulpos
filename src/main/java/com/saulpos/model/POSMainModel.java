@@ -73,27 +73,13 @@ public class POSMainModel extends AbstractModel{
         invoiceInProgress.getValue().getProducts().addListener(new ListChangeListener<Product>() {
             @Override
             public void onChanged(Change<? extends Product> change) {
-                total.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(
-                        value -> value.getTotalAmount().getValue()
-                ).sum());
-
-                totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> convertToDollar(value.getTotalAmount().getValue()).getValue()
-//                                    value.getCurrentPrice().getValue() + value.getVatAmount().getValue();
-
-                        )));
-
-                subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
-                    Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
-                    return value.getCurrentPrice().getValue() - discountAmount;
-                }).sum());
-
-                totalVat.set(invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getVatAmount().getValue()
-
-                        )));
+                calculateProductsCostDetails();
+            }
+        });
+        invoiceWaiting.addListener(new ListChangeListener<Invoice>() {
+            @Override
+            public void onChanged(Change<? extends Invoice> change) {
+                calculateProductsCostDetails();
             }
         });
     }
@@ -310,5 +296,18 @@ public class POSMainModel extends AbstractModel{
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
         return null;
+    }
+
+    private void calculateProductsCostDetails(){
+        total.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> value.getTotalAmount().getValue()).sum());
+        totalUSD.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> convertToDollar(value.getTotalAmount().getValue()).getValue()).sum());
+        subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
+            Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
+            return value.getCurrentPrice().getValue() - discountAmount;
+        }).sum());
+        totalVat.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> value.getVatAmount().getValue()).sum());
     }
 }
