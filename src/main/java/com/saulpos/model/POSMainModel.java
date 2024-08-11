@@ -16,8 +16,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.Label;
-import javafx.scene.control.TableView;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 
@@ -374,6 +375,69 @@ public class POSMainModel extends AbstractModel{
         }
     }
 
+    public void transferMoney(){
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("SAUL POS");
+        alert.setHeaderText("Login and Transfer");
+        // Create a grid pane for the form
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(20));
+        Label usernameLabel = new Label("Username:");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter Username");
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter Password");
+        Label amountLabel = new Label("Amount:");
+        TextField amountField = new TextField();
+        amountField.setPromptText("Amount to Extract");
+        //Only accept numbers
+        amountField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
+            if(!Character.isDigit(e.getCharacter().charAt(0))){
+                e.consume();
+            }
+        });
+        // Add form fields to the grid pane
+        gridPane.add(usernameLabel, 0, 0);
+        gridPane.add(usernameField, 1, 0);
+        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordField, 1, 1);
+        gridPane.add(amountLabel, 0, 2);
+        gridPane.add(amountField, 1, 2);
+        // Set the grid pane as the alert dialog's content
+        alert.getDialogPane().setContent(gridPane);
+        // Add buttons to the alert dialog
+        ButtonType okButtonType = ButtonType.OK;
+        alert.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
+
+        //Hide Ok button from Alert if any field is empty.
+        TextField[] textFields = {usernameField, passwordField, amountField};
+        for(TextField item: textFields){
+            item.textProperty().addListener((observable, oldValue, newValue) -> {
+                if(!usernameField.getText().trim().isEmpty() && !passwordField.getText().trim().isEmpty() && !amountField.getText().trim().isEmpty()){
+                    if(!alert.getDialogPane().getButtonTypes().contains(okButtonType)){
+                        alert.getDialogPane().getButtonTypes().add(0, okButtonType);
+                        item.requestFocus();
+                    }
+                }else{
+                    alert.getDialogPane().getButtonTypes().remove(okButtonType);
+                }
+            });
+        }
+        //addListenerInAlertFields(usernameField, passwordField, amountField, okButtonType, alert);
+        // Show the alert dialog
+        alert.showAndWait().ifPresent(response -> {
+            if (response == okButtonType ) {
+                // Handle form submission here
+                //Check the credentials and transfer money.
+                System.out.println("Username: " + usernameField.getText());
+                System.out.println("Password: " + passwordField.getText());
+                System.out.println("Amount: " + amountField.getText());
+            }
+        });
+    }
     private void calculateProductsCostDetails(){
         total.set(invoiceInProgress.getValue().getProducts().stream()
                 .mapToDouble(value -> value.getTotalAmount().getValue()).sum());

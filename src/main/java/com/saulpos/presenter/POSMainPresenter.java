@@ -3,9 +3,7 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
-import com.saulpos.model.bean.Client;
 import com.saulpos.model.bean.DollarRate;
-import com.saulpos.model.bean.Invoice;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.presenter.action.ClientButtonAction;
@@ -16,8 +14,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -167,6 +163,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         viewWaitingButton.setOnAction(e->{
             restoreWaitingInvoice();
         });
+        removeCashButton.setOnAction(e->{
+            extractMoney();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
@@ -217,7 +216,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 System.out.println("Se presionó F2 (Clientes)");
                 addClient();
             }
-            case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
+            case F3 -> {
+                System.out.println("Se presionó F3 (Extraer dinero)");
+                extractMoney();
+            }
             case F4 -> {
                 System.out.println("Se presionó F4 (A espera)");
                 addInvoiceInWaitingState();
@@ -304,5 +306,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     private void restoreWaitingInvoice(){
         model.invoiceWaitingToInProgress(clientInfoGrid);
+    }
+
+    private void extractMoney(){
+        model.transferMoney();
     }
 }
