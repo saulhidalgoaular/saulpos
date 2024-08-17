@@ -166,6 +166,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         removeCashButton.setOnAction(e->{
             extractMoney();
         });
+        globalDiscountButton.setOnAction(e->{
+            setGlobalDiscount();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
@@ -230,7 +233,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             }
             case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
             case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
-            case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
+            case F7 -> {
+                System.out.println("Se presionó F7 (Descuento Global)");
+                setGlobalDiscount();
+            }
             case ESCAPE -> {
                 System.out.println("Se presionó ESC (Salir)");
                 logout();
@@ -310,5 +316,14 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     private void extractMoney(){
         model.transferMoney();
+    }
+
+    private void setGlobalDiscount(){
+        System.out.println("Implement global discount.");
+        if(!itemsTableView.getItems().isEmpty()){
+            model.applyGlobalDiscount();
+        }else{
+            DialogBuilder.createWarning("Warning!", "SAUL POS", "No product in current invoice!").showAndWait();
+        }
     }
 }

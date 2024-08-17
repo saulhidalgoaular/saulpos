@@ -426,7 +426,6 @@ public class POSMainModel extends AbstractModel{
                 }
             });
         }
-        //addListenerInAlertFields(usernameField, passwordField, amountField, okButtonType, alert);
         // Show the alert dialog
         alert.showAndWait().ifPresent(response -> {
             if (response == okButtonType ) {
@@ -438,6 +437,81 @@ public class POSMainModel extends AbstractModel{
             }
         });
     }
+
+    public void applyGlobalDiscount() {
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("SAUL POS");
+        alert.setHeaderText("Global Discount");
+        // Create a grid pane for the form
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(20));
+        Label usernameLabel = new Label("Username:");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter Username");
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter Password");
+        Label amountLabel = new Label("Global Discount:");
+        TextField discountField = new TextField();
+        discountField.setPromptText("(%)");
+        //Only accept numbers
+        discountField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
+            if(!Character.isDigit(e.getCharacter().charAt(0))){
+                e.consume();
+            }
+        });
+        // Add form fields to the grid pane
+        gridPane.add(usernameLabel, 0, 0);
+        gridPane.add(usernameField, 1, 0);
+        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordField, 1, 1);
+        gridPane.add(amountLabel, 0, 2);
+        gridPane.add(discountField, 1, 2);
+        // Set the grid pane as the alert dialog's content
+        alert.getDialogPane().setContent(gridPane);
+        // Add buttons to the alert dialog
+        ButtonType okButtonType = ButtonType.OK;
+        alert.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
+
+        //Hide Ok button from Alert if any field is empty.
+        TextField[] textFields = {usernameField, passwordField, discountField};
+        for(TextField item: textFields){
+            item.textProperty().addListener((observable, oldValue, newValue) -> {
+                if(!usernameField.getText().trim().isEmpty() && !passwordField.getText().trim().isEmpty() && !discountField.getText().trim().isEmpty()){
+                    if(!alert.getDialogPane().getButtonTypes().contains(okButtonType)){
+                        alert.getDialogPane().getButtonTypes().add(0, okButtonType);
+                        item.requestFocus();
+                    }
+                }else{
+                    alert.getDialogPane().getButtonTypes().remove(okButtonType);
+                }
+            });
+        }
+        // Show the alert dialog
+        alert.showAndWait().ifPresent(response -> {
+            if (response == okButtonType ) {
+                //Check the credentials and apply discount.
+                if(validateGlobalDiscount(usernameField.getText(), passwordField.getText(), discountField.getText())){
+                    double discount = Double.parseDouble(discountField.getText());
+                    setTotalUSD(totalUSD.subtract(totalUSD.multiply(discount).divide(100)).getValue());
+                    DialogBuilder.createInformation("Info!", "SAUL POS", "Discount implemented successfully.").showAndWait();
+                }else{
+                    DialogBuilder.createError("Error!", "SAUL POS", "Invalid Credentials or discount!").showAndWait();
+                }
+            }
+        });
+    }
+
+    private boolean validateGlobalDiscount(String username, String password, String discount) {
+        //Fixme -- Implement this method based on requirements
+        // discount should apply only once - check from DB
+
+        //discount < 100%
+        return !(Double.parseDouble(discount) >= 100);
+    }
+
     private void calculateProductsCostDetails(){
         total.set(invoiceInProgress.getValue().getProducts().stream()
                 .mapToDouble(value -> value.getTotalAmount().getValue()).sum());
