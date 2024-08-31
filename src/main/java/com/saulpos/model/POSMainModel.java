@@ -25,7 +25,9 @@ import javafx.util.Duration;
 import java.beans.PropertyVetoException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class POSMainModel extends AbstractModel{
 
@@ -55,7 +57,9 @@ public class POSMainModel extends AbstractModel{
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
-        invoiceInProgress.set(new Invoice());
+        Invoice invoice = new Invoice();
+        invoice.setInvoiceDetails(new HashSet<InvoiceDetail>());
+        invoiceInProgress.set(invoice);
         initialize();
     }
 
@@ -240,11 +244,26 @@ public class POSMainModel extends AbstractModel{
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
         if (list.size() == 1 && list.get(0).getExistence() > 0) {
-            invoiceInProgress.get().getProducts().add(list.get(0));
-            list.get(0).setExistence(list.get(0).getExistence() -1);
-            list.get(0).saveOrUpdate();
+            Product productToAdd = list.get(0);
+            invoiceInProgress.get().getProducts().add(productToAdd);
+            addProductToInvoiceDetails(productToAdd);
+            productToAdd.setExistence(productToAdd.getExistence() -1);
+            productToAdd.saveOrUpdate();
             barcodeBar.setValue("");
+            System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
         }
+    }
+
+    private void addProductToInvoiceDetails(Product productToAdd) {
+        InvoiceDetail invoiceDetail = new InvoiceDetail();
+        invoiceDetail.setInvoice(invoiceInProgress.get());
+        invoiceDetail.setProduct(productToAdd);
+        invoiceDetail.setSalePrice(productToAdd.getCurrentPrice().get());
+        invoiceDetail.setAmount(1);
+        invoiceDetail.setDiscount(productToAdd.getCurrentDiscount().get());
+        invoiceDetail.setCancelled(0);
+        invoiceDetail.setCreationTime(LocalDateTime.now());
+        invoiceInProgress.get().getInvoiceDetails().add(invoiceDetail);
     }
 
     public void removeItem(TableView<Product> itemsTableView) throws Exception {
@@ -253,7 +272,18 @@ public class POSMainModel extends AbstractModel{
         removedProduct.setExistence(removedProduct.getExistence() + 1);
         itemsTableView.getItems().remove(selectedIndex);
         removedProduct.saveOrUpdate();
+        removeProductFromInvoiceDetails(removedProduct);
+        System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
+    }
 
+    private void removeProductFromInvoiceDetails(Product removedProduct) {
+        Set<InvoiceDetail> invoiceDetails = invoiceInProgress.get().getInvoiceDetails();
+        for(InvoiceDetail invoiceDetail: invoiceDetails){
+            if(invoiceDetail.getProduct().getId() == removedProduct.getId()){
+                invoiceDetails.remove(invoiceDetail);
+                break;
+            }
+        }
     }
 
     public DoubleBinding convertToDollar(double localCurrency){

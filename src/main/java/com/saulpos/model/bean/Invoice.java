@@ -74,6 +74,9 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private ObservableList<Product> products = FXCollections.observableArrayList();
 
+    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails = new SimpleObjectProperty<>();
+
+
     @OneToOne
     public Cashier getPrinter() {
         return printer.get();
@@ -110,8 +113,6 @@ public class Invoice extends BeanImplementation<Invoice> {
     public void setInvoiceDetails(Set<InvoiceDetail> invoiceDetails) {
         this.invoiceDetails.set(invoiceDetails);
     }
-
-    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails;
 
     public LocalDateTime getCreationDate() {
         return creationDate.get();
