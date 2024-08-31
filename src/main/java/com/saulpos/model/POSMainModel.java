@@ -350,6 +350,11 @@ public class POSMainModel extends AbstractModel{
             waitingInvoice.setProducts(products);
             getInvoiceInProgress().getProducts().clear();
 
+            //Move invoice details from in progress invoice to waiting invoice & clear from inProgress invoice.
+            Set<InvoiceDetail> invoiceDetails = new HashSet<>(getInvoiceInProgress().getInvoiceDetails());
+            waitingInvoice.setInvoiceDetails(invoiceDetails);
+            getInvoiceInProgress().getInvoiceDetails().clear();
+
             //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
             //And hide the clientInfoGrid
             Client inProgressClient = getInvoiceInProgress().getClient();
@@ -386,6 +391,10 @@ public class POSMainModel extends AbstractModel{
             Invoice waitingInvoice = getInvoiceWaiting().getFirst();
             getInvoiceInProgress().getProducts().clear();
             getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
+
+            //Clear the invoice details from inProgress invoice and restore invoice details from waiting invoice.
+            getInvoiceInProgress().getInvoiceDetails().clear();
+            getInvoiceInProgress().getInvoiceDetails().addAll(waitingInvoice.getInvoiceDetails());
 
             //Clear the client info from inProgress invoice and restore client info from waiting invoice.
             if(waitingInvoice.getClient() == null){
