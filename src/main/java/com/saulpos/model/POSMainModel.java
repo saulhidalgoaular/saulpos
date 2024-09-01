@@ -250,6 +250,9 @@ public class POSMainModel extends AbstractModel{
             productToAdd.setExistence(productToAdd.getExistence() -1);
             productToAdd.saveOrUpdate();
             barcodeBar.setValue("");
+            if(invoiceInProgress.get().getCreationDate() == null){
+                invoiceInProgress.get().setCreationDate(LocalDateTime.now());
+            }
             System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
         }
     }
@@ -377,7 +380,7 @@ public class POSMainModel extends AbstractModel{
             // Adding this waitingInvoice into the model & show info dialog.
             getInvoiceWaiting().add(waitingInvoice);
             DialogBuilder.createInformation("Success!", "SAUL POS",
-                    "Current invoice moved into waiting state!").showAndWait();
+                    "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
         }
     }
 
@@ -535,6 +538,7 @@ public class POSMainModel extends AbstractModel{
                 if(validateGlobalDiscount(usernameField.getText(), passwordField.getText(), discountField.getText())){
                     double discount = Double.parseDouble(discountField.getText());
                     setTotalUSD(totalUSD.subtract(totalUSD.multiply(discount).divide(100)).getValue());
+                    getInvoiceInProgress().setGlobalDiscount(discount);
                     DialogBuilder.createInformation("Info!", "SAUL POS", "Discount implemented successfully.").showAndWait();
                 }else{
                     DialogBuilder.createError("Error!", "SAUL POS", "Invalid Credentials or discount!").showAndWait();

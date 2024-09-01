@@ -319,7 +319,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
 
     private void setGlobalDiscount(){
-        System.out.println("Implement global discount.");
+        System.out.println("Apply global discount.");
         if(!itemsTableView.getItems().isEmpty()){
             model.applyGlobalDiscount();
         }else{
