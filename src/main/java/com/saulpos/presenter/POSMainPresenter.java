@@ -6,6 +6,7 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.ParentPane;
@@ -241,7 +242,17 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 System.out.println("Se presionó ESC (Salir)");
                 logout();
             }
-            case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
+            case F8 -> {
+                System.out.println("Se presionó F8 (Reporte X)");
+                // test the invoice printing result
+                // need to save the invoice in DB
+                SoutPrinter printer = new SoutPrinter();
+                model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
+                model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
+                model.getInvoiceInProgress().setVat(model.getTotalVat());
+                model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
+                printer.printInvoice(model.getInvoiceInProgress());
+            }
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
             case ENTER -> {
                 try {

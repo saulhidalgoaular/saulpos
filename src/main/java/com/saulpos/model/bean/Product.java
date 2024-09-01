@@ -280,7 +280,9 @@ public class Product extends BeanImplementation<Product> {
         if(priceSet != null){
             for(Price price: priceSet){
                 LocalDate now = LocalDate.now();
-                if(now.isAfter(price.getFromDate()) && now.isBefore(price.getToDate())){
+                //Check the current time is equal or within the boundary time.
+                if( (now.isEqual(price.getFromDate()) || now.isAfter(price.getFromDate()))
+                        && (now.isEqual(price.getToDate()) || now.isBefore(price.getToDate())) ){
                     return price.priceProperty();
                 }
             }
@@ -312,7 +314,10 @@ public class Product extends BeanImplementation<Product> {
         //check if discount is available till now?
         Discount discount = getDiscount();
         LocalDate now = LocalDate.now();
-        if(discount != null && now.isAfter(discount.getStartingDate()) && now.isBefore(discount.getEndingDate())){
+        if(discount != null
+                && (now.isEqual(discount.getStartingDate()) || now.isAfter(discount.getStartingDate()) )
+                && (now.isEqual(discount.getEndingDate()) || now.isBefore(discount.getEndingDate()) )
+        ){
             return discount.percentageProperty();
         }
         return new SimpleDoubleProperty(0);
