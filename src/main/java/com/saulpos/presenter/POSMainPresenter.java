@@ -172,7 +172,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
-        priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
+        priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty().asObject());
         amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
         discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
         vatColumn.setCellValueFactory(cell ->{

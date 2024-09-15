@@ -15,8 +15,6 @@
  */
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.annotations.Ignore;
-import com.saulpos.javafxcrudgenerator.annotations.Readonly;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
@@ -28,7 +26,6 @@ import javafx.beans.property.*;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDate;
-import java.util.Set;
 
 
 @Entity
@@ -65,11 +62,7 @@ public class Product extends BeanImplementation<Product> {
     @TableViewColumn
     private final SimpleObjectProperty<Storage> storage = new SimpleObjectProperty<Storage>();
     @TableViewColumn
-    @Ignore
-    private final ObjectProperty<Set<Price>> priceList = new SimpleObjectProperty<>();
-    @TableViewColumn
-    @Readonly
-    private SimpleDoubleProperty price = new SimpleDoubleProperty(0);
+    private final SimpleDoubleProperty price = new SimpleDoubleProperty(0);
 
     private final SimpleObjectProperty<Vat> vat = new SimpleObjectProperty<>();
 
@@ -244,20 +237,6 @@ public class Product extends BeanImplementation<Product> {
         this.storage.set(storage);
     }
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @Where(clause = "beanStatus = 'Active' ")
-    public Set<Price> getPriceList() {
-        return priceList.get();
-    }
-
-    public ObjectProperty<Set<Price>> priceListProperty() {
-        return priceList;
-    }
-
-    public void setPriceList(Set<Price> priceList) {
-        this.priceList.set(priceList);
-    }
-
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "vat_id", referencedColumnName = "id")
     @Where(clause = "beanStatus = 'Active' ")
@@ -273,30 +252,11 @@ public class Product extends BeanImplementation<Product> {
         this.vat.set(vat);
     }
 
-    @Transient
-    public SimpleDoubleProperty getCurrentPrice(){
-        //Calculate price for current day.
-        Set<Price> priceSet = getPriceList();
-        if(priceSet != null){
-            for(Price price: priceSet){
-                LocalDate now = LocalDate.now();
-                //Check the current time is equal or within the boundary time.
-                if( (now.isEqual(price.getFromDate()) || now.isAfter(price.getFromDate()))
-                        && (now.isEqual(price.getToDate()) || now.isBefore(price.getToDate())) ){
-                    return price.priceProperty();
-                }
-            }
-        }
-        return new SimpleDoubleProperty(0f);
-    }
-
-    @Transient
     public double getPrice() {
         return price.get();
     }
 
     public SimpleDoubleProperty priceProperty() {
-        this.price.set(getCurrentPrice().getValue());
         return price;
     }
 
@@ -327,14 +287,15 @@ public class Product extends BeanImplementation<Product> {
         if (getVat() == null){
             return Bindings.createDoubleBinding(() -> .0);
         }
-        SimpleDoubleProperty price = getCurrentPrice();
+        SimpleDoubleProperty price = priceProperty();
 
         return price.multiply(getVat().percentageProperty()).divide(100);
     }
+
     @Transient
     public DoubleBinding getTotalAmount(){
-        DoubleBinding discountAmount = getCurrentPrice().multiply(getCurrentDiscount()).divide(100).negate();
-        return getVatAmount().add(getCurrentPrice()).add(discountAmount);
+        DoubleBinding discountAmount = priceProperty().multiply(getCurrentDiscount()).divide(100).negate();
+        return getVatAmount().add(priceProperty()).add(discountAmount);
     }
 
     @Override

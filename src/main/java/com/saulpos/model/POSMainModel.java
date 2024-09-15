@@ -1,6 +1,5 @@
 package com.saulpos.model;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.*;
@@ -261,7 +260,7 @@ public class POSMainModel extends AbstractModel{
         InvoiceDetail invoiceDetail = new InvoiceDetail();
         invoiceDetail.setInvoice(invoiceInProgress.get());
         invoiceDetail.setProduct(productToAdd);
-        invoiceDetail.setSalePrice(productToAdd.getCurrentPrice().get());
+        invoiceDetail.setSalePrice(productToAdd.priceProperty().get());
         invoiceDetail.setAmount(1);
         invoiceDetail.setDiscount(productToAdd.getCurrentDiscount().get());
         invoiceDetail.setCancelled(0);
@@ -297,33 +296,11 @@ public class POSMainModel extends AbstractModel{
 
     public DollarRate findActiveDollarRate() {
         try {
-            String query = "SELECT * FROM dollarrate WHERE activated=1";
-            List<Object[]> allItems = DatabaseConnection.getInstance().runQuery(query);
-            if(allItems.size() == 1){
-                DollarRate entity= new DollarRate();
-//                DialogBuilder.createInformation("Info", "SAUL POS", "Active size: "+allItems.size()).showAndWait();
-                Object[] objArr = allItems.getFirst();
-                entity.setId(Integer.parseInt(objArr[0].toString()));
-                entity.setBeanStatus(AbstractBeanImplementationSoftDelete.BeanStatus.valueOf(objArr[1].toString()));
-                entity.setCreationTime(LocalDateTime.parse(objArr[2].toString().replace(" ", "T")));
-                if(objArr[3] != null){
-                    entity.setLastModificationTime(LocalDateTime.parse(objArr[3].toString().replace(" ", "T")));
-                }
-                if(objArr[4] != null){
-                    entity.setLocalCurrencyName(objArr[4].toString());
-                }
-                if(objArr[5] != null){
-                    entity.setLocalCurrencyRate(Double.parseDouble(objArr[5].toString()));
-                }
-                entity.setActivated(true);
-                return entity;
-            }else if(allItems.size() == 0){
-                DialogBuilder.createWarning("Warning", "SAUL POS",
-                        "No dollar rate is activated. Please activate one from admin module.").showAndWait();
-            }else{
-                DialogBuilder.createWarning("Warning", "SAUL POS",
-                        "Multiple dollar rate is activated. Please activate only one from admin module.").showAndWait();
-            }
+            DollarRate dollar = new DollarRate();
+            dollar.setLocalCurrencyName("Bolivar");
+            dollar.setId(1);
+            dollar.setActivated(true);
+            return dollar;
         } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
@@ -561,8 +538,8 @@ public class POSMainModel extends AbstractModel{
         totalUSD.set(invoiceInProgress.getValue().getProducts().stream()
                 .mapToDouble(value -> convertToDollar(value.getTotalAmount().getValue()).getValue()).sum());
         subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
-            Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
-            return value.getCurrentPrice().getValue() - discountAmount;
+            Double discountAmount = value.priceProperty().multiply(value.getCurrentDiscount()).divide(100).getValue();
+            return value.priceProperty().getValue() - discountAmount;
         }).sum());
         totalVat.set(invoiceInProgress.getValue().getProducts().stream()
                 .mapToDouble(value -> value.getVatAmount().getValue()).sum());

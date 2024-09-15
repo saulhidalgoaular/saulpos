@@ -20,12 +20,10 @@ import com.saulpos.javafxcrudgenerator.CrudGeneratorParameter;
 import com.saulpos.javafxcrudgenerator.model.CrudModel;
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.presenter.CrudPresenter;
 import com.saulpos.javafxcrudgenerator.view.*;
 import com.saulpos.model.MainModel;
 import com.saulpos.model.bean.Discount;
-import com.saulpos.model.bean.Price;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.bean.Vat;
 import com.saulpos.model.dao.DatabaseConnection;
@@ -48,7 +46,6 @@ import javafx.scene.text.TextFlow;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 public class ManageProductsMenuAction extends CrudMenuAction{
 
@@ -72,125 +69,6 @@ public class ManageProductsMenuAction extends CrudMenuAction{
                 customButton.setGraphic(icon);
                 customButton.setPrefWidth(crudGeneratorParameter.getButtonWidth());
                 return customButton;
-            }
-        };
-
-        Function customButtonFunction = new Function() {
-            @Override
-            public Object[] run(Object[] params) throws Exception {
-                Product product = (Product)params[0];
-
-                Label label = new Label("Assign the price for the product:");
-
-                VBox vBox = new VBox(5);
-                vBox.setPadding(new Insets(30));
-
-
-                CrudGeneratorParameter crudGeneratorParameter = new CrudGeneratorParameter();
-                crudGeneratorParameter.setClazz(Price.class);
-
-                HibernateDataProvider dataProviderForColumn = new HibernateDataProvider(){
-
-                    @Override
-                    public List getAllItems(Class aClass, AbstractBean abstractBean, SearchType type) {
-                        Price dummyPrice = new Price();
-                        dummyPrice.setProduct(product);
-
-                        try {
-                            return DatabaseConnection.getInstance().listBySample(Price.class, dummyPrice, SearchType.EQUAL);
-                        } catch (Exception e) {
-                            DialogBuilder.createExceptionDialog("Error", "Error query the database", e.getMessage(), e).showAndWait();
-                        }
-
-                        return new ArrayList();
-                    }
-                };
-
-
-                // Custom Buttons
-                NodeConstructor customBackButtonConstructor = new NodeConstructor() {
-                    @Override
-                    public Node generateNode(Object... name) {
-                        Button customButton = new Button();
-                        Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.BACKWARD, crudGeneratorParameter.translate("back"), "20px", "10px", ContentDisplay.LEFT);
-                        customButton.setGraphic(icon);
-                        customButton.setPrefWidth(crudGeneratorParameter.getButtonWidth());
-                        return customButton;
-                    }
-                };
-
-                Function backButtonFunction = new Function() {
-                    @Override
-                    public Object[] run(Object[] objects) throws Exception {
-                        if (viewDef != null) {
-                            Utils.goBack(viewDef, mainPane);
-                        }
-                        return null;
-                    }
-                };
-
-
-                crudGeneratorParameter.addCustomButton(new CustomButton(customBackButtonConstructor, backButtonFunction, false));
-
-
-                crudGeneratorParameter.setDataProvider(dataProviderForColumn);
-
-                // FIXME later this is not too elegant, but let's leave it for now...
-                CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter){
-                    @Override
-                    public CrudPresenter generate() throws Exception {
-                        final CrudModel model = new CrudModel<>(crudGeneratorParameter){
-                            @Override
-                            public AbstractBean getNewBean() {
-                                Price newBean = new Price();
-                                newBean.setProduct(product);
-                                return newBean;
-                            }
-                        };
-
-
-                        final CrudView view = new CrudViewGenerator(crudGeneratorParameter).generate();
-
-                        return new CrudPresenter (model, view);
-                    }
-                };
-
-                CrudPresenter crud = crudGenerator.generate();
-
-                ((Button)crud.getView().getSaveButton()).setOnAction(
-                    new EventHandler<ActionEvent>() {
-                        @Override
-                        public void handle(ActionEvent actionEvent) {
-                            try {
-                                crud.getModel().saveItemAction();
-                                // Let's select the item in case it was a new one.
-
-                                if (crud.getView().getTableView().getSelectionModel().selectedItemProperty().get() == null){
-                                    crud.getView().getTableView().getSelectionModel().selectLast();
-                                }
-
-
-                                // FIXME We are querying the database twice, it is not ideal, but let's leave it like this for now
-
-                                List allItems = dataProvider.getAllItems(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
-                                Set<Price> set = ((Product) allItems.get(0)).getPriceList();
-                                product.setPriceList(set);
-                                product.saveOrUpdate();
-                            } catch (Exception e) {
-                                DialogBuilder.createExceptionDialog("Exception saving the item", "SAUL POS", e.getMessage(), e).showAndWait();
-                            }
-                        }
-                    }
-                );
-
-
-                AbstractView view = new AbstractView(crud.getView().getMainView());
-
-
-                vBox.getChildren().addAll(label, view.getRoot());
-
-                Utils.goForward(new AbstractView(vBox), mainPane);
-                return null;
             }
         };
 
@@ -420,7 +298,6 @@ public class ManageProductsMenuAction extends CrudMenuAction{
             }
         };
 
-        crudGeneratorParameter.addCustomButton(new CustomButton(customButtonConstructor, customButtonFunction, true));
         crudGeneratorParameter.addCustomButton(new CustomButton(discountButtonConstructor, discountButtonFunction, true));
         crudGeneratorParameter.addCustomButton(new CustomButton(vatButtonConstructor, vatButtonFunction, true));
         crudGeneratorParameter.setDataProvider(dataProvider);
