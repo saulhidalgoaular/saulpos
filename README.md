@@ -39,21 +39,21 @@
 
 ## Módulo de ventas
 
-    1. Login
-    2. Logout
+    1. Login [Hecho]
+    2. Logout [Hecho]
         1. Cierre de caja
         2. Manual
         3. Finalización de turno
     3. Bloqueo de usuario y/o sistema
     4. Solicitud monto inicial de caja
-    5. Agregar articulo
+    5. Agregar articulo [Hecho]
     6. Reporte Z
-    7. Borrado de articulo del pedido
+    7. Borrado de articulo del pedido [Hecho]
     8. Cobrar pedido
     9. Clientes (Gestión de clientes Añadir/Buscar)
-    10. Desc. Global
+    10. Desc. Global 
     11. Reporte X
-    12. Borrar pedido
+    12. Borrar pedido [Hecho]
     13. Enviar pedido a espera
     14. Ver pedidos en espera
     15. Extracción de dinero de caja
