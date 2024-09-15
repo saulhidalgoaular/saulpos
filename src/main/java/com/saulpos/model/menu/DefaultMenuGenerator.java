@@ -85,6 +85,9 @@ public class DefaultMenuGenerator {
         MenuModel shifts = new MenuModel("Shifts", shop, "CLOCK_ALT", "ManageShiftsMenuAction", MenuModel.MenuType.Administrative, 17);
         answer.add(shifts);
 
+        MenuModel vats = new MenuModel("Vats", shop, "CLOCK_ALT", "ManageVatMenuAction", MenuModel.MenuType.Administrative, 18);
+        answer.add(vats);
+
         Collections.sort(answer);
 
         return answer;
