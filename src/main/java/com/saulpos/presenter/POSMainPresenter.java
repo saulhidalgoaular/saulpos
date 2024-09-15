@@ -6,6 +6,7 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
 import com.saulpos.view.LoginView;
 import com.saulpos.view.ParentPane;
@@ -157,6 +158,18 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         clientsButton.setOnAction(e->{
             addClient();
         });
+        sendToWaitButton.setOnAction(e->{
+            addInvoiceInWaitingState();
+        });
+        viewWaitingButton.setOnAction(e->{
+            restoreWaitingInvoice();
+        });
+        removeCashButton.setOnAction(e->{
+            extractMoney();
+        });
+        globalDiscountButton.setOnAction(e->{
+            setGlobalDiscount();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
@@ -207,17 +220,39 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 System.out.println("Se presionó F2 (Clientes)");
                 addClient();
             }
-            case F3 -> {System.out.println("Se presionó F3 (Extraer dinero)");}
-            case F4 -> {System.out.println("Se presionó F4 (A espera)");}
-            case F5 -> {System.out.println("Se presionó F5 (Ver espera)");}
+            case F3 -> {
+                System.out.println("Se presionó F3 (Extraer dinero)");
+                extractMoney();
+            }
+            case F4 -> {
+                System.out.println("Se presionó F4 (A espera)");
+                addInvoiceInWaitingState();
+            }
+            case F5 -> {
+                System.out.println("Se presionó F5 (Ver espera)");
+                restoreWaitingInvoice();
+            }
             case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
             case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
-            case F7 -> {System.out.println("Se presionó F7 (Descuento Global)");}
+            case F7 -> {
+                System.out.println("Se presionó F7 (Descuento Global)");
+                setGlobalDiscount();
+            }
             case ESCAPE -> {
                 System.out.println("Se presionó ESC (Salir)");
                 logout();
             }
-            case F8 -> {System.out.println("Se presionó F8 (Reporte X)");}
+            case F8 -> {
+                System.out.println("Se presionó F8 (Reporte X)");
+                // test the invoice printing result
+                // need to save the invoice in DB
+                SoutPrinter printer = new SoutPrinter();
+                model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
+                model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
+                model.getInvoiceInProgress().setVat(model.getTotalVat());
+                model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
+                printer.printInvoice(model.getInvoiceInProgress());
+            }
             case END -> {System.out.println("Se presionó END (Reporte Z)");}
             case ENTER -> {
                 try {
@@ -282,4 +317,24 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         }
     }
 
+    private void addInvoiceInWaitingState(){
+        model.invoiceInProgressToWaiting(itemsTableView, clientInfoGrid);
+    }
+
+    private void restoreWaitingInvoice(){
+        model.invoiceWaitingToInProgress(clientInfoGrid);
+    }
+
+    private void extractMoney(){
+        model.transferMoney();
+    }
+
+    private void setGlobalDiscount(){
+        System.out.println("Apply global discount.");
+        if(!itemsTableView.getItems().isEmpty()){
+            model.applyGlobalDiscount();
+        }else{
+            DialogBuilder.createWarning("Warning!", "SAUL POS", "No product in current invoice!").showAndWait();
+        }
+    }
 }

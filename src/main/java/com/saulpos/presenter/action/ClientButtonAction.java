@@ -98,6 +98,7 @@ public class ClientButtonAction {
         CrudGenerator<Client> crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         crudPresenter = crudGenerator.generate();
         ((Button)crudPresenter.getView().getDeleteButton()).setOnAction(actionEvent -> {
+            //FIXME - If any client is attached with invoice in waiting, should not be deleted.
             Client selectedClient = (Client) crudPresenter.getView().getTableView().getSelectionModel().getSelectedItem();
             if(viewDef != null && selectedClient != null){
                 try {

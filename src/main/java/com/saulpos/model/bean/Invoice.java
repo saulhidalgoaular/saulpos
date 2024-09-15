@@ -48,6 +48,8 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private final SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
 
+    private final SimpleDoubleProperty totalInUSD = new SimpleDoubleProperty();
+
     @ColumnDefault("0.0000")
     @NotNull
     private final SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
@@ -73,6 +75,9 @@ public class Invoice extends BeanImplementation<Invoice> {
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
     private ObservableList<Product> products = FXCollections.observableArrayList();
+
+    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails = new SimpleObjectProperty<>();
+
 
     @OneToOne
     public Cashier getPrinter() {
@@ -110,8 +115,6 @@ public class Invoice extends BeanImplementation<Invoice> {
     public void setInvoiceDetails(Set<InvoiceDetail> invoiceDetails) {
         this.invoiceDetails.set(invoiceDetails);
     }
-
-    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails;
 
     public LocalDateTime getCreationDate() {
         return creationDate.get();
@@ -172,6 +175,18 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     public void setTotalWithVat(double totalWithVat) {
         this.totalWithVat.set(totalWithVat);
+    }
+
+    public double getTotalInUSD() {
+        return totalInUSD.get();
+    }
+
+    public SimpleDoubleProperty totalInUSDProperty() {
+        return totalInUSD;
+    }
+
+    public void setTotalInUSD(double totalInUSD) {
+        this.totalInUSD.set(totalInUSD);
     }
 
     public double getGlobalDiscount() {

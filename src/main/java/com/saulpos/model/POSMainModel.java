@@ -3,10 +3,7 @@ package com.saulpos.model;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBeanImplementationSoftDelete;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
-import com.saulpos.model.bean.DollarRate;
-import com.saulpos.model.bean.Invoice;
-import com.saulpos.model.bean.Product;
-import com.saulpos.model.bean.UserB;
+import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.DatabaseConnection;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
@@ -19,14 +16,18 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.control.TableView;
+import javafx.geometry.Insets;
+import javafx.scene.control.*;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 
 import java.beans.PropertyVetoException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class POSMainModel extends AbstractModel{
 
@@ -56,7 +57,9 @@ public class POSMainModel extends AbstractModel{
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
-        invoiceInProgress.set(new Invoice());
+        Invoice invoice = new Invoice();
+        invoice.setInvoiceDetails(new HashSet<InvoiceDetail>());
+        invoiceInProgress.set(invoice);
         initialize();
     }
 
@@ -73,27 +76,13 @@ public class POSMainModel extends AbstractModel{
         invoiceInProgress.getValue().getProducts().addListener(new ListChangeListener<Product>() {
             @Override
             public void onChanged(Change<? extends Product> change) {
-                total.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(
-                        value -> value.getTotalAmount().getValue()
-                ).sum());
-
-                totalUSD.set( invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> convertToDollar(value.getTotalAmount().getValue()).getValue()
-//                                    value.getCurrentPrice().getValue() + value.getVatAmount().getValue();
-
-                        )));
-
-                subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
-                    Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
-                    return value.getCurrentPrice().getValue() - discountAmount;
-                }).sum());
-
-                totalVat.set(invoiceInProgress.getValue().getProducts().stream()
-                        .collect(Collectors.summingDouble(
-                                value -> value.getVatAmount().getValue()
-
-                        )));
+                calculateProductsCostDetails();
+            }
+        });
+        invoiceWaiting.addListener(new ListChangeListener<Invoice>() {
+            @Override
+            public void onChanged(Change<? extends Invoice> change) {
+                calculateProductsCostDetails();
             }
         });
     }
@@ -255,11 +244,29 @@ public class POSMainModel extends AbstractModel{
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
         if (list.size() == 1 && list.get(0).getExistence() > 0) {
-            invoiceInProgress.get().getProducts().add(list.get(0));
-            list.get(0).setExistence(list.get(0).getExistence() -1);
-            list.get(0).saveOrUpdate();
+            Product productToAdd = list.get(0);
+            invoiceInProgress.get().getProducts().add(productToAdd);
+            addProductToInvoiceDetails(productToAdd);
+            productToAdd.setExistence(productToAdd.getExistence() -1);
+            productToAdd.saveOrUpdate();
             barcodeBar.setValue("");
+            if(invoiceInProgress.get().getCreationDate() == null){
+                invoiceInProgress.get().setCreationDate(LocalDateTime.now());
+            }
+            System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
         }
+    }
+
+    private void addProductToInvoiceDetails(Product productToAdd) {
+        InvoiceDetail invoiceDetail = new InvoiceDetail();
+        invoiceDetail.setInvoice(invoiceInProgress.get());
+        invoiceDetail.setProduct(productToAdd);
+        invoiceDetail.setSalePrice(productToAdd.getCurrentPrice().get());
+        invoiceDetail.setAmount(1);
+        invoiceDetail.setDiscount(productToAdd.getCurrentDiscount().get());
+        invoiceDetail.setCancelled(0);
+        invoiceDetail.setCreationTime(LocalDateTime.now());
+        invoiceInProgress.get().getInvoiceDetails().add(invoiceDetail);
     }
 
     public void removeItem(TableView<Product> itemsTableView) throws Exception {
@@ -268,7 +275,18 @@ public class POSMainModel extends AbstractModel{
         removedProduct.setExistence(removedProduct.getExistence() + 1);
         itemsTableView.getItems().remove(selectedIndex);
         removedProduct.saveOrUpdate();
+        removeProductFromInvoiceDetails(removedProduct);
+        System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
+    }
 
+    private void removeProductFromInvoiceDetails(Product removedProduct) {
+        Set<InvoiceDetail> invoiceDetails = invoiceInProgress.get().getInvoiceDetails();
+        for(InvoiceDetail invoiceDetail: invoiceDetails){
+            if(invoiceDetail.getProduct().getId() == removedProduct.getId()){
+                invoiceDetails.remove(invoiceDetail);
+                break;
+            }
+        }
     }
 
     public DoubleBinding convertToDollar(double localCurrency){
@@ -310,5 +328,243 @@ public class POSMainModel extends AbstractModel{
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
         return null;
+    }
+
+    public void invoiceInProgressToWaiting(TableView<Product> itemsTableView, GridPane clientInfoGrid){
+        // Return if there is no product in table view.
+        if(itemsTableView.getItems().size() == 0){
+            DialogBuilder.createError("Error!", "SAUL POS",
+                    "There is no product in product list").showAndWait();
+            return;
+        }
+        System.out.println("Moving Current invoice in waiting state!");
+        //Considering only one invoice can be in waiting state.
+        if(getInvoiceWaiting().size() > 0){
+            DialogBuilder.createError("Error!", "SAUL POS",
+                    "Already an invoice in waiting state. Another invoice is not allowed to move in waiting state.").showAndWait();
+        } else if (getInvoiceWaiting().size() == 0) {
+            //Move inProgress invoice data into the waiting invoice data in model.
+            Invoice waitingInvoice = new Invoice();
+            waitingInvoice.setStatus(Invoice.InvoiceStatus.Waiting);
+
+            //Move all products from inProgress invoice to waiting invoice & clear products from inProgress invoice
+            ObservableList<Product> products = FXCollections.observableArrayList();
+            products.addAll(getInvoiceInProgress().getProducts());
+            waitingInvoice.setProducts(products);
+            getInvoiceInProgress().getProducts().clear();
+
+            //Move invoice details from in progress invoice to waiting invoice & clear from inProgress invoice.
+            Set<InvoiceDetail> invoiceDetails = new HashSet<>(getInvoiceInProgress().getInvoiceDetails());
+            waitingInvoice.setInvoiceDetails(invoiceDetails);
+            getInvoiceInProgress().getInvoiceDetails().clear();
+
+            //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
+            //And hide the clientInfoGrid
+            Client inProgressClient = getInvoiceInProgress().getClient();
+            if(inProgressClient != null){
+                Client waitingClient = new Client();
+                waitingClient.setId(inProgressClient.getId());
+                if(inProgressClient.getName() != null){
+                    waitingClient.setName(inProgressClient.getName());
+                }
+                if (inProgressClient.getAddress() != null) {
+                    waitingClient.setAddress(inProgressClient.getAddress());
+                }
+                if (inProgressClient.getPhone() != null) {
+                    waitingClient.setPhone(inProgressClient.getPhone());
+                }
+                waitingInvoice.setClient(waitingClient);
+                getInvoiceInProgress().setClient(null);
+                clientInfoGrid.setVisible(false);
+            }
+            // Adding this waitingInvoice into the model & show info dialog.
+            getInvoiceWaiting().add(waitingInvoice);
+            DialogBuilder.createInformation("Success!", "SAUL POS",
+                    "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
+        }
+    }
+
+    public void invoiceWaitingToInProgress(GridPane clientInfoGrid){
+        System.out.println("Restore waiting invoice from waiting list.");
+        // Return if there is no invoice in waiting state
+        if(getInvoiceWaiting().size() == 0){
+            DialogBuilder.createInformation("Info!", "SAUL POS", "No invoice in waiting state.").showAndWait();
+        }else if(getInvoiceWaiting().size() == 1){
+            //Clear the product list from inProgress invoice and restore products from waiting invoice.
+            Invoice waitingInvoice = getInvoiceWaiting().getFirst();
+            getInvoiceInProgress().getProducts().clear();
+            getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
+
+            //Clear the invoice details from inProgress invoice and restore invoice details from waiting invoice.
+            getInvoiceInProgress().getInvoiceDetails().clear();
+            getInvoiceInProgress().getInvoiceDetails().addAll(waitingInvoice.getInvoiceDetails());
+
+            //Clear the client info from inProgress invoice and restore client info from waiting invoice.
+            if(waitingInvoice.getClient() == null){
+                getInvoiceInProgress().setClient(null);
+                clientInfoGrid.setVisible(false);
+            }else{
+                getInvoiceInProgress().setClient(waitingInvoice.getClient());
+                clientInfoGrid.setVisible(true);
+                ((Label) clientInfoGrid.getChildren().get(1)).setText(getInvoiceInProgress().getClient().getName());
+                ((Label) clientInfoGrid.getChildren().get(3)).setText(getInvoiceInProgress().getClient().getAddress());
+                ((Label) clientInfoGrid.getChildren().get(5)).setText(getInvoiceInProgress().getClient().getPhone());
+            }
+            //Clear the waiting invoice list & show info dialog.
+            getInvoiceWaiting().clear();
+            DialogBuilder.createInformation("Success!", "SAUL POS",
+                    "Current invoice is restored from waiting state!").showAndWait();
+        }
+    }
+
+    public void transferMoney(){
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("SAUL POS");
+        alert.setHeaderText("Login and Transfer");
+        // Create a grid pane for the form
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(20));
+        Label usernameLabel = new Label("Username:");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter Username");
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter Password");
+        Label amountLabel = new Label("Amount:");
+        TextField amountField = new TextField();
+        amountField.setPromptText("Amount to Extract");
+        //Only accept numbers
+        amountField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
+            if(!Character.isDigit(e.getCharacter().charAt(0))){
+                e.consume();
+            }
+        });
+        // Add form fields to the grid pane
+        gridPane.add(usernameLabel, 0, 0);
+        gridPane.add(usernameField, 1, 0);
+        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordField, 1, 1);
+        gridPane.add(amountLabel, 0, 2);
+        gridPane.add(amountField, 1, 2);
+        // Set the grid pane as the alert dialog's content
+        alert.getDialogPane().setContent(gridPane);
+        // Add buttons to the alert dialog
+        ButtonType okButtonType = ButtonType.OK;
+        alert.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
+
+        //Hide Ok button from Alert if any field is empty.
+        TextField[] textFields = {usernameField, passwordField, amountField};
+        for(TextField item: textFields){
+            item.textProperty().addListener((observable, oldValue, newValue) -> {
+                if(!usernameField.getText().trim().isEmpty() && !passwordField.getText().trim().isEmpty() && !amountField.getText().trim().isEmpty()){
+                    if(!alert.getDialogPane().getButtonTypes().contains(okButtonType)){
+                        alert.getDialogPane().getButtonTypes().add(0, okButtonType);
+                        item.requestFocus();
+                    }
+                }else{
+                    alert.getDialogPane().getButtonTypes().remove(okButtonType);
+                }
+            });
+        }
+        // Show the alert dialog
+        alert.showAndWait().ifPresent(response -> {
+            if (response == okButtonType ) {
+                // Handle form submission here
+                //Check the credentials and transfer money.
+                System.out.println("Username: " + usernameField.getText());
+                System.out.println("Password: " + passwordField.getText());
+                System.out.println("Amount: " + amountField.getText());
+            }
+        });
+    }
+
+    public void applyGlobalDiscount() {
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("SAUL POS");
+        alert.setHeaderText("Global Discount");
+        // Create a grid pane for the form
+        GridPane gridPane = new GridPane();
+        gridPane.setHgap(20);
+        gridPane.setVgap(10);
+        gridPane.setPadding(new Insets(20));
+        Label usernameLabel = new Label("Username:");
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Enter Username");
+        Label passwordLabel = new Label("Password:");
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Enter Password");
+        Label amountLabel = new Label("Global Discount:");
+        TextField discountField = new TextField();
+        discountField.setPromptText("(%)");
+        //Only accept numbers
+        discountField.addEventFilter(KeyEvent.KEY_TYPED, e -> {
+            if(!Character.isDigit(e.getCharacter().charAt(0))){
+                e.consume();
+            }
+        });
+        // Add form fields to the grid pane
+        gridPane.add(usernameLabel, 0, 0);
+        gridPane.add(usernameField, 1, 0);
+        gridPane.add(passwordLabel, 0, 1);
+        gridPane.add(passwordField, 1, 1);
+        gridPane.add(amountLabel, 0, 2);
+        gridPane.add(discountField, 1, 2);
+        // Set the grid pane as the alert dialog's content
+        alert.getDialogPane().setContent(gridPane);
+        // Add buttons to the alert dialog
+        ButtonType okButtonType = ButtonType.OK;
+        alert.getDialogPane().getButtonTypes().addAll(ButtonType.CANCEL);
+
+        //Hide Ok button from Alert if any field is empty.
+        TextField[] textFields = {usernameField, passwordField, discountField};
+        for(TextField item: textFields){
+            item.textProperty().addListener((observable, oldValue, newValue) -> {
+                if(!usernameField.getText().trim().isEmpty() && !passwordField.getText().trim().isEmpty() && !discountField.getText().trim().isEmpty()){
+                    if(!alert.getDialogPane().getButtonTypes().contains(okButtonType)){
+                        alert.getDialogPane().getButtonTypes().add(0, okButtonType);
+                        item.requestFocus();
+                    }
+                }else{
+                    alert.getDialogPane().getButtonTypes().remove(okButtonType);
+                }
+            });
+        }
+        // Show the alert dialog
+        alert.showAndWait().ifPresent(response -> {
+            if (response == okButtonType ) {
+                //Check the credentials and apply discount.
+                if(validateGlobalDiscount(usernameField.getText(), passwordField.getText(), discountField.getText())){
+                    double discount = Double.parseDouble(discountField.getText());
+                    setTotalUSD(totalUSD.subtract(totalUSD.multiply(discount).divide(100)).getValue());
+                    getInvoiceInProgress().setGlobalDiscount(discount);
+                    DialogBuilder.createInformation("Info!", "SAUL POS", "Discount implemented successfully.").showAndWait();
+                }else{
+                    DialogBuilder.createError("Error!", "SAUL POS", "Invalid Credentials or discount!").showAndWait();
+                }
+            }
+        });
+    }
+
+    private boolean validateGlobalDiscount(String username, String password, String discount) {
+        //Fixme -- Implement this method based on requirements
+        // discount should apply only once - check from DB
+
+        //discount < 100%
+        return !(Double.parseDouble(discount) >= 100);
+    }
+
+    private void calculateProductsCostDetails(){
+        total.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> value.getTotalAmount().getValue()).sum());
+        totalUSD.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> convertToDollar(value.getTotalAmount().getValue()).getValue()).sum());
+        subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
+            Double discountAmount = value.getCurrentPrice().multiply(value.getCurrentDiscount()).divide(100).getValue();
+            return value.getCurrentPrice().getValue() - discountAmount;
+        }).sum());
+        totalVat.set(invoiceInProgress.getValue().getProducts().stream()
+                .mapToDouble(value -> value.getVatAmount().getValue()).sum());
     }
 }

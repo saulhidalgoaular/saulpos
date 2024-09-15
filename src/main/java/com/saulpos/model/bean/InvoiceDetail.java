@@ -125,12 +125,12 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
         this.invoice.set(invoice);
     }
 
-    public void setSalePrice(double salePrice) {
-        this.salePrice.set(salePrice);
-    }
+//    public void setSalePrice(double salePrice) {
+//        this.salePrice.set(salePrice);
+//    }
 
-    public void setDiscount(double discount) {
-        this.discount.set(discount);
-    }
+//    public void setDiscount(double discount) {
+//        this.discount.set(discount);
+//    }
 
 }

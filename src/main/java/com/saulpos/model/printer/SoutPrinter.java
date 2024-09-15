@@ -1,9 +1,9 @@
 package com.saulpos.model.printer;
 
-import com.saulpos.model.bean.CreditNote;
-import com.saulpos.model.bean.Invoice;
-import com.saulpos.model.bean.MoneyExtraction;
-import com.saulpos.model.bean.PrinterInformation;
+import com.saulpos.model.bean.*;
+
+import java.time.LocalDateTime;
+import java.util.Set;
 
 public class SoutPrinter implements AbstractPrinter{
 
@@ -16,6 +16,34 @@ public class SoutPrinter implements AbstractPrinter{
     @Override
     public void printInvoice(Invoice invoice) {
         System.out.println("Printing invoice: " + invoice);
+        System.out.println("Invoice status: " + invoice.getStatus().toString());
+        System.out.println("Invoice created date: " + invoice.getCreationDate());
+        System.out.println("Invoice printing date: " + LocalDateTime.now());
+        System.out.println("---------Client Information---------");
+        Client client = invoice.getClient();
+        if(client != null){
+            String clientInfo = "Name: "+client.getName() +"\nAddress: "+client.getAddress()+"\nPhone: " +client.getPhone();
+            System.out.println(clientInfo);
+        }else{
+            System.out.println("No client found!");
+        }
+        System.out.println("---------Product Information---------");
+        System.out.println("SerialNo    ProductName    Amount    Price");
+        Set<InvoiceDetail> invoiceDetails = invoice.getInvoiceDetails();
+        int serial = 1;
+        for(InvoiceDetail invoiceDetail: invoiceDetails){
+            System.out.println(serial++ +"    "
+                    +invoiceDetail.getProduct().getDescription()+"    "
+                    +invoiceDetail.getAmount()+"    "
+                    +invoiceDetail.getSalePrice()
+            );
+        }
+        System.out.println("---------Payment & Discount---------");
+        System.out.printf("Global discountA: %.2f\n", invoice.getGlobalDiscount());
+        System.out.printf("Vat: %.2f\n", invoice.getVat());
+        System.out.printf("Total without vat: %.2f\n", invoice.getTotalWithoutVat());
+        System.out.printf("Total with vat: %.2f\n", invoice.getTotalWithVat());
+        System.out.printf("Total in USD(discount applied): %.2f\n", invoice.getTotalInUSD());
     }
 
     @Override
