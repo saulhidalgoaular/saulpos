@@ -236,9 +236,8 @@ public class Product extends BeanImplementation<Product> {
     public void setStorage(Storage storage) {
         this.storage.set(storage);
     }
-
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    @JoinColumn(name = "vat_id", referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name="vat_id")
     @Where(clause = "beanStatus = 'Active' ")
     public Vat getVat() {
         return vat.get();

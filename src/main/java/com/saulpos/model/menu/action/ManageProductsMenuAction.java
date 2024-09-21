@@ -41,8 +41,11 @@ import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
+import javafx.util.Callback;
+import org.controlsfx.control.PropertySheet;
+import org.controlsfx.property.editor.DefaultPropertyEditorFactory;
+import org.controlsfx.property.editor.Editors;
+import org.controlsfx.property.editor.PropertyEditor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -184,127 +187,36 @@ public class ManageProductsMenuAction extends CrudMenuAction{
             }
         };
 
-        NodeConstructor vatButtonConstructor = new NodeConstructor() {
-            @Override
-            public Node generateNode(Object... objects) {
-                Button vatBtn = new Button();
-                Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.PERCENT, crudGeneratorParameter.translate("Vat"), "20px", "10px", ContentDisplay.LEFT);
-                vatBtn.setGraphic(icon);
-                vatBtn.setPrefWidth(crudGeneratorParameter.getButtonWidth());
-                return vatBtn;
-            }
-        };
-        Function vatButtonFunction = new Function() {
-            @Override
-            public Object[] run(Object[] objects) throws Exception {
-                Product product = (Product) objects[0];
-                TextFlow textFlow = new TextFlow();
-                Text text1=new Text("Assign the vat for the product: ");
-                Text text2=new Text(product.getDescription());
-                text2.setStyle("-fx-font-weight: bold");
-                textFlow.getChildren().addAll(text1, text2);
-
-                VBox vBox = new VBox(5);
-                vBox.setPadding(new Insets(30));
-
-                CrudGeneratorParameter<Vat> crudVatParamGenerator = new CrudGeneratorParameter<>();
-                crudVatParamGenerator.setClazz(Vat.class);
-
-                HibernateDataProvider vatDataProvider = new HibernateDataProvider(){
-                    @Override
-                    public List getAllItems(Class aClass, AbstractBean abstractBean, SearchType type) {
-                        Vat vat = new Vat();
-                        vat.setProduct(product);
-                        try {
-                            List list = DatabaseConnection.getInstance().listBySample(Vat.class, vat, SearchType.EQUAL);
-                            return list;
-                        } catch (Exception e) {
-                            DialogBuilder.createExceptionDialog("Error", "Error query the database", e.getMessage(), e).showAndWait();
-                        }
-                        return new ArrayList<>();
-                    }
-                };
-
-                NodeConstructor vatBackButtonConstructor = new NodeConstructor() {
-                    @Override
-                    public Node generateNode(Object... objects) {
-                        Button customVatBackButton = new Button();
-                        Label icon = GlyphsDude.createIconLabel(FontAwesomeIcon.BACKWARD, crudVatParamGenerator.translate("Back"), "20px", "10px", ContentDisplay.LEFT);
-                        customVatBackButton.setGraphic(icon);
-                        customVatBackButton.setPrefWidth(crudVatParamGenerator.getButtonWidth());
-                        return customVatBackButton;
-                    }
-                };
-                Function vatBackButtonFunction = new Function() {
-                    @Override
-                    public Object[] run(Object[] objects) throws Exception {
-                        if(viewDef != null){
-                            Utils.goBack(viewDef, mainPane);
-                        }
-                        return null;
-                    }
-                };
-                crudVatParamGenerator.addCustomButton(new CustomButton(vatBackButtonConstructor, vatBackButtonFunction, false));
-                crudVatParamGenerator.setDataProvider(vatDataProvider);
-
-                CrudGenerator<Vat> crudVatGenerator = new CrudGenerator<>(crudVatParamGenerator){
-                    @Override
-                    public CrudPresenter<Vat> generate() throws Exception {
-                        final CrudModel<Vat> model = new CrudModel<>(crudVatParamGenerator){
-                            @Override
-                            public Vat getNewBean() {
-                                Vat newBean = new Vat();
-                                product.setVat(newBean);
-                                return newBean;
-                            }
-                        };
-                        final CrudView view = new CrudViewGenerator(crudVatParamGenerator).generate();
-                        return new CrudPresenter<Vat>(model, view);
-                    }
-                };
-                CrudPresenter<Vat> vatCrudPresenter = crudVatGenerator.generate();
-
-                ((Button) vatCrudPresenter.getView().getSaveButton()).setOnAction(
-                        new EventHandler<ActionEvent>() {
-                            @Override
-                            public void handle(ActionEvent actionEvent) {
-                                try{
-                                    if(vatCrudPresenter.getView().getTableView().getItems().size() > 0 &&
-                                        vatCrudPresenter.getView().getTableView().getSelectionModel().getSelectedItem() ==null){
-                                        DialogBuilder.createError("Error", "SAUL POS",
-                                                "Adding multiple vat information for a single product is not allowed!").showAndWait();
-                                    }else{
-                                        //Condition for not to add the empty vat details
-                                        if(vatCrudPresenter.getModel().getBeanInEdition().getDescription() != null
-                                                && vatCrudPresenter.getModel().getBeanInEdition().getPercentage() > 0){
-                                            vatCrudPresenter.getModel().saveItemAction();
-                                            product.setVat((Vat) dataProvider.getAllItems(Vat.class).getLast());
-                                            product.saveOrUpdate();
-                                            vatCrudPresenter.getModel().refreshAction();
-                                            vatCrudPresenter.getView().getTableView().getSelectionModel().selectLast();
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                    DialogBuilder.createExceptionDialog("Exception saving the item", "SAUL POS", e.getMessage(), e).showAndWait();
-                                }
-                            }
-                        }
-                );
-
-                AbstractView view = new AbstractView(vatCrudPresenter.getView().getMainView());
-                vBox.getChildren().addAll(textFlow, view.getRoot());
-                Utils.goForward(new AbstractView(vBox), mainPane);
-                return null;
-            }
-        };
-
         crudGeneratorParameter.addCustomButton(new CustomButton(discountButtonConstructor, discountButtonFunction, true));
-        crudGeneratorParameter.addCustomButton(new CustomButton(vatButtonConstructor, vatButtonFunction, true));
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
         CrudPresenter crud = crudGenerator.generate();
-
+        generateVatComboBox(crudGeneratorParameter, dataProvider);
         viewDef = new AbstractView(crud.getView().getMainView());
         Utils.goForward(viewDef, mainPane);
+    }
+
+    private void generateVatComboBox(CrudGeneratorParameter crudGeneratorParameter, HibernateDataProvider dataProvider) {
+        PropertySheet propertySheet = (PropertySheet) crudGeneratorParameter.getFieldsLayout().getChildren().getFirst();
+        DefaultPropertyEditorFactory defaultPropertyEditorFactory = new DefaultPropertyEditorFactory();
+        propertySheet.setPropertyEditorFactory(new Callback<PropertySheet.Item, PropertyEditor<?>>() {
+            @Override
+            public PropertyEditor<?> call(PropertySheet.Item param) {
+                if (param.getName().equals("Vat")){
+                    List<Vat> vatList = getVatList(dataProvider);
+                    return Editors.createChoiceEditor(param, vatList);
+                }
+                return defaultPropertyEditorFactory.call(param);
+            }
+        });
+    }
+
+    private List<Vat> getVatList(HibernateDataProvider dataProvider){
+        List vats = dataProvider.getAllItems(Vat.class);
+        List<Vat> vatList = new ArrayList<>();
+        for(Object vat: vats){
+            vatList.add((Vat) vat);
+        }
+        return vatList;
     }
 }
