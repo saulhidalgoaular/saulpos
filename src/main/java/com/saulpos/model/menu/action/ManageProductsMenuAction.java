@@ -160,7 +160,7 @@ public class ManageProductsMenuAction extends CrudMenuAction{
                                                 "Adding multiple discount information for a single product is not allowed!").showAndWait();
                                     }else{
                                         //Condition for not to add the empty discount details
-                                        if(discountCrudPresenter.getModel().getBeanInEdition().getDescription() != null
+                                        if(!discountCrudPresenter.getModel().getBeanInEdition().getDescription().isBlank()
                                                 && discountCrudPresenter.getModel().getBeanInEdition().getPercentage() > 0
                                                 && discountCrudPresenter.getModel().getBeanInEdition().getStartingDate() != null
                                                 && discountCrudPresenter.getModel().getBeanInEdition().getEndingDate() != null
@@ -168,10 +168,11 @@ public class ManageProductsMenuAction extends CrudMenuAction{
                                                     .isBefore(discountCrudPresenter.getModel().getBeanInEdition().getEndingDate()
                                                 )){
                                             discountCrudPresenter.getModel().saveItemAction();
-                                            product.setDiscount((Discount) dataProvider.getAllItems(Discount.class).getLast());
                                             product.saveOrUpdate();
                                             discountCrudPresenter.getModel().refreshAction();
                                             discountCrudPresenter.getView().getTableView().getSelectionModel().selectLast();
+                                        }else {
+                                            DialogBuilder.createError("Error", "SAUL POS", "Empty entity or Invalid Discount percentage or Starting date or Ending date!").showAndWait();
                                         }
                                     }
                                 } catch (Exception e) {
