@@ -53,6 +53,7 @@ import java.util.List;
 public class ManageProductsMenuAction extends CrudMenuAction{
 
     private AbstractView viewDef;
+    private CrudPresenter<Product> mainCrudPresenter;
 
     public ManageProductsMenuAction() {
         super(Product.class);
@@ -127,6 +128,7 @@ public class ManageProductsMenuAction extends CrudMenuAction{
                     public Object[] run(Object[] objects) throws Exception {
                         if(viewDef != null){
                             Utils.goBack(viewDef, mainPane);
+                            mainCrudPresenter.getModel().refreshAction();
                         }
                         return null;
                     }
@@ -191,10 +193,39 @@ public class ManageProductsMenuAction extends CrudMenuAction{
         crudGeneratorParameter.addCustomButton(new CustomButton(discountButtonConstructor, discountButtonFunction, true));
         crudGeneratorParameter.setDataProvider(dataProvider);
         CrudGenerator crudGenerator = new CrudGenerator<>(crudGeneratorParameter);
-        CrudPresenter crud = crudGenerator.generate();
+        mainCrudPresenter = crudGenerator.generate();
         generateVatComboBox(crudGeneratorParameter, dataProvider);
-        viewDef = new AbstractView(crud.getView().getMainView());
+        checkAndSaveProduct(mainCrudPresenter);
+        viewDef = new AbstractView(mainCrudPresenter.getView().getMainView());
         Utils.goForward(viewDef, mainPane);
+    }
+
+    private void checkAndSaveProduct(CrudPresenter<Product> mainCrudPresenter) {
+        ((Button) mainCrudPresenter.getView().getSaveButton()).setOnAction(new EventHandler<ActionEvent>() {
+            @Override
+            public void handle(ActionEvent actionEvent) {
+                if (mainCrudPresenter.getModel().getBeanInEdition().getDescription() == null
+                        || mainCrudPresenter.getModel().getBeanInEdition().getBarcode() == null){
+                    DialogBuilder.createError("Error", "SAUL POS",
+                            "Product description or barcode can not be empty!").showAndWait();
+                }else {
+                    try {
+                        int selectedIndex = mainCrudPresenter.getView().getTableView().getSelectionModel().getSelectedIndex();
+                        mainCrudPresenter.getModel().getBeanInEdition().saveOrUpdate();
+                        mainCrudPresenter.getModel().refreshAction();
+                        if(selectedIndex > -1){
+                            //Select the updated row.
+                            mainCrudPresenter.getView().getTableView().getSelectionModel().select(selectedIndex);
+                        }else {
+                            //Select the newly added row.
+                            mainCrudPresenter.getView().getTableView().getSelectionModel().selectLast();
+                        }
+                    } catch (Exception e) {
+                        DialogBuilder.createExceptionDialog("Exception saving the Product", "SAUL POS", e.getMessage(), e).showAndWait();
+                    }
+                }
+            }
+        });
     }
 
     private void generateVatComboBox(CrudGeneratorParameter crudGeneratorParameter, HibernateDataProvider dataProvider) {
