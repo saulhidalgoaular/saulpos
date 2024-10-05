@@ -242,17 +242,23 @@ public class POSMainModel extends AbstractModel{
         Product product = new Product();
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
-        if (list.size() == 1 && list.get(0).getExistence() > 0) {
-            Product productToAdd = list.get(0);
-            invoiceInProgress.get().getProducts().add(productToAdd);
-            addProductToInvoiceDetails(productToAdd);
-            productToAdd.setExistence(productToAdd.getExistence() -1);
-            productToAdd.saveOrUpdate();
-            barcodeBar.setValue("");
-            if(invoiceInProgress.get().getCreationDate() == null){
-                invoiceInProgress.get().setCreationDate(LocalDateTime.now());
+        if (list.size() == 1) {
+            if (list.get(0).getExistence() > 0){
+                Product productToAdd = list.get(0);
+                invoiceInProgress.get().getProducts().add(productToAdd);
+                addProductToInvoiceDetails(productToAdd);
+                productToAdd.setExistence(productToAdd.getExistence() -1);
+                productToAdd.saveOrUpdate();
+                barcodeBar.setValue("");
+                if(invoiceInProgress.get().getCreationDate() == null){
+                    invoiceInProgress.get().setCreationDate(LocalDateTime.now());
+                }
+                System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
+            }else {
+                //If there is a product barcode but no existence
+                DialogBuilder.createError("Error", "SAUL POS", "No existence of the scanned product").showAndWait();
+                barcodeBar.setValue("");
             }
-            System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
         }
     }
 
