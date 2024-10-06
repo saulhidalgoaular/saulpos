@@ -28,7 +28,7 @@ import java.util.ResourceBundle;
  */
 public abstract class AbstractPresenter
         <M extends AbstractModel> implements Initializable {
-    final protected M model;
+    protected M model;
     protected AbstractPresenter father;
 
     @FXML
@@ -77,6 +77,9 @@ public abstract class AbstractPresenter
 
     public M getModel(){
         return model;
+    }
+    public void removeModelFromPresenter() {
+        this.model = null;
     }
 
 }

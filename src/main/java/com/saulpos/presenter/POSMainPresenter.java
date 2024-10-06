@@ -200,83 +200,84 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
     public void handleKeyReleased(KeyEvent event) {
         KeyCode keyCode = event.getCode();
-        switch (keyCode) {
-            case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
-            case BACK_SPACE -> {
-                System.out.println("Se presionó BACKSPACE (Borrar)");
-                // should delete items from item table view
-                if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
-                    && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
+        if(model != null){
+            switch (keyCode) {
+                case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
+                case BACK_SPACE -> {
+                    // should delete items from item table view
+                    if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
+                            && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
+                        try {
+                            model.removeItem(itemsTableView);
+                            System.out.println("Invoice product list after deletion: " +
+                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                        }catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                case F2 -> {
+                    System.out.println("Se presionó F2 (Clientes)");
+                    addClient();
+                }
+                case F3 -> {
+                    System.out.println("Se presionó F3 (Extraer dinero)");
+                    extractMoney();
+                }
+                case F4 -> {
+                    System.out.println("Se presionó F4 (A espera)");
+                    addInvoiceInWaitingState();
+                }
+                case F5 -> {
+                    System.out.println("Se presionó F5 (Ver espera)");
+                    restoreWaitingInvoice();
+                }
+                case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
+                case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
+                case F7 -> {
+                    System.out.println("Se presionó F7 (Descuento Global)");
+                    setGlobalDiscount();
+                }
+                case ESCAPE -> {
+                    System.out.println("Se presionó ESC (Salir)");
+                    logout();
+                }
+                case F8 -> {
+                    System.out.println("Se presionó F8 (Reporte X)");
+                    // test the invoice printing result
+                    // need to save the invoice in DB
+                    SoutPrinter printer = new SoutPrinter();
+                    model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
+                    model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
+                    model.getInvoiceInProgress().setVat(model.getTotalVat());
+                    model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
+                    printer.printInvoice(model.getInvoiceInProgress());
+                }
+                case END -> {System.out.println("Se presionó END (Reporte Z)");}
+                case ENTER -> {
                     try {
-                        model.removeItem(itemsTableView);
-                        System.out.println("Invoice product list after deletion: " +
-                                model.invoiceInProgressProperty().getValue().getProducts().size());
-                    }catch (Exception e) {
+                        if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
+                            if(model.getActiveDollarRate() == null){
+                                DollarRate dollarRate = model.findActiveDollarRate();
+                                if(dollarRate != null){
+                                    model.setActiveDollarRate(dollarRate);
+                                }
+                            }
+                            model.addItem();
+
+                            System.out.println("Invoice product list after add: " +
+                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                        }
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
-            }
-            case F2 -> {
-                System.out.println("Se presionó F2 (Clientes)");
-                addClient();
-            }
-            case F3 -> {
-                System.out.println("Se presionó F3 (Extraer dinero)");
-                extractMoney();
-            }
-            case F4 -> {
-                System.out.println("Se presionó F4 (A espera)");
-                addInvoiceInWaitingState();
-            }
-            case F5 -> {
-                System.out.println("Se presionó F5 (Ver espera)");
-                restoreWaitingInvoice();
-            }
-            case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
-            case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
-            case F7 -> {
-                System.out.println("Se presionó F7 (Descuento Global)");
-                setGlobalDiscount();
-            }
-            case ESCAPE -> {
-                System.out.println("Se presionó ESC (Salir)");
-                logout();
-            }
-            case F8 -> {
-                System.out.println("Se presionó F8 (Reporte X)");
-                // test the invoice printing result
-                // need to save the invoice in DB
-                SoutPrinter printer = new SoutPrinter();
-                model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
-                model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
-                model.getInvoiceInProgress().setVat(model.getTotalVat());
-                model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
-                printer.printInvoice(model.getInvoiceInProgress());
-            }
-            case END -> {System.out.println("Se presionó END (Reporte Z)");}
-            case ENTER -> {
-                try {
-                    if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
-                        if(model.getActiveDollarRate() == null){
-                            DollarRate dollarRate = model.findActiveDollarRate();
-                            if(dollarRate != null){
-                                model.setActiveDollarRate(dollarRate);
-                            }
-                        }
-                        model.addItem();
-
-                        System.out.println("Invoice product list after add: " +
-                                model.invoiceInProgressProperty().getValue().getProducts().size());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                case UP -> {
+                    moveFocus(-1);
                 }
-            }
-            case UP -> {
-                moveFocus(-1);
-            }
-            case DOWN -> {
-                moveFocus(1);
+                case DOWN -> {
+                    moveFocus(1);
+                }
             }
         }
     }
@@ -302,6 +303,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             LoginView loginView = new LoginView("/login.fxml", loginPresenter);
             ParentPane parentPane = (ParentPane) mainPOSVBox.getParent();
             parentPane.getChildren().remove(0);
+            removeModelFromPresenter();
             Utils.goForward(loginView, parentPane);
         } catch (Exception e){
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
