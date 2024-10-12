@@ -111,6 +111,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     public Button zReportButton;
     @FXML
     public GridPane clientInfoGrid;
+    @FXML
+    private Label exchangeRateLabel;
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
@@ -132,7 +134,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
         subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
         vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
-        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.2f"));
+        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.4f"));
     }
 
     @Override
@@ -184,9 +186,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.4f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
+        showExchangeRate();
 
         // For this we need to keep the local currency rate in dollars somewhere.
         // Create another bean that stores the currency rate.
@@ -337,6 +340,20 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             model.applyGlobalDiscount();
         }else{
             DialogBuilder.createWarning("Warning!", "SAUL POS", "No product in current invoice!").showAndWait();
+        }
+    }
+
+    private void showExchangeRate() {
+        //show the currency exchange rate when POS window opens.
+        System.out.println("Show exchange rate name: " + model.getEnabledDollarRate().getLocalCurrencyName()+
+                " -rate:" + model.getEnabledDollarRate().getExchangeRatePerDollar());
+        if (model.getEnabledDollarRate().getExchangeRatePerDollar() > 0f) {
+            exchangeRateLabel.setText("Exchange rate: ("+
+                    model.getEnabledDollarRate().getExchangeRatePerDollar()+ " " +
+                    model.getEnabledDollarRate().getLocalCurrencyName()+
+                    "/$)");
+        }else {
+            exchangeRateLabel.setText("Exchange rate: (Invalid)");
         }
     }
 }

@@ -173,7 +173,7 @@
                               <Insets left="10.0" />
                            </HBox.margin>
                         </AnchorPane>
-                        <GridPane prefHeight="122.0" prefWidth="151.0">
+                        <GridPane prefHeight="122.0">
                           <columnConstraints>
                             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
                             <ColumnConstraints halignment="RIGHT" hgrow="SOMETIMES" maxWidth="200.0" minWidth="10.0" prefWidth="100.0" />
@@ -200,11 +200,16 @@
                                     <Font name="System Bold" size="13.0" />
                                  </font>
                               </Label>
-                              <Label layoutX="127.0" layoutY="77.0" text="Total $" GridPane.rowIndex="3">
-                                 <font>
-                                    <Font name="System Bold" size="13.0" />
-                                 </font>
-                              </Label>
+                              <HBox alignment="CENTER_RIGHT" minWidth="-Infinity" spacing="2.0" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3">
+                                 <children>
+                                    <Label fx:id="exchangeRateLabel" text="Label" />
+                                    <Label text="Total $">
+                                       <font>
+                                          <Font name="System Bold" size="13.0" />
+                                       </font>
+                                    </Label>
+                                 </children>
+                              </HBox>
                               <Label fx:id="subtotalLabel" text="Label" GridPane.columnIndex="1" />
                               <Label fx:id="vatLabel" layoutX="230.0" layoutY="17.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                               <Label fx:id="totalLabel" layoutX="230.0" layoutY="47.0" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="2" />
