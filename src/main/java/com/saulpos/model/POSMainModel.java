@@ -4,6 +4,11 @@ import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.DatabaseConnection;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Root;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
@@ -52,7 +57,7 @@ public class POSMainModel extends AbstractModel{
     private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty(0);
 
     private SimpleDoubleProperty subtotal = new SimpleDoubleProperty(0);
-    private SimpleObjectProperty<DollarRate> activeDollarRate = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<DollarRate> enabledDollarRate = new SimpleObjectProperty<>();
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
@@ -60,6 +65,7 @@ public class POSMainModel extends AbstractModel{
         invoice.setInvoiceDetails(new HashSet<InvoiceDetail>());
         invoiceInProgress.set(invoice);
         initialize();
+        initializeEnabledDollarRate();
     }
 
     @Override
@@ -226,16 +232,16 @@ public class POSMainModel extends AbstractModel{
         return invoiceInProgress;
     }
 
-    public DollarRate getActiveDollarRate() {
-        return activeDollarRate.get();
+    public DollarRate getEnabledDollarRate() {
+        return enabledDollarRate.get();
     }
 
-    public SimpleObjectProperty<DollarRate> activeDollarRateProperty() {
-        return activeDollarRate;
+    public SimpleObjectProperty<DollarRate> enabledDollarRateProperty() {
+        return enabledDollarRate;
     }
 
-    public void setActiveDollarRate(DollarRate activeDollarRate) {
-        this.activeDollarRate.set(activeDollarRate);
+    public void setEnabledDollarRate(DollarRate enabledDollarRate) {
+        this.enabledDollarRate.set(enabledDollarRate);
     }
 
     public void addItem() throws Exception {
@@ -295,22 +301,44 @@ public class POSMainModel extends AbstractModel{
     }
 
     public DoubleBinding convertToDollar(double localCurrency){
-        return getActiveDollarRate() != null ?
-            getActiveDollarRate().localCurrencyRateProperty().multiply(localCurrency) :
-                Bindings.createDoubleBinding(() -> localCurrency);
+        if (getEnabledDollarRate().getExchangeRatePerDollar() > 0f){
+            // Calculation for: local currency -> dollar conversion
+            // For example: 148.84 Japanese Yen = 1$; so, '148.84' stores in 'exchangeRatePerDollar' column in DB
+            double value = Math.pow(getEnabledDollarRate().getExchangeRatePerDollar(), -1) * localCurrency;
+            return Bindings.createDoubleBinding(() -> value);
+        }else {
+            return Bindings.createDoubleBinding(() -> localCurrency);
+        }
     }
 
-    public DollarRate findActiveDollarRate() {
+    private void initializeEnabledDollarRate() {
+        //find from db and set the enabled dollar rate in model constructor
+        DollarRate dummyRate = new DollarRate();
+        dummyRate.setLocalCurrencyName("Invalid rate");
+        dummyRate.setExchangeRatePerDollar(0);
         try {
-            DollarRate dollar = new DollarRate();
-            dollar.setLocalCurrencyName("Bolivar");
-            dollar.setId(1);
-            dollar.setActivated(true);
-            return dollar;
+            DollarRate enabledRate = findEnabledDollarRate();
+            if (enabledRate != null) {
+                setEnabledDollarRate(enabledRate);
+            }else {
+                //DialogBuilder.createWarning("Warning", "SAUL POS", "Could not find any enabled currency rate(set 0)!!!").showAndWait();
+                setEnabledDollarRate(dummyRate);
+            }
         } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
-        return null;
+    }
+
+    private DollarRate findEnabledDollarRate() throws Exception {
+        EntityManagerFactory entityManagerFactory = DatabaseConnection.getInstance().entityManagerFactory;
+        EntityManager entityManager = entityManagerFactory.createEntityManager();
+        CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        CriteriaQuery<DollarRate> criteriaQuery = criteriaBuilder.createQuery(DollarRate.class);
+        Root<DollarRate> root = criteriaQuery.from(DollarRate.class);
+        criteriaQuery.select(root).where(criteriaBuilder.equal(root.get("enabled"), true));
+        DollarRate result = entityManager.createQuery(criteriaQuery).getSingleResultOrNull();
+        entityManager.close();
+        return result;
     }
 
     public void invoiceInProgressToWaiting(TableView<Product> itemsTableView, GridPane clientInfoGrid){

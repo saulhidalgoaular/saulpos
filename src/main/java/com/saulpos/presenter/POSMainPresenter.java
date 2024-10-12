@@ -257,10 +257,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 case ENTER -> {
                     try {
                         if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
-                            if(model.getActiveDollarRate() == null){
-                                DollarRate dollarRate = model.findActiveDollarRate();
+                            if(model.getEnabledDollarRate() == null){
+                                DollarRate dollarRate = model.getEnabledDollarRate();
                                 if(dollarRate != null){
-                                    model.setActiveDollarRate(dollarRate);
+                                    model.setEnabledDollarRate(dollarRate);
                                 }
                             }
                             model.addItem();

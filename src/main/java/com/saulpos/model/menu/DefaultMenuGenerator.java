@@ -56,7 +56,7 @@ public class DefaultMenuGenerator {
         MenuModel users = new MenuModel("Users", system, "USER", "ManageUserMenuAction", MenuModel.MenuType.Administrative,9);
         answer.add(users);
 
-        MenuModel currency = new MenuModel("Add Currency", system, "DOLLAR", "ManageCurrencyMenuAction", MenuModel.MenuType.Administrative,18);
+        MenuModel currency = new MenuModel("Currency", system, "DOLLAR", "ManageCurrencyMenuAction", MenuModel.MenuType.Administrative,19);
         answer.add(currency);
 
         // SHOP ROOT MENU
