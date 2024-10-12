@@ -345,15 +345,17 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     private void showExchangeRate() {
         //show the currency exchange rate when POS window opens.
-        System.out.println("Show exchange rate name: " + model.getEnabledDollarRate().getLocalCurrencyName()+
-                " -rate:" + model.getEnabledDollarRate().getExchangeRatePerDollar());
+//        System.out.println("Show exchange rate name: " + model.getEnabledDollarRate().getLocalCurrencyName()+
+//                " -rate:" + model.getEnabledDollarRate().getExchangeRatePerDollar());
         if (model.getEnabledDollarRate().getExchangeRatePerDollar() > 0f) {
-            exchangeRateLabel.setText("Exchange rate: ("+
+            exchangeRateLabel.setText(model.getLanguage().getString("exchangeRate")+" ("+
                     model.getEnabledDollarRate().getExchangeRatePerDollar()+ " " +
                     model.getEnabledDollarRate().getLocalCurrencyName()+
                     "/$)");
         }else {
-            exchangeRateLabel.setText("Exchange rate: (Invalid)");
+
+            exchangeRateLabel.setText(model.getLanguage().getString("exchangeRate.invalid"));
+//            exchangeRateLabel.setText("Exchange rate: (Invalid)");
         }
     }
 }
