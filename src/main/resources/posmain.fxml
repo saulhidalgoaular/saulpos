@@ -26,6 +26,11 @@
                                 <Font name="System Bold" size="12.0" />
                             </font>
                         </Label>
+                  <Label fx:id="cashierLabel" alignment="CENTER_RIGHT" layoutX="85.0" layoutY="73.0" textAlignment="CENTER" textFill="WHITE">
+                     <font>
+                        <Font name="System Bold" size="12.0" />
+                     </font>
+                  </Label>
                     </children>
                     <HBox.margin>
                         <Insets />

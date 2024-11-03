@@ -112,7 +112,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public GridPane clientInfoGrid;
     @FXML
-    private Label exchangeRateLabel;
+    public Label exchangeRateLabel;
+    @FXML
+    public Label cashierLabel;
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
@@ -128,6 +130,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         clockLabel.textProperty().bind(model.clockValueProperty());
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
+        cashierLabel.textProperty().bind(model.cashierNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
 

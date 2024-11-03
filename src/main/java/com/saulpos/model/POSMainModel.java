@@ -4,6 +4,7 @@ import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.view.Utils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -59,6 +60,8 @@ public class POSMainModel extends AbstractModel{
     private SimpleDoubleProperty subtotal = new SimpleDoubleProperty(0);
     private SimpleObjectProperty<DollarRate> enabledDollarRate = new SimpleObjectProperty<>();
 
+    private SimpleStringProperty cashierName = new SimpleStringProperty();
+
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
         Invoice invoice = new Invoice();
@@ -106,6 +109,7 @@ public class POSMainModel extends AbstractModel{
         timeline.play();
 
         employeeName.set(userB.getName());
+        cashierName.set("Cashier: " + Utils.getCashierName());
     }
 
     public UserB getUserB() {
@@ -242,6 +246,18 @@ public class POSMainModel extends AbstractModel{
 
     public void setEnabledDollarRate(DollarRate enabledDollarRate) {
         this.enabledDollarRate.set(enabledDollarRate);
+    }
+
+    public String getCashierName() {
+        return cashierName.get();
+    }
+
+    public SimpleStringProperty cashierNameProperty() {
+        return cashierName;
+    }
+
+    public void setCashierName(String cashierName) {
+        this.cashierName.set(cashierName);
     }
 
     public void addItem() throws Exception {
