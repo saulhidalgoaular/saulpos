@@ -15,6 +15,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -272,9 +273,6 @@ public class POSMainModel extends AbstractModel{
                 productToAdd.setExistence(productToAdd.getExistence() -1);
                 productToAdd.saveOrUpdate();
                 barcodeBar.setValue("");
-                if(invoiceInProgress.get().getCreationDate() == null){
-                    invoiceInProgress.get().setCreationDate(LocalDateTime.now());
-                }
                 System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
             }else {
                 //If there is a product barcode but no existence
@@ -365,50 +363,51 @@ public class POSMainModel extends AbstractModel{
             return;
         }
         System.out.println("Moving Current invoice in waiting state!");
-        //Considering only one invoice can be in waiting state.
-        if(getInvoiceWaiting().size() > 0){
-            DialogBuilder.createError("Error!", "SAUL POS",
-                    "Already an invoice in waiting state. Another invoice is not allowed to move in waiting state.").showAndWait();
-        } else if (getInvoiceWaiting().size() == 0) {
-            //Move inProgress invoice data into the waiting invoice data in model.
-            Invoice waitingInvoice = new Invoice();
-            waitingInvoice.setStatus(Invoice.InvoiceStatus.Waiting);
+        //Considering multiple invoice can be in waiting state.
+        //Move inProgress invoice data into the waiting invoice data in model.
+        Invoice waitingInvoice = new Invoice();
+        waitingInvoice.setStatus(Invoice.InvoiceStatus.Waiting);
 
-            //Move all products from inProgress invoice to waiting invoice & clear products from inProgress invoice
-            ObservableList<Product> products = FXCollections.observableArrayList();
-            products.addAll(getInvoiceInProgress().getProducts());
-            waitingInvoice.setProducts(products);
-            getInvoiceInProgress().getProducts().clear();
+        //Move all products from inProgress invoice to waiting invoice & clear products from inProgress invoice
+        ObservableList<Product> products = FXCollections.observableArrayList();
+        products.addAll(getInvoiceInProgress().getProducts());
+        waitingInvoice.setProducts(products);
+        getInvoiceInProgress().getProducts().clear();
 
-            //Move invoice details from in progress invoice to waiting invoice & clear from inProgress invoice.
-            Set<InvoiceDetail> invoiceDetails = new HashSet<>(getInvoiceInProgress().getInvoiceDetails());
-            waitingInvoice.setInvoiceDetails(invoiceDetails);
-            getInvoiceInProgress().getInvoiceDetails().clear();
+        //Move invoice details from in progress invoice to waiting invoice & clear from inProgress invoice.
+        Set<InvoiceDetail> invoiceDetails = new HashSet<>(getInvoiceInProgress().getInvoiceDetails());
+        waitingInvoice.setInvoiceDetails(invoiceDetails);
+        getInvoiceInProgress().getInvoiceDetails().clear();
 
-            //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
-            //And hide the clientInfoGrid
-            Client inProgressClient = getInvoiceInProgress().getClient();
-            if(inProgressClient != null){
-                Client waitingClient = new Client();
-                waitingClient.setId(inProgressClient.getId());
-                if(inProgressClient.getName() != null){
-                    waitingClient.setName(inProgressClient.getName());
-                }
-                if (inProgressClient.getAddress() != null) {
-                    waitingClient.setAddress(inProgressClient.getAddress());
-                }
-                if (inProgressClient.getPhone() != null) {
-                    waitingClient.setPhone(inProgressClient.getPhone());
-                }
-                waitingInvoice.setClient(waitingClient);
-                getInvoiceInProgress().setClient(null);
-                clientInfoGrid.setVisible(false);
+        //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
+        //And hide the clientInfoGrid
+        Client inProgressClient = getInvoiceInProgress().getClient();
+        if(inProgressClient != null){
+            Client waitingClient = new Client();
+            waitingClient.setId(inProgressClient.getId());
+            if(inProgressClient.getName() != null){
+                waitingClient.setName(inProgressClient.getName());
             }
-            // Adding this waitingInvoice into the model & show info dialog.
-            getInvoiceWaiting().add(waitingInvoice);
-            DialogBuilder.createInformation("Success!", "SAUL POS",
-                    "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
+            if (inProgressClient.getAddress() != null) {
+                waitingClient.setAddress(inProgressClient.getAddress());
+            }
+            if (inProgressClient.getPhone() != null) {
+                waitingClient.setPhone(inProgressClient.getPhone());
+            }
+            waitingInvoice.setClient(waitingClient);
+            getInvoiceInProgress().setClient(null);
+            clientInfoGrid.setVisible(false);
         }
+
+        // Move creationDate from inProgress invoice to waiting invoice & set creationDate=null in inProgress invoice.
+        var createdAt = getInvoiceInProgress().getCreationDate();
+        waitingInvoice.setCreationDate(createdAt);
+        getInvoiceInProgress().setCreationDate(null);
+
+        // Adding this waitingInvoice into the model & show info dialog.
+        getInvoiceWaiting().add(waitingInvoice);
+        DialogBuilder.createInformation("Success!", "SAUL POS",
+                "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
     }
 
     public void invoiceWaitingToInProgress(GridPane clientInfoGrid){
@@ -416,31 +415,8 @@ public class POSMainModel extends AbstractModel{
         // Return if there is no invoice in waiting state
         if(getInvoiceWaiting().size() == 0){
             DialogBuilder.createInformation("Info!", "SAUL POS", "No invoice in waiting state.").showAndWait();
-        }else if(getInvoiceWaiting().size() == 1){
-            //Clear the product list from inProgress invoice and restore products from waiting invoice.
-            Invoice waitingInvoice = getInvoiceWaiting().getFirst();
-            getInvoiceInProgress().getProducts().clear();
-            getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
-
-            //Clear the invoice details from inProgress invoice and restore invoice details from waiting invoice.
-            getInvoiceInProgress().getInvoiceDetails().clear();
-            getInvoiceInProgress().getInvoiceDetails().addAll(waitingInvoice.getInvoiceDetails());
-
-            //Clear the client info from inProgress invoice and restore client info from waiting invoice.
-            if(waitingInvoice.getClient() == null){
-                getInvoiceInProgress().setClient(null);
-                clientInfoGrid.setVisible(false);
-            }else{
-                getInvoiceInProgress().setClient(waitingInvoice.getClient());
-                clientInfoGrid.setVisible(true);
-                ((Label) clientInfoGrid.getChildren().get(1)).setText(getInvoiceInProgress().getClient().getName());
-                ((Label) clientInfoGrid.getChildren().get(3)).setText(getInvoiceInProgress().getClient().getAddress());
-                ((Label) clientInfoGrid.getChildren().get(5)).setText(getInvoiceInProgress().getClient().getPhone());
-            }
-            //Clear the waiting invoice list & show info dialog.
-            getInvoiceWaiting().clear();
-            DialogBuilder.createInformation("Success!", "SAUL POS",
-                    "Current invoice is restored from waiting state!").showAndWait();
+        }else {
+            showInvoicesInWaitingState(clientInfoGrid);
         }
     }
 
@@ -572,6 +548,86 @@ public class POSMainModel extends AbstractModel{
                 }
             }
         });
+    }
+    private void showInvoicesInWaitingState(GridPane clientInfoGrid) {
+        ObservableList<Invoice> invoices = getInvoiceWaiting();
+        TableView<Invoice> invoiceInWaitingTableView = new TableView<>();
+        TableColumn<Invoice, Number> indexCol = new TableColumn<Invoice, Number>("#");
+        indexCol.setSortable(false);
+        indexCol.setCellValueFactory(column-> new ReadOnlyObjectWrapper<Number>(invoiceInWaitingTableView.getItems().indexOf(column.getValue()) + 1));
+        TableColumn<Invoice, String> dateCol = new TableColumn<>("Created DateTime");
+        dateCol.setSortable(false);
+        dateCol.setCellValueFactory(column -> new ReadOnlyObjectWrapper<>(column.getValue().getCreationDate().format(DateTimeFormatter.ofPattern("HH:mm:ss MMM-dd"))));
+        TableColumn<Invoice, String> clientNameCol = new TableColumn<>("Client Name");
+        clientNameCol.setSortable(false);
+        clientNameCol.setCellValueFactory(column ->{
+            if(column.getValue().getClient() != null
+                && column.getValue().getClient().getName() != null
+                && !column.getValue().getClient().getName().isEmpty()
+                && !column.getValue().getClient().getName().isBlank()){
+                return new ReadOnlyObjectWrapper<>(column.getValue().getClient().getName());
+            }else {
+                return new ReadOnlyObjectWrapper<>("---");
+            }
+        });
+        invoiceInWaitingTableView.getColumns().addAll(indexCol, dateCol, clientNameCol);
+        invoiceInWaitingTableView.getItems().addAll(invoices);
+        // Create an Alert
+        Alert alert = new Alert(Alert.AlertType.NONE);
+        alert.setTitle("Saul POS");
+        alert.setHeaderText("List of Waiting Invoices");
+        alert.getDialogPane().setContent(invoiceInWaitingTableView);
+        alert.setWidth(300);
+        alert.setHeight(400);
+        ButtonType btnApply = ButtonType.APPLY;
+        alert.getButtonTypes().addAll(ButtonType.CANCEL);
+
+        // Add Apply button if any item is selected.
+        invoiceInWaitingTableView.getSelectionModel().selectedItemProperty().addListener((observableValue, oldSelection, newSelection) -> {
+            if(observableValue.getValue() != null && !alert.getButtonTypes().contains(btnApply)){
+                alert.getButtonTypes().add(btnApply);
+            }
+        });
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.APPLY) {
+                Invoice selectedItem = invoiceInWaitingTableView.getSelectionModel().getSelectedItem();
+                if(selectedItem != null){
+                    restoreInvoice(selectedItem, clientInfoGrid);
+                }
+            }
+        });
+    }
+
+    private void restoreInvoice(Invoice waitingInvoice, GridPane clientInfoGrid){
+        //Clear the product list from inProgress invoice and restore products from waiting invoice.
+        getInvoiceInProgress().getProducts().clear();
+        getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
+
+        //Clear the invoice details from inProgress invoice and restore invoice details from waiting invoice.
+        getInvoiceInProgress().getInvoiceDetails().clear();
+        getInvoiceInProgress().getInvoiceDetails().addAll(waitingInvoice.getInvoiceDetails());
+
+        //Clear the client info from inProgress invoice and restore client info from waiting invoice.
+        if(waitingInvoice.getClient() == null){
+            getInvoiceInProgress().setClient(null);
+            clientInfoGrid.setVisible(false);
+        }else{
+            getInvoiceInProgress().setClient(waitingInvoice.getClient());
+            clientInfoGrid.setVisible(true);
+            ((Label) clientInfoGrid.getChildren().get(1)).setText(getInvoiceInProgress().getClient().getName());
+            ((Label) clientInfoGrid.getChildren().get(3)).setText(getInvoiceInProgress().getClient().getAddress());
+            ((Label) clientInfoGrid.getChildren().get(5)).setText(getInvoiceInProgress().getClient().getPhone());
+        }
+
+        //Restore the creation date from waiting invoice to inProgress invoice
+        getInvoiceInProgress().setCreationDate(waitingInvoice.getCreationDate());
+
+        // Remove the selected invoice from the waiting invoice list & show info dialog.
+        getInvoiceWaiting().remove(waitingInvoice);
+//        System.out.println("After restoring a invoice, Waiting invoice list size: " + getInvoiceWaiting().size());
+        DialogBuilder.createInformation("Success!", "SAUL POS",
+                "Selected invoice is restored from waiting state!").showAndWait();
     }
 
     private boolean validateGlobalDiscount(String username, String password, String discount) {

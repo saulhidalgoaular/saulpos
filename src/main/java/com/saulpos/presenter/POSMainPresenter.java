@@ -23,6 +23,8 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
+import java.time.LocalDateTime;
+
 //
 
 
@@ -268,6 +270,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                                 if(dollarRate != null){
                                     model.setEnabledDollarRate(dollarRate);
                                 }
+                            }
+                            if(model.getInvoiceInProgress().getCreationDate() == null){
+                                model.getInvoiceInProgress().setCreationDate(LocalDateTime.now());
                             }
                             model.addItem();
 
