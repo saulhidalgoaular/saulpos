@@ -426,9 +426,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             viewDef = new AbstractView(paymentPane);
             backButton.setOnAction(e->{
                 try {
-//                    Utils.goBackRemove(new POSMainView(mainPOSVBox), null, (Pane) viewDef.getRootNode());
-                    Utils.goTo(new POSMainView(mainPOSVBox), (Pane) viewDef.getRootNode().getParent(), viewDef.getRootNode().getParent().getScene().getWidth() * (-1), .0, true);
-
+                    Utils.goBackRemove(new POSMainView(mainPOSVBox), null, (Pane) viewDef.getRootNode());
                 } catch (IOException ex) {
                     ex.printStackTrace();
                 }

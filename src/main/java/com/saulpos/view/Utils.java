@@ -48,7 +48,7 @@ public class Utils {
 
     public static void goBackRemove(final AbstractView viewDef,
                              final Class classInstance, final Pane mainPane) throws IOException {
-        goTo(viewDef, mainPane,.0, mainPane.getScene().getWidth(), true);
+        goTo(viewDef, mainPane,(mainPane.getScene().getWidth()) * (-1), .0, true);
     }
 
     public static void goForwardRemove(final AbstractView viewDef,
