@@ -34,11 +34,13 @@ import java.util.ArrayList;
 
 public class Utils {
 
+    // Utils.goForward(destinationReference, sourceReference);
     public static void goForward(final AbstractView viewDef,
                                  final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane, mainPane.getScene().getWidth(), .0, true);
     }
 
+    // Utils.goForward(destinationReference, sourceReference);
     public static void goBack(final AbstractView viewDef,
                        final Pane mainPane) throws IOException {
         goTo(viewDef, mainPane, (mainPane.getScene().getWidth()) * (-1), .0, false);

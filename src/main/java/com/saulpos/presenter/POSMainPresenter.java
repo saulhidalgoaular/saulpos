@@ -8,21 +8,26 @@ import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
-import com.saulpos.view.LoginView;
-import com.saulpos.view.ParentPane;
-import com.saulpos.view.Utils;
+import com.saulpos.view.*;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 
 //
@@ -177,6 +182,9 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         globalDiscountButton.setOnAction(e->{
             setGlobalDiscount();
         });
+        chargeButton.setOnAction(e->{
+            proceedToPayment();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
         priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty().asObject());
@@ -210,7 +218,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         KeyCode keyCode = event.getCode();
         if(model != null){
             switch (keyCode) {
-                case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
+                case F1 -> {
+                    // Should open the pay window for payment.
+                    System.out.println("Se presionó F1 (Cobrar)");
+                    proceedToPayment();
+                }
                 case BACK_SPACE -> {
                     // should delete items from item table view
                     if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
@@ -364,6 +376,67 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
             exchangeRateLabel.setText(model.getLanguage().getString("exchangeRate.invalid"));
 //            exchangeRateLabel.setText("Exchange rate: (Invalid)");
+        }
+    }
+
+    private void proceedToPayment() {
+        if(itemsTableView.getItems().size() == 0){
+            DialogBuilder.createInformation("Info!", "SAUL POS",
+                    "There is no product in product list").showAndWait();
+            return;
+        }
+        // Open the pay window.
+        AbstractView viewDef;
+        try {
+            VBox paymentPane = new VBox();
+            Button cashPayment = GlyphsDude.createIconButton(FontAwesomeIcon.DOLLAR, "Cash", "20px", "18px", ContentDisplay.TOP);
+            cashPayment.setPrefSize(250, 100);
+            Button visaCardPayment = GlyphsDude.createIconButton(FontAwesomeIcon.CC_VISA, "Visa Card", "20px", "18px", ContentDisplay.TOP);
+            visaCardPayment.setPrefSize(250, 100);
+            Button masterCardPayment = GlyphsDude.createIconButton(FontAwesomeIcon.CC_MASTERCARD, "Master Card", "20px", "18px", ContentDisplay.TOP);
+            masterCardPayment.setPrefSize(250, 100);
+            Button splitPayment = GlyphsDude.createIconButton(FontAwesomeIcon.DEVIANTART, "Split", "20px", "18px", ContentDisplay.TOP);;
+            splitPayment.setPrefSize(250, 100);
+            Button backButton = GlyphsDude.createIconButton(FontAwesomeIcon.BACKWARD, "Back", "20px", "18px", ContentDisplay.LEFT);
+            backButton.setPrefSize(200, 50);
+
+            HBox row1 = new HBox(30, cashPayment, splitPayment);
+            row1.setAlignment(Pos.CENTER);
+            HBox row2 = new HBox(30, visaCardPayment, masterCardPayment);
+            row2.setAlignment(Pos.CENTER);
+            HBox row3 = new HBox(backButton);
+            row3.setAlignment(Pos.CENTER);
+
+            Label label = new Label("Payment Options");
+            label.setFont(Font.font("System", FontWeight.BOLD,32));
+            Label dollarLabel = new Label("Total $ " + totalDollarLabel.getText());
+            dollarLabel.setFont(Font.font("System", FontWeight.BOLD, 24));
+            Border border = new Border(new BorderStroke(
+                    Color.color(.12,.34,.65),
+                    BorderStrokeStyle.DASHED,
+                    new CornerRadii(3),
+                    new BorderWidths(1)
+            ));
+            dollarLabel.setBorder(border);
+            dollarLabel.setPadding(new Insets(3));
+            paymentPane.getChildren().addAll(label,dollarLabel, row1, row2, row3);
+            paymentPane.setAlignment(Pos.CENTER);
+            paymentPane.setSpacing(30);
+
+            viewDef = new AbstractView(paymentPane);
+            backButton.setOnAction(e->{
+                try {
+//                    Utils.goBackRemove(new POSMainView(mainPOSVBox), null, (Pane) viewDef.getRootNode());
+                    Utils.goTo(new POSMainView(mainPOSVBox), (Pane) viewDef.getRootNode().getParent(), viewDef.getRootNode().getParent().getScene().getWidth() * (-1), .0, true);
+
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+            // Utils.goForward(destinationReference, sourceReference);
+            Utils.goForward(viewDef, mainPOSVBox);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }
