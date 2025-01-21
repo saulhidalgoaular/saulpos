@@ -374,7 +374,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     private void addClient(){
         ClientButtonAction clientButton = new ClientButtonAction();
         try {
-            clientButton.generateCrudView(mainPOSVBox, model, clientInfoGrid);
+            clientButton.generateCrudView(mainPOSVBox, model);
         } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }

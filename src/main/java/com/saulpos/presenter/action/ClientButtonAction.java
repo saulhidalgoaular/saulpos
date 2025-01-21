@@ -10,6 +10,7 @@ import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.javafxcrudgenerator.view.NodeConstructor;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.Client;
+import com.saulpos.model.bean.Invoice;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.view.AbstractView;
@@ -34,7 +35,7 @@ public class ClientButtonAction {
     public ClientButtonAction() {
     }
 
-    public void generateCrudView(Pane mainPane, POSMainModel posMainModel, GridPane clientInfoGrid) throws Exception {
+    public void generateCrudView(Pane mainPane, POSMainModel posMainModel) throws Exception {
         CrudGeneratorParameter<Client> crudGeneratorParameter = new CrudGeneratorParameter<>();
         crudGeneratorParameter.setClazz(Client.class);
         HibernateDataProvider dataProvider = new HibernateDataProvider();
@@ -60,10 +61,7 @@ public class ClientButtonAction {
                 if(viewDef != null){
                     Client selectedClient = (Client) crudPresenter.getView().getTableView().getSelectionModel().getSelectedItem();
                     if(selectedClient != null){
-                        clientInfoGrid.setVisible(true);
-                        ((Label) clientInfoGrid.getChildren().get(1)).setText(selectedClient.getName());
-                        ((Label) clientInfoGrid.getChildren().get(3)).setText(selectedClient.getAddress());
-                        ((Label) clientInfoGrid.getChildren().get(5)).setText(selectedClient.getPhone());
+                        posMainModel.clientPanelVisibleProperty().setValue(true);
                         posMainModel.getInvoiceInProgress().setClient(selectedClient);
 //                        System.out.println("Add this customer to invoice: " + selectedClient.getId()+" - " +selectedClient.getName());
                     }
@@ -106,7 +104,7 @@ public class ClientButtonAction {
                     selectedClient.delete();
                     if(posMainModel.getInvoiceInProgress().getClient() != null && posMainModel.getInvoiceInProgress().getClient().getId() == selectedClient.getId()){
                         posMainModel.getInvoiceInProgress().setClient(null);
-                        clientInfoGrid.setVisible(false);
+                        posMainModel.clientPanelVisibleProperty().setValue(false);
                         DialogBuilder.createWarning("Warning", "SAUL POS", "Deleted Client was attached with current invoice.").showAndWait();
                     }
                 } catch (Exception e) {
@@ -114,34 +112,33 @@ public class ClientButtonAction {
                 }
             }
         });
-        highlightClientInTableView(clientInfoGrid);
+        highlightClientInTableView(posMainModel);
         vBox.getChildren().addAll(label, crudPresenter.getView().getMainView());
         viewDef = new AbstractView(vBox);
         Utils.goForward(viewDef, mainPane);
     }
 
-    private void highlightClientInTableView(GridPane clientInfoGrid) {
-        if(clientInfoGrid != null){
-           try{
-               Client sample = new Client();
-               sample.setName(((Label) clientInfoGrid.getChildren().get(1)).getText());
-               sample.setAddress(((Label) clientInfoGrid.getChildren().get(3)).getText());
-               sample.setPhone(((Label) clientInfoGrid.getChildren().get(5)).getText());
-               List<Client> list = DatabaseConnection.getInstance().listBySample(Client.class, sample, AbstractDataProvider.SearchType.EQUAL);
-               if(list != null && list.size() == 1){
-                   for(int i = 0; i<crudPresenter.getView().getTableView().getItems().size(); i++){
-                       Client c = (Client) crudPresenter.getView().getTableView().getItems().get(i);
-                       if(c.getId() == list.get(0).getId()){
-                           crudPresenter.getView().getTableView().getSelectionModel().select(i);
-                           break;
-                       }
-                   }
-               }else if(list != null && list.size() > 1){
-                   DialogBuilder.createError("Error", "SAUL POS", "Multiple entity found.").showAndWait();
-               }
-           } catch (Exception e){
-               DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+    private void highlightClientInTableView(POSMainModel posMainModel) {
+       try{
+           Invoice invoiceInProgress = posMainModel.getInvoiceInProgress();
+           if (invoiceInProgress == null){
+               return;
            }
-        }
+           Client sample = invoiceInProgress.getClient();
+           List<Client> list = DatabaseConnection.getInstance().listBySample(Client.class, sample, AbstractDataProvider.SearchType.EQUAL);
+           if(list != null && list.size() == 1){
+               for(int i = 0; i<crudPresenter.getView().getTableView().getItems().size(); i++){
+                   Client c = (Client) crudPresenter.getView().getTableView().getItems().get(i);
+                   if(c.getId() == list.get(0).getId()){
+                       crudPresenter.getView().getTableView().getSelectionModel().select(i);
+                       break;
+                   }
+               }
+           }else if(list != null && list.size() > 1){
+               DialogBuilder.createError("Error", "SAUL POS", "Multiple entity found.").showAndWait();
+           }
+       } catch (Exception e){
+           DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+       }
     }
 }
