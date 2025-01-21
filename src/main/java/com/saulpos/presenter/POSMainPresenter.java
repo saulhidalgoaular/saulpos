@@ -381,11 +381,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
 
     private void addInvoiceInWaitingState(){
-        model.invoiceInProgressToWaiting(itemsTableView, clientInfoGrid);
+        model.invoiceInProgressToWaiting(itemsTableView);
     }
 
     private void restoreWaitingInvoice(){
-        model.invoiceWaitingToInProgress(clientInfoGrid);
+        model.invoiceWaitingToInProgress();
     }
 
     private void extractMoney(){

@@ -366,9 +366,9 @@ public class POSMainModel extends AbstractModel{
         return result;
     }
 
-    public void invoiceInProgressToWaiting(TableView<Product> itemsTableView, GridPane clientInfoGrid){
+    public void invoiceInProgressToWaiting(TableView<Product> itemsTableView){
         // Return if there is no product in table view.
-        if(itemsTableView.getItems().size() == 0){
+        if(itemsTableView.getItems().isEmpty()){
             DialogBuilder.createError("Error!", "SAUL POS",
                     "There is no product in product list").showAndWait();
             return;
@@ -407,7 +407,7 @@ public class POSMainModel extends AbstractModel{
             }
             waitingInvoice.setClient(waitingClient);
             getInvoiceInProgress().setClient(null);
-            clientInfoGrid.setVisible(false);
+            clientPanelVisible.setValue(false);
         }
 
         // Move creationDate from inProgress invoice to waiting invoice & set creationDate=null in inProgress invoice.
@@ -421,13 +421,13 @@ public class POSMainModel extends AbstractModel{
                 "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
     }
 
-    public void invoiceWaitingToInProgress(GridPane clientInfoGrid){
+    public void invoiceWaitingToInProgress(){
         System.out.println("Restore waiting invoice from waiting list.");
         // Return if there is no invoice in waiting state
         if(getInvoiceWaiting().isEmpty()){
             DialogBuilder.createInformation("Info!", "SAUL POS", "No invoice in waiting state.").showAndWait();
         }else {
-            showInvoicesInWaitingState(clientInfoGrid);
+            showInvoicesInWaitingState();
         }
     }
 
@@ -560,7 +560,7 @@ public class POSMainModel extends AbstractModel{
             }
         });
     }
-    private void showInvoicesInWaitingState(GridPane clientInfoGrid) {
+    private void showInvoicesInWaitingState() {
         ObservableList<Invoice> invoices = getInvoiceWaiting();
         TableView<Invoice> invoiceInWaitingTableView = new TableView<>();
         TableColumn<Invoice, Number> indexCol = new TableColumn<Invoice, Number>("#");
