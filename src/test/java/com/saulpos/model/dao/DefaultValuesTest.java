@@ -1,10 +1,7 @@
 package com.saulpos.model.dao;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
-import com.saulpos.model.bean.MenuModel;
-import com.saulpos.model.bean.Permission;
-import com.saulpos.model.bean.Profile;
-import com.saulpos.model.bean.UserB;
+import com.saulpos.model.bean.*;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import org.junit.jupiter.api.Test;
 
@@ -76,5 +73,11 @@ public class DefaultValuesTest {
         }
 
         admin.saveOrUpdate();
+
+        DollarRate dollarRate = new DollarRate();
+        dollarRate.setEnabled(true);
+        dollarRate.setExchangeRatePerDollar(1);
+        dollarRate.setLocalCurrencyName("Test Currency");
+        dollarRate.saveOrUpdate();
     }
 }

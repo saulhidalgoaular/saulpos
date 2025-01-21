@@ -123,6 +123,15 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Label cashierLabel;
 
+    @FXML
+    public Label clientName;
+
+    @FXML
+    public Label clientAddress;
+
+    @FXML
+    public Label clientPhone;
+
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
 
@@ -145,6 +154,35 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
         vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
         totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.4f"));
+
+        clientName.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getName()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientAddress.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getAddress()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientPhone.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getPhone()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientInfoGrid.visibleProperty().bind(model.clientPanelVisibleProperty());
     }
 
     @Override
@@ -225,7 +263,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 }
                 case BACK_SPACE -> {
                     // should delete items from item table view
-                    if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
+                    if(itemsTableView.isFocused() && !itemsTableView.getItems().isEmpty()
                             && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
                         try {
                             model.removeItem(itemsTableView);

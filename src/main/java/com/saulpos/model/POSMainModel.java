@@ -15,10 +15,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.*;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -62,6 +59,8 @@ public class POSMainModel extends AbstractModel{
     private SimpleObjectProperty<DollarRate> enabledDollarRate = new SimpleObjectProperty<>();
 
     private SimpleStringProperty cashierName = new SimpleStringProperty();
+
+    private SimpleBooleanProperty clientPanelVisible = new SimpleBooleanProperty();
 
     public POSMainModel(UserB userB) throws PropertyVetoException {
         this.userB = userB;
@@ -261,6 +260,18 @@ public class POSMainModel extends AbstractModel{
         this.cashierName.set(cashierName);
     }
 
+    public boolean isClientPanelVisible() {
+        return clientPanelVisible.get();
+    }
+
+    public SimpleBooleanProperty clientPanelVisibleProperty() {
+        return clientPanelVisible;
+    }
+
+    public void setClientPanelVisible(boolean clientPanelVisible) {
+        this.clientPanelVisible.set(clientPanelVisible);
+    }
+
     public void addItem() throws Exception {
         Product product = new Product();
         product.setBarcode(barcodeBar.getValue());
@@ -335,7 +346,7 @@ public class POSMainModel extends AbstractModel{
             if (enabledRate != null) {
                 setEnabledDollarRate(enabledRate);
             }else {
-                //DialogBuilder.createWarning("Warning", "SAUL POS", "Could not find any enabled currency rate(set 0)!!!").showAndWait();
+                DialogBuilder.createWarning("Warning", "SAUL POS", "Could not find any enabled currency rate (set as 0)!!!").showAndWait();
                 setEnabledDollarRate(dummyRate);
             }
         } catch (Exception e) {
@@ -413,7 +424,7 @@ public class POSMainModel extends AbstractModel{
     public void invoiceWaitingToInProgress(GridPane clientInfoGrid){
         System.out.println("Restore waiting invoice from waiting list.");
         // Return if there is no invoice in waiting state
-        if(getInvoiceWaiting().size() == 0){
+        if(getInvoiceWaiting().isEmpty()){
             DialogBuilder.createInformation("Info!", "SAUL POS", "No invoice in waiting state.").showAndWait();
         }else {
             showInvoicesInWaitingState(clientInfoGrid);
@@ -593,13 +604,13 @@ public class POSMainModel extends AbstractModel{
             if (response == ButtonType.APPLY) {
                 Invoice selectedItem = invoiceInWaitingTableView.getSelectionModel().getSelectedItem();
                 if(selectedItem != null){
-                    restoreInvoice(selectedItem, clientInfoGrid);
+                    restoreInvoice(selectedItem);
                 }
             }
         });
     }
 
-    private void restoreInvoice(Invoice waitingInvoice, GridPane clientInfoGrid){
+    private void restoreInvoice(Invoice waitingInvoice){
         //Clear the product list from inProgress invoice and restore products from waiting invoice.
         getInvoiceInProgress().getProducts().clear();
         getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
@@ -611,13 +622,10 @@ public class POSMainModel extends AbstractModel{
         //Clear the client info from inProgress invoice and restore client info from waiting invoice.
         if(waitingInvoice.getClient() == null){
             getInvoiceInProgress().setClient(null);
-            clientInfoGrid.setVisible(false);
+            clientPanelVisible.setValue(false);
         }else{
             getInvoiceInProgress().setClient(waitingInvoice.getClient());
-            clientInfoGrid.setVisible(true);
-            ((Label) clientInfoGrid.getChildren().get(1)).setText(getInvoiceInProgress().getClient().getName());
-            ((Label) clientInfoGrid.getChildren().get(3)).setText(getInvoiceInProgress().getClient().getAddress());
-            ((Label) clientInfoGrid.getChildren().get(5)).setText(getInvoiceInProgress().getClient().getPhone());
+            clientPanelVisible.setValue(true);
         }
 
         //Restore the creation date from waiting invoice to inProgress invoice

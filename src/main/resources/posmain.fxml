@@ -151,7 +151,7 @@
                                           <Font name="System Italic" size="13.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="10.0" layoutY="22.0" text="Client Address" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
+                                    <Label layoutX="10.0" layoutY="22.0" text="Address" GridPane.halignment="LEFT" GridPane.rowIndex="1" GridPane.valignment="CENTER">
                                        <font>
                                           <Font name="System Bold" size="13.0" />
                                        </font>
@@ -161,7 +161,7 @@
                                           <Font name="System Italic" size="13.0" />
                                        </font>
                                     </Label>
-                                    <Label layoutX="10.0" layoutY="22.0" text="Client Phone" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
+                                    <Label layoutX="10.0" layoutY="22.0" text="Phone" GridPane.halignment="LEFT" GridPane.rowIndex="2" GridPane.valignment="CENTER">
                                        <font>
                                           <Font name="System Bold" size="13.0" />
                                        </font>
