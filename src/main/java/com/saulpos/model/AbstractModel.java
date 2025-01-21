@@ -16,16 +16,18 @@
 package com.saulpos.model;
 
 import java.beans.PropertyVetoException;
+import java.util.Locale;
 import java.util.ResourceBundle;
 
 /**
  * Created by Saul on 10/23/2016.
  */
 public abstract class AbstractModel {
-    ResourceBundle language;
+    private Locale currentLocale = Locale.of("es", "VE");
+    private ResourceBundle language;
 
     public AbstractModel(){
-
+        this.language = ResourceBundle.getBundle("BundleName", this.currentLocale);
     }
 
     protected void initialize() throws PropertyVetoException {

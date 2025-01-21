@@ -8,20 +8,27 @@ import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
-import com.saulpos.view.LoginView;
-import com.saulpos.view.ParentPane;
-import com.saulpos.view.Utils;
+import com.saulpos.view.*;
+import de.jensd.fx.glyphs.GlyphsDude;
+import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+
+import java.io.IOException;
+import java.time.LocalDateTime;
 
 //
 
@@ -111,6 +118,19 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     public Button zReportButton;
     @FXML
     public GridPane clientInfoGrid;
+    @FXML
+    public Label exchangeRateLabel;
+    @FXML
+    public Label cashierLabel;
+
+    @FXML
+    public Label clientName;
+
+    @FXML
+    public Label clientAddress;
+
+    @FXML
+    public Label clientPhone;
 
     //Aqui
     private final HibernateDataProvider hibernateDataProvider;
@@ -126,13 +146,43 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         clockLabel.textProperty().bind(model.clockValueProperty());
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
+        cashierLabel.textProperty().bind(model.cashierNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
 
         totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
         subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
         vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
-        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.2f"));
+        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.4f"));
+
+        clientName.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getName()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientAddress.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getAddress()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientPhone.textProperty().bind(
+                Bindings.createStringBinding(
+                        () -> model.getInvoiceInProgress().clientProperty().getValue() != null
+                                ? model.getInvoiceInProgress().clientProperty().getValue().getPhone()
+                                : "",
+                        model.getInvoiceInProgress().clientProperty()
+                )
+        );
+
+        clientInfoGrid.visibleProperty().bind(model.clientPanelVisibleProperty());
     }
 
     @Override
@@ -170,9 +220,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         globalDiscountButton.setOnAction(e->{
             setGlobalDiscount();
         });
+        chargeButton.setOnAction(e->{
+            proceedToPayment();
+        });
 
         descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
-        priceColumn.setCellValueFactory(cell -> cell.getValue().getCurrentPrice().asObject());
+        priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty().asObject());
         amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
         discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
         vatColumn.setCellValueFactory(cell ->{
@@ -184,9 +237,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.3f").get();
+            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.4f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
+        showExchangeRate();
 
         // For this we need to keep the local currency rate in dollars somewhere.
         // Create another bean that stores the currency rate.
@@ -200,83 +254,91 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
     public void handleKeyReleased(KeyEvent event) {
         KeyCode keyCode = event.getCode();
-        switch (keyCode) {
-            case F1 -> {System.out.println("Se presionó F1 (Cobrar)");}
-            case BACK_SPACE -> {
-                System.out.println("Se presionó BACKSPACE (Borrar)");
-                // should delete items from item table view
-                if(itemsTableView.isFocused() && itemsTableView.getItems().size() > 0
-                    && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
+        if(model != null){
+            switch (keyCode) {
+                case F1 -> {
+                    // Should open the pay window for payment.
+                    System.out.println("Se presionó F1 (Cobrar)");
+                    proceedToPayment();
+                }
+                case BACK_SPACE -> {
+                    // should delete items from item table view
+                    if(itemsTableView.isFocused() && !itemsTableView.getItems().isEmpty()
+                            && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
+                        try {
+                            model.removeItem(itemsTableView);
+                            System.out.println("Invoice product list after deletion: " +
+                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                        }catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                }
+                case F2 -> {
+                    System.out.println("Se presionó F2 (Clientes)");
+                    addClient();
+                }
+                case F3 -> {
+                    System.out.println("Se presionó F3 (Extraer dinero)");
+                    extractMoney();
+                }
+                case F4 -> {
+                    System.out.println("Se presionó F4 (A espera)");
+                    addInvoiceInWaitingState();
+                }
+                case F5 -> {
+                    System.out.println("Se presionó F5 (Ver espera)");
+                    restoreWaitingInvoice();
+                }
+                case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
+                case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
+                case F7 -> {
+                    System.out.println("Se presionó F7 (Descuento Global)");
+                    setGlobalDiscount();
+                }
+                case ESCAPE -> {
+                    System.out.println("Se presionó ESC (Salir)");
+                    logout();
+                }
+                case F8 -> {
+                    System.out.println("Se presionó F8 (Reporte X)");
+                    // test the invoice printing result
+                    // need to save the invoice in DB
+                    SoutPrinter printer = new SoutPrinter();
+                    model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
+                    model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
+                    model.getInvoiceInProgress().setVat(model.getTotalVat());
+                    model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
+                    printer.printInvoice(model.getInvoiceInProgress());
+                }
+                case END -> {System.out.println("Se presionó END (Reporte Z)");}
+                case ENTER -> {
                     try {
-                        model.removeItem(itemsTableView);
-                        System.out.println("Invoice product list after deletion: " +
-                                model.invoiceInProgressProperty().getValue().getProducts().size());
-                    }catch (Exception e) {
+                        if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
+                            if(model.getEnabledDollarRate() == null){
+                                DollarRate dollarRate = model.getEnabledDollarRate();
+                                if(dollarRate != null){
+                                    model.setEnabledDollarRate(dollarRate);
+                                }
+                            }
+                            if(model.getInvoiceInProgress().getCreationDate() == null){
+                                model.getInvoiceInProgress().setCreationDate(LocalDateTime.now());
+                            }
+                            model.addItem();
+
+                            System.out.println("Invoice product list after add: " +
+                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                        }
+                    } catch (Exception e) {
                         throw new RuntimeException(e);
                     }
                 }
-            }
-            case F2 -> {
-                System.out.println("Se presionó F2 (Clientes)");
-                addClient();
-            }
-            case F3 -> {
-                System.out.println("Se presionó F3 (Extraer dinero)");
-                extractMoney();
-            }
-            case F4 -> {
-                System.out.println("Se presionó F4 (A espera)");
-                addInvoiceInWaitingState();
-            }
-            case F5 -> {
-                System.out.println("Se presionó F5 (Ver espera)");
-                restoreWaitingInvoice();
-            }
-            case DELETE -> {System.out.println("Se presionó DEL (Borrar pedido)");}
-            case F6 -> {System.out.println("Se presionó F6 (Nota de credito)");}
-            case F7 -> {
-                System.out.println("Se presionó F7 (Descuento Global)");
-                setGlobalDiscount();
-            }
-            case ESCAPE -> {
-                System.out.println("Se presionó ESC (Salir)");
-                logout();
-            }
-            case F8 -> {
-                System.out.println("Se presionó F8 (Reporte X)");
-                // test the invoice printing result
-                // need to save the invoice in DB
-                SoutPrinter printer = new SoutPrinter();
-                model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
-                model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
-                model.getInvoiceInProgress().setVat(model.getTotalVat());
-                model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
-                printer.printInvoice(model.getInvoiceInProgress());
-            }
-            case END -> {System.out.println("Se presionó END (Reporte Z)");}
-            case ENTER -> {
-                try {
-                    if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
-                        if(model.getActiveDollarRate() == null){
-                            DollarRate dollarRate = model.findActiveDollarRate();
-                            if(dollarRate != null){
-                                model.setActiveDollarRate(dollarRate);
-                            }
-                        }
-                        model.addItem();
-
-                        System.out.println("Invoice product list after add: " +
-                                model.invoiceInProgressProperty().getValue().getProducts().size());
-                    }
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
+                case UP -> {
+                    moveFocus(-1);
                 }
-            }
-            case UP -> {
-                moveFocus(-1);
-            }
-            case DOWN -> {
-                moveFocus(1);
+                case DOWN -> {
+                    moveFocus(1);
+                }
             }
         }
     }
@@ -302,6 +364,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             LoginView loginView = new LoginView("/login.fxml", loginPresenter);
             ParentPane parentPane = (ParentPane) mainPOSVBox.getParent();
             parentPane.getChildren().remove(0);
+            removeModelFromPresenter();
             Utils.goForward(loginView, parentPane);
         } catch (Exception e){
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
@@ -311,7 +374,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     private void addClient(){
         ClientButtonAction clientButton = new ClientButtonAction();
         try {
-            clientButton.generateCrudView(mainPOSVBox, model, clientInfoGrid);
+            clientButton.generateCrudView(mainPOSVBox, model);
         } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
@@ -335,6 +398,81 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             model.applyGlobalDiscount();
         }else{
             DialogBuilder.createWarning("Warning!", "SAUL POS", "No product in current invoice!").showAndWait();
+        }
+    }
+
+    private void showExchangeRate() {
+        //show the currency exchange rate when POS window opens.
+//        System.out.println("Show exchange rate name: " + model.getEnabledDollarRate().getLocalCurrencyName()+
+//                " -rate:" + model.getEnabledDollarRate().getExchangeRatePerDollar());
+        if (model.getEnabledDollarRate().getExchangeRatePerDollar() > 0f) {
+            exchangeRateLabel.setText(model.getLanguage().getString("exchangeRate")+" ("+
+                    model.getEnabledDollarRate().getExchangeRatePerDollar()+ " " +
+                    model.getEnabledDollarRate().getLocalCurrencyName()+
+                    "/$)");
+        }else {
+
+            exchangeRateLabel.setText(model.getLanguage().getString("exchangeRate.invalid"));
+//            exchangeRateLabel.setText("Exchange rate: (Invalid)");
+        }
+    }
+
+    private void proceedToPayment() {
+        if(itemsTableView.getItems().size() == 0){
+            DialogBuilder.createInformation("Info!", "SAUL POS",
+                    "There is no product in product list").showAndWait();
+            return;
+        }
+        // Open the pay window.
+        AbstractView viewDef;
+        try {
+            VBox paymentPane = new VBox();
+            Button cashPayment = GlyphsDude.createIconButton(FontAwesomeIcon.DOLLAR, "Cash", "20px", "18px", ContentDisplay.TOP);
+            cashPayment.setPrefSize(250, 100);
+            Button visaCardPayment = GlyphsDude.createIconButton(FontAwesomeIcon.CC_VISA, "Visa Card", "20px", "18px", ContentDisplay.TOP);
+            visaCardPayment.setPrefSize(250, 100);
+            Button masterCardPayment = GlyphsDude.createIconButton(FontAwesomeIcon.CC_MASTERCARD, "Master Card", "20px", "18px", ContentDisplay.TOP);
+            masterCardPayment.setPrefSize(250, 100);
+            Button splitPayment = GlyphsDude.createIconButton(FontAwesomeIcon.DEVIANTART, "Split", "20px", "18px", ContentDisplay.TOP);;
+            splitPayment.setPrefSize(250, 100);
+            Button backButton = GlyphsDude.createIconButton(FontAwesomeIcon.BACKWARD, "Back", "20px", "18px", ContentDisplay.LEFT);
+            backButton.setPrefSize(200, 50);
+
+            HBox row1 = new HBox(30, cashPayment, splitPayment);
+            row1.setAlignment(Pos.CENTER);
+            HBox row2 = new HBox(30, visaCardPayment, masterCardPayment);
+            row2.setAlignment(Pos.CENTER);
+            HBox row3 = new HBox(backButton);
+            row3.setAlignment(Pos.CENTER);
+
+            Label label = new Label("Payment Options");
+            label.setFont(Font.font("System", FontWeight.BOLD,32));
+            Label dollarLabel = new Label("Total $ " + totalDollarLabel.getText());
+            dollarLabel.setFont(Font.font("System", FontWeight.BOLD, 24));
+            Border border = new Border(new BorderStroke(
+                    Color.color(.12,.34,.65),
+                    BorderStrokeStyle.DASHED,
+                    new CornerRadii(3),
+                    new BorderWidths(1)
+            ));
+            dollarLabel.setBorder(border);
+            dollarLabel.setPadding(new Insets(3));
+            paymentPane.getChildren().addAll(label,dollarLabel, row1, row2, row3);
+            paymentPane.setAlignment(Pos.CENTER);
+            paymentPane.setSpacing(30);
+
+            viewDef = new AbstractView(paymentPane);
+            backButton.setOnAction(e->{
+                try {
+                    Utils.goBackRemove(new POSMainView(mainPOSVBox), null, (Pane) viewDef.getRootNode());
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
+            });
+            // Utils.goForward(destinationReference, sourceReference);
+            Utils.goForward(viewDef, mainPOSVBox);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

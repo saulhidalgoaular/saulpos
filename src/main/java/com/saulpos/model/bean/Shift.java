@@ -15,9 +15,13 @@
  */
 package com.saulpos.model.bean;
 
+import com.saulpos.javafxcrudgenerator.annotations.DisplayOrder;
 import com.saulpos.javafxcrudgenerator.annotations.TableViewColumn;
 import com.saulpos.model.dao.BeanImplementation;
-import jakarta.persistence.*;
+import jakarta.persistence.Access;
+import jakarta.persistence.AccessType;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -29,12 +33,15 @@ import java.time.LocalTime;
 @Table
 public class Shift extends BeanImplementation<Shift> {
 
+    @DisplayOrder(orderValue = 1)
     @TableViewColumn
     private final SimpleStringProperty shiftName = new SimpleStringProperty();
 
+    @DisplayOrder(orderValue = 2)
     @TableViewColumn
     private final ObjectProperty<LocalTime> shiftStart = new SimpleObjectProperty<>();
 
+    @DisplayOrder(orderValue = 3)
     @TableViewColumn
     private final ObjectProperty<LocalTime> shiftEnd = new SimpleObjectProperty<>();
 

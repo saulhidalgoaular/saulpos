@@ -21,10 +21,10 @@ public class DollarRate extends BeanImplementation<DollarRate> {
     private final SimpleStringProperty localCurrencyName = new SimpleStringProperty();
     @TableViewColumn
     @DisplayOrder(orderValue = 2)
-    private final SimpleDoubleProperty localCurrencyRate = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty exchangeRatePerDollar = new SimpleDoubleProperty();
     @TableViewColumn
     @DisplayOrder(orderValue = 3)
-    private final SimpleBooleanProperty activated = new SimpleBooleanProperty(false);
+    private final SimpleBooleanProperty enabled = new SimpleBooleanProperty(false);
 
     public String getLocalCurrencyName() {
         return localCurrencyName.get();
@@ -38,28 +38,28 @@ public class DollarRate extends BeanImplementation<DollarRate> {
         this.localCurrencyName.set(localCurrencyName);
     }
 
-    public double getLocalCurrencyRate() {
-        return localCurrencyRate.get();
+    public double getExchangeRatePerDollar() {
+        return exchangeRatePerDollar.get();
     }
 
-    public SimpleDoubleProperty localCurrencyRateProperty() {
-        return localCurrencyRate;
+    public SimpleDoubleProperty exchangeRatePerDollarProperty() {
+        return exchangeRatePerDollar;
     }
 
-    public void setLocalCurrencyRate(double localCurrencyRate) {
-        this.localCurrencyRate.set(localCurrencyRate);
+    public void setExchangeRatePerDollar(double exchangeRatePerDollar) {
+        this.exchangeRatePerDollar.set(exchangeRatePerDollar);
     }
 
-    @Column(columnDefinition="tinyint(1) default 0", nullable = false)
-    public boolean isActivated() {
-        return activated.get();
+    @Column(nullable = false)
+    public boolean isEnabled() {
+        return enabled.get();
     }
 
-    public SimpleBooleanProperty activatedProperty() {
-        return activated;
+    public SimpleBooleanProperty enabledProperty() {
+        return enabled;
     }
 
-    public void setActivated(boolean activated) {
-        this.activated.set(activated);
+    public void setEnabled(boolean enabled) {
+        this.enabled.set(enabled);
     }
 }
