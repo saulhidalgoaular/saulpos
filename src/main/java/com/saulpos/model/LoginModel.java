@@ -130,26 +130,32 @@ public class LoginModel extends AbstractModel{
         return userB1;
     }
 
-    public static void checkOpenShift() throws Exception {
+    public static Assignment checkOpenShift() throws Exception {
         // Check if we have a shift opened for the cashier Today.
         Assignment todayAssign = new Assignment();
         todayAssign.setAssignmentDay(LocalDate.now());
         todayAssign.setAssignmentStatus(Assignment.AssignmentStatus.Open);
 
         final List<Assignment> assignments = DatabaseConnection.getInstance().listBySample(Assignment.class, todayAssign, AbstractDataProvider.SearchType.EQUAL);
-        boolean found = false;
+
         String myPhysicalName = Utils.getComputerName();
         if (myPhysicalName == null){
             throw new SaulPosException("There is no name on the local computer");
         }
+
+        Assignment answer = null;
         for (Assignment assignment : assignments){
-            found |= myPhysicalName.equals(assignment.getCashier().getPhysicalName()) &&
-            assignment.getShift().getShiftStart().isBefore(LocalTime.now()) && assignment.getShift().getShiftEnd().isAfter(LocalTime.now());
+            if (myPhysicalName.equals(assignment.getCashier().getPhysicalName()) &&
+            assignment.getShift().getShiftStart().isBefore(LocalTime.now()) && assignment.getShift().getShiftEnd().isAfter(LocalTime.now())){
+                answer = assignment;
+            }
         }
 
-        if (!found){
+        if (answer == null){
             throw new SaulPosException("There is no shift for this cashier. Contact System Administrator");
         }
+
+        return answer;
     }
 
     @Override

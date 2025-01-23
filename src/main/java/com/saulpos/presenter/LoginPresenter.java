@@ -25,6 +25,7 @@ import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.MainModel;
 import com.saulpos.model.POSMainModel;
+import com.saulpos.model.bean.Assignment;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.view.LoginView;
@@ -108,10 +109,10 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
                 // Load other window
 
                 if (MenuModel.MenuType.POS.equals(model.getSystemType())){
-                    LoginModel.checkOpenShift();
+                    Assignment assignment = LoginModel.checkOpenShift();
 
                     // Load POS Model if it was selected.
-                    POSMainModel mainModel = new POSMainModel(userB);
+                    POSMainModel mainModel = new POSMainModel(userB, assignment);
                     POSMainPresenter mainPresenter = new POSMainPresenter(mainModel);
                     POSMainView posMainView = new POSMainView("/posmain.fxml", mainPresenter);
                     Utils.goForward(posMainView, mainVBox);

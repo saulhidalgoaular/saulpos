@@ -4,7 +4,6 @@ import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.DatabaseConnection;
-import com.saulpos.view.Utils;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -35,6 +34,7 @@ import java.util.Set;
 public class POSMainModel extends AbstractModel{
 
     private UserB userB;
+    private Assignment assignment;
     private SimpleObjectProperty<Invoice> invoiceInProgress = new SimpleObjectProperty<>();
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
@@ -62,8 +62,9 @@ public class POSMainModel extends AbstractModel{
 
     private SimpleBooleanProperty clientPanelVisible = new SimpleBooleanProperty();
 
-    public POSMainModel(UserB userB) throws PropertyVetoException {
+    public POSMainModel(UserB userB, Assignment assignment) throws PropertyVetoException {
         this.userB = userB;
+        this.assignment = assignment;
         Invoice invoice = new Invoice();
         invoice.setInvoiceDetails(new HashSet<InvoiceDetail>());
         invoiceInProgress.set(invoice);
@@ -109,7 +110,7 @@ public class POSMainModel extends AbstractModel{
         timeline.play();
 
         employeeName.set("Cashier: " + userB.getName());
-        cashierName.set("Cash: " + Utils.getCashierName());
+        cashierName.set("Cash: " + assignment.getCashier().getDescription());
     }
 
     public UserB getUserB() {
@@ -281,7 +282,7 @@ public class POSMainModel extends AbstractModel{
                 Product productToAdd = list.get(0);
                 invoiceInProgress.get().getProducts().add(productToAdd);
                 addProductToInvoiceDetails(productToAdd);
-                productToAdd.setExistence(productToAdd.getExistence() -1);
+                productToAdd.setExistence(productToAdd.getExistence() - 1);
                 productToAdd.saveOrUpdate();
                 barcodeBar.setValue("");
                 System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
