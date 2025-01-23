@@ -4,6 +4,7 @@ import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.DollarRate;
+import com.saulpos.model.bean.InvoiceDetail;
 import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.printer.SoutPrinter;
@@ -65,21 +66,21 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     @FXML
     public Button deleteCurrentButton;
     @FXML
-    public TableView<Product> itemsTableView;
+    public TableView<InvoiceDetail> itemsTableView;
     @FXML
-    public TableColumn<Product, String> descriptionColumn;
+    public TableColumn<InvoiceDetail, String> descriptionColumn;
     @FXML
-    public TableColumn<Product, Integer> amountColumn;
+    public TableColumn<InvoiceDetail, Integer> amountColumn;
     @FXML
-    public TableColumn<Product, String> discountLabel;
+    public TableColumn<InvoiceDetail, String> discountLabel;
     @FXML
-    public TableColumn<Product, Double> priceColumn;
+    public TableColumn<InvoiceDetail, Double> priceColumn;
     @FXML
-    public TableColumn<Product, Double> vatColumn;
+    public TableColumn<InvoiceDetail, Double> vatColumn;
     @FXML
-    public TableColumn<Product, Double> totalColumn;
+    public TableColumn<InvoiceDetail, Double> totalColumn;
     @FXML
-    public TableColumn<Product, Double> totalUSDColumn;
+    public TableColumn<InvoiceDetail, Double> totalUSDColumn;
 
 
     @FXML
@@ -148,7 +149,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         cashierLabel.textProperty().bind(model.cashierNameProperty());
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
-        Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getProducts());
+        Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getObservableInvoiceDetails());
 
         totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
         subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
@@ -224,20 +225,20 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             proceedToPayment();
         });
 
-        descriptionColumn.setCellValueFactory(cell -> cell.getValue().descriptionProperty());
-        priceColumn.setCellValueFactory(cell -> cell.getValue().priceProperty().asObject());
-        amountColumn.setCellValueFactory(cell -> new SimpleIntegerProperty(1).asObject());
-        discountLabel.setCellValueFactory(cell -> cell.getValue().getCurrentDiscountString());
+        descriptionColumn.setCellValueFactory(cell -> cell.getValue().getProduct().descriptionProperty());
+        priceColumn.setCellValueFactory(cell -> cell.getValue().getProduct().priceProperty().asObject());
+        amountColumn.setCellValueFactory(cell -> cell.getValue().amountProperty().asObject());
+        discountLabel.setCellValueFactory(cell -> cell.getValue().getProduct().getCurrentDiscountString());
         vatColumn.setCellValueFactory(cell ->{
-            String str = cell.getValue().getVatAmount().asString("%.3f").get();
+            String str = cell.getValue().getProduct().getVatAmount().asString("%.3f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalColumn.setCellValueFactory(cell -> {
-            String str = cell.getValue().getTotalAmount().asString("%.3f").get();
+            String str = cell.getValue().getProduct().getTotalAmount().asString("%.3f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar(cell.getValue().getTotalAmount().getValue()).asString("%.4f").get();
+            String str = model.convertToDollar(cell.getValue().getProduct().getTotalAmount().getValue()).asString("%.4f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         showExchangeRate();
@@ -268,7 +269,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                         try {
                             model.removeItem(itemsTableView);
                             System.out.println("Invoice product list after deletion: " +
-                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                                    model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
                         }catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -327,7 +328,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                             model.addItem();
 
                             System.out.println("Invoice product list after add: " +
-                                    model.invoiceInProgressProperty().getValue().getProducts().size());
+                                    model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
                         }
                     } catch (Exception e) {
                         throw new RuntimeException(e);
@@ -381,7 +382,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
 
     private void addInvoiceInWaitingState(){
-        model.invoiceInProgressToWaiting(itemsTableView);
+        model.invoiceInProgressToWaiting();
     }
 
     private void restoreWaitingInvoice(){

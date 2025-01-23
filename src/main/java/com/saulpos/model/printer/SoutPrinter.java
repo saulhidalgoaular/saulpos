@@ -1,8 +1,10 @@
 package com.saulpos.model.printer;
 
 import com.saulpos.model.bean.*;
+import javafx.collections.ObservableList;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 public class SoutPrinter implements AbstractPrinter{
@@ -29,7 +31,7 @@ public class SoutPrinter implements AbstractPrinter{
         }
         System.out.println("---------Product Information---------");
         System.out.println("SerialNo    ProductName    Amount    Price");
-        Set<InvoiceDetail> invoiceDetails = invoice.getInvoiceDetails();
+        List<InvoiceDetail> invoiceDetails = invoice.getInvoiceDetails();
         int serial = 1;
         for(InvoiceDetail invoiceDetail: invoiceDetails){
             System.out.println(serial++ +"    "

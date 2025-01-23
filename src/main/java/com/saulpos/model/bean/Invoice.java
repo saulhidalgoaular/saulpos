@@ -24,6 +24,8 @@ import javafx.collections.ObservableList;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 
@@ -32,13 +34,15 @@ import java.util.Set;
 @Table
 public class Invoice extends BeanImplementation<Invoice> {
 
+
+
     public enum InvoiceStatus {
         InProgress, Cancelled, Waiting, Completed
     }
 
     private final SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>(InvoiceStatus.InProgress);
 
-    private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>();
+    private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>(LocalDateTime.now());
 
     private final ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
@@ -62,7 +66,6 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private final SimpleStringProperty taxNumber = new SimpleStringProperty();
 
-    @Column(nullable = false)
     private final SimpleStringProperty zReportNumber = new SimpleStringProperty();
 
     private final SimpleObjectProperty<UserB> user = new SimpleObjectProperty<>();
@@ -74,10 +77,9 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
-    private ObservableList<Product> products = FXCollections.observableArrayList();
+    private List<InvoiceDetail> invoiceDetails = new ArrayList<>();
 
-    private ObjectProperty<Set<InvoiceDetail>> invoiceDetails = new SimpleObjectProperty<>();
-
+    private ObservableList<InvoiceDetail> observableInvoiceDetails = FXCollections.observableArrayList();
 
     @OneToOne
     public Cashier getPrinter() {
@@ -104,16 +106,21 @@ public class Invoice extends BeanImplementation<Invoice> {
     }
 
     @OneToMany
-    public Set<InvoiceDetail> getInvoiceDetails() {
-        return invoiceDetails.get();
-    }
-
-    public ObjectProperty<Set<InvoiceDetail>> invoiceDetailsProperty() {
+    public List<InvoiceDetail> getInvoiceDetails() {
         return invoiceDetails;
     }
 
-    public void setInvoiceDetails(Set<InvoiceDetail> invoiceDetails) {
-        this.invoiceDetails.set(invoiceDetails);
+    public void setInvoiceDetails(List<InvoiceDetail> invoiceDetails) {
+        this.invoiceDetails = invoiceDetails;
+    }
+
+    @Transient
+    public ObservableList<InvoiceDetail> getObservableInvoiceDetails() {
+        return observableInvoiceDetails;
+    }
+
+    public void setObservableInvoiceDetails(ObservableList<InvoiceDetail> observableInvoiceDetails) {
+        this.observableInvoiceDetails = observableInvoiceDetails;
     }
 
     public LocalDateTime getCreationDate() {
@@ -224,15 +231,15 @@ public class Invoice extends BeanImplementation<Invoice> {
     public void setTaxNumber(String taxNumber) {
         this.taxNumber.set(taxNumber);
     }
-    @Column(nullable = false)
+
     public String getzReportNumber() {
         return zReportNumber.get();
     }
-    @Column(nullable = false)
+
     public SimpleStringProperty zReportNumberProperty() {
         return zReportNumber;
     }
-    @Column(nullable = false)
+
     public void setzReportNumber(String zReportNumber) {
         this.zReportNumber.set(zReportNumber);
     }
@@ -291,12 +298,13 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.status.set(status);
     }
 
-    @ManyToMany
-    public ObservableList<Product> getProducts() {
-        return products;
+    public void addInvoiceDetail(InvoiceDetail invoiceDetail){
+        observableInvoiceDetails.add(invoiceDetail);
+        invoiceDetails.add(invoiceDetail);
     }
 
-    public void setProducts(ObservableList<Product> products) {
-        this.products = products;
+    public void removeInvoiceDetail(InvoiceDetail invoiceDetail){
+        observableInvoiceDetails.remove(invoiceDetail);
+        invoiceDetails.remove(invoiceDetail);
     }
 }

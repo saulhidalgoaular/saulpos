@@ -4,6 +4,7 @@ import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.dao.DatabaseConnection;
+import com.saulpos.model.exception.SaulPosException;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityManagerFactory;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -65,9 +66,7 @@ public class POSMainModel extends AbstractModel{
     public POSMainModel(UserB userB, Assignment assignment) throws PropertyVetoException {
         this.userB = userB;
         this.assignment = assignment;
-        Invoice invoice = new Invoice();
-        invoice.setInvoiceDetails(new HashSet<InvoiceDetail>());
-        invoiceInProgress.set(invoice);
+        invoiceInProgress.set(new Invoice());
         initialize();
         initializeEnabledDollarRate();
     }
@@ -82,9 +81,9 @@ public class POSMainModel extends AbstractModel{
 
     @Override
     public void addListeners() {
-        invoiceInProgress.getValue().getProducts().addListener(new ListChangeListener<Product>() {
+        invoiceInProgress.getValue().getObservableInvoiceDetails().addListener(new ListChangeListener<InvoiceDetail>() {
             @Override
-            public void onChanged(Change<? extends Product> change) {
+            public void onChanged(Change<? extends InvoiceDetail> change) {
                 calculateProductsCostDetails();
             }
         });
@@ -278,12 +277,14 @@ public class POSMainModel extends AbstractModel{
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
         if (list.size() == 1) {
-            if (list.get(0).getExistence() > 0){
-                Product productToAdd = list.get(0);
-                invoiceInProgress.get().getProducts().add(productToAdd);
+            if (list.getFirst().getExistence() > 0){
+                Product productToAdd = list.getFirst();
+
                 addProductToInvoiceDetails(productToAdd);
                 productToAdd.setExistence(productToAdd.getExistence() - 1);
                 productToAdd.saveOrUpdate();
+
+                invoiceInProgress.get().saveOrUpdate();
                 barcodeBar.setValue("");
                 System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
             }else {
@@ -303,27 +304,18 @@ public class POSMainModel extends AbstractModel{
         invoiceDetail.setDiscount(productToAdd.getCurrentDiscount().get());
         invoiceDetail.setCancelled(0);
         invoiceDetail.setCreationTime(LocalDateTime.now());
-        invoiceInProgress.get().getInvoiceDetails().add(invoiceDetail);
+        invoiceInProgress.get().addInvoiceDetail(invoiceDetail);
     }
 
-    public void removeItem(TableView<Product> itemsTableView) throws Exception {
+    public void removeItem(TableView<InvoiceDetail> itemsTableView) throws Exception {
         int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
-        Product removedProduct = itemsTableView.getItems().get(selectedIndex);
-        removedProduct.setExistence(removedProduct.getExistence() + 1);
+        InvoiceDetail removedProduct = itemsTableView.getItems().get(selectedIndex);
+        removedProduct.getProduct().setExistence(removedProduct.getProduct().getExistence() + 1);
         itemsTableView.getItems().remove(selectedIndex);
         removedProduct.saveOrUpdate();
-        removeProductFromInvoiceDetails(removedProduct);
+        invoiceInProgress.get().removeInvoiceDetail(removedProduct);
+        invoiceInProgress.get().saveOrUpdate();
         System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
-    }
-
-    private void removeProductFromInvoiceDetails(Product removedProduct) {
-        Set<InvoiceDetail> invoiceDetails = invoiceInProgress.get().getInvoiceDetails();
-        for(InvoiceDetail invoiceDetail: invoiceDetails){
-            if(invoiceDetail.getProduct().getId() == removedProduct.getId()){
-                invoiceDetails.remove(invoiceDetail);
-                break;
-            }
-        }
     }
 
     public DoubleBinding convertToDollar(double localCurrency){
@@ -367,59 +359,20 @@ public class POSMainModel extends AbstractModel{
         return result;
     }
 
-    public void invoiceInProgressToWaiting(TableView<Product> itemsTableView){
-        // Return if there is no product in table view.
-        if(itemsTableView.getItems().isEmpty()){
+    public void invoiceInProgressToWaiting(){
+        // Return if there is no product
+        if (invoiceInProgress.get().getInvoiceDetails().isEmpty()){
             DialogBuilder.createError("Error!", "SAUL POS",
                     "There is no product in product list").showAndWait();
             return;
         }
-        System.out.println("Moving Current invoice in waiting state!");
-        //Considering multiple invoice can be in waiting state.
-        //Move inProgress invoice data into the waiting invoice data in model.
-        Invoice waitingInvoice = new Invoice();
-        waitingInvoice.setStatus(Invoice.InvoiceStatus.Waiting);
 
-        //Move all products from inProgress invoice to waiting invoice & clear products from inProgress invoice
-        ObservableList<Product> products = FXCollections.observableArrayList();
-        products.addAll(getInvoiceInProgress().getProducts());
-        waitingInvoice.setProducts(products);
-        getInvoiceInProgress().getProducts().clear();
+        invoiceInProgress.get().setStatus(Invoice.InvoiceStatus.Waiting);
+        invoiceWaiting.add(invoiceInProgress.getValue());
+        invoiceInProgress.set(new Invoice());
 
-        //Move invoice details from in progress invoice to waiting invoice & clear from inProgress invoice.
-        Set<InvoiceDetail> invoiceDetails = new HashSet<>(getInvoiceInProgress().getInvoiceDetails());
-        waitingInvoice.setInvoiceDetails(invoiceDetails);
-        getInvoiceInProgress().getInvoiceDetails().clear();
-
-        //Move client from inProgress invoice to waiting invoice & set client=null in inProgress invoice.
-        //And hide the clientInfoGrid
-        Client inProgressClient = getInvoiceInProgress().getClient();
-        if(inProgressClient != null){
-            Client waitingClient = new Client();
-            waitingClient.setId(inProgressClient.getId());
-            if(inProgressClient.getName() != null){
-                waitingClient.setName(inProgressClient.getName());
-            }
-            if (inProgressClient.getAddress() != null) {
-                waitingClient.setAddress(inProgressClient.getAddress());
-            }
-            if (inProgressClient.getPhone() != null) {
-                waitingClient.setPhone(inProgressClient.getPhone());
-            }
-            waitingInvoice.setClient(waitingClient);
-            getInvoiceInProgress().setClient(null);
-            clientPanelVisible.setValue(false);
-        }
-
-        // Move creationDate from inProgress invoice to waiting invoice & set creationDate=null in inProgress invoice.
-        var createdAt = getInvoiceInProgress().getCreationDate();
-        waitingInvoice.setCreationDate(createdAt);
-        getInvoiceInProgress().setCreationDate(null);
-
-        // Adding this waitingInvoice into the model & show info dialog.
-        getInvoiceWaiting().add(waitingInvoice);
         DialogBuilder.createInformation("Success!", "SAUL POS",
-                "Current invoice moved into waiting state & Global discount(if applied) is canceled!").showAndWait();
+                "Current invoice moved into waiting state").showAndWait();
     }
 
     public void invoiceWaitingToInProgress(){
@@ -605,36 +558,28 @@ public class POSMainModel extends AbstractModel{
             if (response == ButtonType.APPLY) {
                 Invoice selectedItem = invoiceInWaitingTableView.getSelectionModel().getSelectedItem();
                 if(selectedItem != null){
-                    restoreInvoice(selectedItem);
+                    try {
+                        restoreInvoice(selectedItem);
+                    } catch (SaulPosException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
         });
     }
 
-    private void restoreInvoice(Invoice waitingInvoice){
-        //Clear the product list from inProgress invoice and restore products from waiting invoice.
-        getInvoiceInProgress().getProducts().clear();
-        getInvoiceInProgress().getProducts().addAll(waitingInvoice.getProducts());
-
-        //Clear the invoice details from inProgress invoice and restore invoice details from waiting invoice.
-        getInvoiceInProgress().getInvoiceDetails().clear();
-        getInvoiceInProgress().getInvoiceDetails().addAll(waitingInvoice.getInvoiceDetails());
-
-        //Clear the client info from inProgress invoice and restore client info from waiting invoice.
-        if(waitingInvoice.getClient() == null){
-            getInvoiceInProgress().setClient(null);
-            clientPanelVisible.setValue(false);
-        }else{
-            getInvoiceInProgress().setClient(waitingInvoice.getClient());
-            clientPanelVisible.setValue(true);
+    private void restoreInvoice(Invoice waitingInvoice) throws SaulPosException {
+        if (!getInvoiceInProgress().getInvoiceDetails().isEmpty()){
+            throw new SaulPosException("There is an invoice in progress");
         }
 
-        //Restore the creation date from waiting invoice to inProgress invoice
-        getInvoiceInProgress().setCreationDate(waitingInvoice.getCreationDate());
+        waitingInvoice.setStatus(Invoice.InvoiceStatus.InProgress);
 
         // Remove the selected invoice from the waiting invoice list & show info dialog.
         getInvoiceWaiting().remove(waitingInvoice);
-//        System.out.println("After restoring a invoice, Waiting invoice list size: " + getInvoiceWaiting().size());
+        setInvoiceInProgress(waitingInvoice);
+
+        // System.out.println("After restoring a invoice, Waiting invoice list size: " + getInvoiceWaiting().size());
         DialogBuilder.createInformation("Success!", "SAUL POS",
                 "Selected invoice is restored from waiting state!").showAndWait();
     }
@@ -648,15 +593,15 @@ public class POSMainModel extends AbstractModel{
     }
 
     private void calculateProductsCostDetails(){
-        total.set(invoiceInProgress.getValue().getProducts().stream()
-                .mapToDouble(value -> value.getTotalAmount().getValue()).sum());
-        totalUSD.set(invoiceInProgress.getValue().getProducts().stream()
-                .mapToDouble(value -> convertToDollar(value.getTotalAmount().getValue()).getValue()).sum());
-        subtotal.set(invoiceInProgress.getValue().getProducts().stream().mapToDouble(value -> {
-            Double discountAmount = value.priceProperty().multiply(value.getCurrentDiscount()).divide(100).getValue();
-            return value.priceProperty().getValue() - discountAmount;
+        total.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
+                .mapToDouble(value -> value.getProduct().getTotalAmount().getValue()).sum());
+        totalUSD.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
+                .mapToDouble(value -> convertToDollar(value.getProduct().getTotalAmount().getValue()).getValue()).sum());
+        subtotal.set(invoiceInProgress.getValue().getInvoiceDetails().stream().mapToDouble(value -> {
+            Double discountAmount = value.getProduct().priceProperty().multiply(value.getProduct().getCurrentDiscount()).divide(100).getValue();
+            return value.getProduct().priceProperty().getValue() - discountAmount;
         }).sum());
-        totalVat.set(invoiceInProgress.getValue().getProducts().stream()
-                .mapToDouble(value -> value.getVatAmount().getValue()).sum());
+        totalVat.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
+                .mapToDouble(value -> value.getProduct().getVatAmount().getValue()).sum());
     }
 }
