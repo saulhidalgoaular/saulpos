@@ -15,6 +15,8 @@
  */
 package com.saulpos;
 
+import atlantafx.base.theme.NordLight;
+import atlantafx.base.theme.PrimerLight;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.presenter.LoginPresenter;
@@ -36,6 +38,7 @@ public class Launcher extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
+
         DatabaseConnection.getInstance().initialize();
 
         LoginModel loginModel = new LoginModel();

@@ -31,6 +31,8 @@ public class Cashier extends BeanImplementation<Cashier> {
     @TableViewColumn
     private final SimpleStringProperty description = new SimpleStringProperty();
     @TableViewColumn
+    private final SimpleStringProperty physicalName = new SimpleStringProperty();
+    @TableViewColumn
     private final SimpleStringProperty printer = new SimpleStringProperty();
     @TableViewColumn
     private final SimpleBooleanProperty enabled = new SimpleBooleanProperty();
@@ -115,6 +117,18 @@ public class Cashier extends BeanImplementation<Cashier> {
 
     public void setLastCreditNote(CreditNote lastCreditNote) {
         this.lastCreditNote.set(lastCreditNote);
+    }
+
+    public String getPhysicalName() {
+        return physicalName.get();
+    }
+
+    public SimpleStringProperty physicalNameProperty() {
+        return physicalName;
+    }
+
+    public void setPhysicalName(String newPhysicalName){
+        physicalName.setValue(newPhysicalName);
     }
 
     public Cashier() {

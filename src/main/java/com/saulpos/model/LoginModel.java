@@ -17,11 +17,13 @@ package com.saulpos.model;
 
 import com.saulpos.javafxcrudgenerator.model.Function;
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
+import com.saulpos.model.bean.Assignment;
 import com.saulpos.model.bean.MenuModel;
 import com.saulpos.model.bean.Profile;
 import com.saulpos.model.bean.UserB;
 import com.saulpos.model.dao.DatabaseConnection;
 import com.saulpos.model.exception.SaulPosException;
+import com.saulpos.view.Utils;
 import javafx.beans.property.ListProperty;
 import javafx.beans.property.SimpleListProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -31,6 +33,8 @@ import javafx.collections.ObservableList;
 import org.hibernate.Hibernate;
 
 import java.beans.PropertyVetoException;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 
 public class LoginModel extends AbstractModel{
@@ -119,10 +123,33 @@ public class LoginModel extends AbstractModel{
         if (!userB1.isEnabled()){
             throw new SaulPosException("User is not enabled. Please, contact the system administrator");
         }
+
         Profile profile = userB1.getProfile();
         System.out.println("Permission size: " + profile);
 
         return userB1;
+    }
+
+    public static void checkOpenShift() throws Exception {
+        // Check if we have a shift opened for the cashier Today.
+        Assignment todayAssign = new Assignment();
+        todayAssign.setAssignmentDay(LocalDate.now());
+        todayAssign.setAssignmentStatus(Assignment.AssignmentStatus.Open);
+
+        final List<Assignment> assignments = DatabaseConnection.getInstance().listBySample(Assignment.class, todayAssign, AbstractDataProvider.SearchType.EQUAL);
+        boolean found = false;
+        String myPhysicalName = Utils.getComputerName();
+        if (myPhysicalName == null){
+            throw new SaulPosException("There is no name on the local computer");
+        }
+        for (Assignment assignment : assignments){
+            found |= myPhysicalName.equals(assignment.getCashier().getPhysicalName()) &&
+            assignment.getShift().getShiftStart().isBefore(LocalTime.now()) && assignment.getShift().getShiftEnd().isAfter(LocalTime.now());
+        }
+
+        if (!found){
+            throw new SaulPosException("There is no shift for this cashier. Contact System Administrator");
+        }
     }
 
     @Override

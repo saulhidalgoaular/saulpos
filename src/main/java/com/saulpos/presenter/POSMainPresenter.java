@@ -363,7 +363,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             LoginPresenter loginPresenter = new LoginPresenter(loginModel);
             LoginView loginView = new LoginView("/login.fxml", loginPresenter);
             ParentPane parentPane = (ParentPane) mainPOSVBox.getParent();
-            parentPane.getChildren().remove(0);
+            parentPane.getChildren().removeFirst();
             removeModelFromPresenter();
             Utils.goForward(loginView, parentPane);
         } catch (Exception e){

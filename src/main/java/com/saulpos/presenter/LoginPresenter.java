@@ -108,6 +108,8 @@ public class LoginPresenter extends AbstractPresenter<LoginModel> {
                 // Load other window
 
                 if (MenuModel.MenuType.POS.equals(model.getSystemType())){
+                    LoginModel.checkOpenShift();
+
                     // Load POS Model if it was selected.
                     POSMainModel mainModel = new POSMainModel(userB);
                     POSMainPresenter mainPresenter = new POSMainPresenter(mainModel);

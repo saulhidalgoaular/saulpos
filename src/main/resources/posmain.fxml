@@ -17,16 +17,16 @@
 
 <VBox fx:id="mainPOSVBox" alignment="CENTER" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" style="-fx-background-color: #263238;">
+        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="300.0" style="-fx-background-color: #263238;">
             <children>
-                <VBox alignment="BOTTOM_CENTER" prefHeight="200.0" prefWidth="150.0">
+                <VBox alignment="BOTTOM_CENTER" prefHeight="200.0" prefWidth="300.0">
                     <children>
                         <Label fx:id="employeeLabel" alignment="CENTER_RIGHT" textAlignment="CENTER" textFill="WHITE">
                             <font>
                                 <Font name="System Bold" size="12.0" />
                             </font>
                         </Label>
-                  <Label fx:id="cashierLabel" alignment="CENTER_RIGHT" layoutX="85.0" layoutY="73.0" textAlignment="CENTER" textFill="WHITE">
+                  <Label fx:id="cashierLabel" alignment="CENTER_RIGHT" textAlignment="CENTER" textFill="WHITE">
                      <font>
                         <Font name="System Bold" size="12.0" />
                      </font>

@@ -108,8 +108,8 @@ public class POSMainModel extends AbstractModel{
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
 
-        employeeName.set(userB.getName());
-        cashierName.set("Cashier: " + Utils.getCashierName());
+        employeeName.set("Cashier: " + userB.getName());
+        cashierName.set("Cash: " + Utils.getCashierName());
     }
 
     public UserB getUserB() {

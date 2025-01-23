@@ -163,7 +163,7 @@ public class Utils {
     }
 
     // Read current computer name
-    private static String getComputerName() {
+    public static String getComputerName() {
         //Using System...
         String osName = System.getProperty("os.name").toLowerCase();
         String computerName;
