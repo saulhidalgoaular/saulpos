@@ -121,7 +121,7 @@
         <dependency>
             <groupId>com.saulpos</groupId>
             <artifactId>javafx-crud-generator</artifactId>
-            <version>1.0-SNAPSHOT-20240519</version>
+            <version>1.0-SNAPSHOT-20250124</version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/net.sourceforge.dynamicreports/dynamicreports-core -->
         <dependency>

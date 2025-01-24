@@ -77,9 +77,7 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty();
 
-    private List<InvoiceDetail> invoiceDetails = new ArrayList<>();
-
-    private ObservableList<InvoiceDetail> observableInvoiceDetails = FXCollections.observableArrayList();
+    private final ObservableList<InvoiceDetail> invoiceDetails = FXCollections.observableArrayList();
 
     @OneToOne
     public Cashier getPrinter() {
@@ -111,16 +109,12 @@ public class Invoice extends BeanImplementation<Invoice> {
     }
 
     public void setInvoiceDetails(List<InvoiceDetail> invoiceDetails) {
-        this.invoiceDetails = invoiceDetails;
+        this.invoiceDetails.setAll(invoiceDetails);
     }
 
     @Transient
     public ObservableList<InvoiceDetail> getObservableInvoiceDetails() {
-        return observableInvoiceDetails;
-    }
-
-    public void setObservableInvoiceDetails(ObservableList<InvoiceDetail> observableInvoiceDetails) {
-        this.observableInvoiceDetails = observableInvoiceDetails;
+        return invoiceDetails;
     }
 
     public LocalDateTime getCreationDate() {
@@ -257,8 +251,6 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.user.set(userB);
     }
 
-
-
     @OneToOne
     public Assignment getAssignment() {
         return assignment.get();
@@ -299,12 +291,10 @@ public class Invoice extends BeanImplementation<Invoice> {
     }
 
     public void addInvoiceDetail(InvoiceDetail invoiceDetail){
-        observableInvoiceDetails.add(invoiceDetail);
         invoiceDetails.add(invoiceDetail);
     }
 
     public void removeInvoiceDetail(InvoiceDetail invoiceDetail){
-        observableInvoiceDetails.remove(invoiceDetail);
         invoiceDetails.remove(invoiceDetail);
     }
 }

@@ -20,8 +20,6 @@ public class Vat extends BeanImplementation<Product> {
     private final SimpleStringProperty description = new SimpleStringProperty();
 
     private final SimpleDoubleProperty percentage = new SimpleDoubleProperty();
-    @Ignore
-    private final SimpleObjectProperty<List<Product>> product = new SimpleObjectProperty<>();
 
     public String getDescription() {
         return description.get();
@@ -46,18 +44,7 @@ public class Vat extends BeanImplementation<Product> {
     public void setPercentage(double percentage) {
         this.percentage.set(percentage);
     }
-    @OneToMany(mappedBy = "vat", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
-    public List<Product> getProduct() {
-        return product.get();
-    }
 
-    public SimpleObjectProperty<List<Product>> productProperty() {
-        return product;
-    }
-
-    public void setProduct(List<Product> product) {
-        this.product.set(product);
-    }
 
     @Override
     public String toString() {

@@ -28,7 +28,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.beans.PropertyVetoException;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 
 //
@@ -210,7 +212,17 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             addClient();
         });
         sendToWaitButton.setOnAction(e->{
-            addInvoiceInWaitingState();
+            try {
+                addInvoiceInWaitingState();
+            } catch (PropertyVetoException ex) {
+                throw new RuntimeException(ex);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            } catch (URISyntaxException ex) {
+                throw new RuntimeException(ex);
+            } catch (ClassNotFoundException ex) {
+                throw new RuntimeException(ex);
+            }
         });
         viewWaitingButton.setOnAction(e->{
             restoreWaitingInvoice();
@@ -285,7 +297,17 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 }
                 case F4 -> {
                     System.out.println("Se presionó F4 (A espera)");
-                    addInvoiceInWaitingState();
+                    try {
+                        addInvoiceInWaitingState();
+                    } catch (PropertyVetoException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (URISyntaxException e) {
+                        throw new RuntimeException(e);
+                    } catch (ClassNotFoundException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 case F5 -> {
                     System.out.println("Se presionó F5 (Ver espera)");
@@ -381,7 +403,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         }
     }
 
-    private void addInvoiceInWaitingState(){
+    private void addInvoiceInWaitingState() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         model.invoiceInProgressToWaiting();
     }
 

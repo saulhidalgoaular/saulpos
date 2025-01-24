@@ -112,7 +112,7 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
         return discount;
     }
 
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.MERGE)
     public Invoice getInvoice() {
         return invoice.get();
     }

@@ -1,6 +1,7 @@
 package com.saulpos.model.dao;
 
 import com.saulpos.javafxcrudgenerator.model.dao.AbstractBean;
+import com.saulpos.model.LoginModel;
 import com.saulpos.model.bean.*;
 import com.saulpos.model.menu.DefaultMenuGenerator;
 import org.junit.jupiter.api.Test;
@@ -8,6 +9,10 @@ import org.junit.jupiter.api.Test;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.TemporalUnit;
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -47,6 +52,8 @@ public class DefaultValuesTest {
         // default password
         UserB admin = new UserB();
         admin.setUserName("admin");
+        admin.setName("Saul");
+        admin.setLastname("Hidalgo");
         admin.setPassword("admin");
         admin.hashPassword();
         admin.setEnabled(true);
@@ -79,5 +86,51 @@ public class DefaultValuesTest {
         dollarRate.setExchangeRatePerDollar(1);
         dollarRate.setLocalCurrencyName("Test Currency");
         dollarRate.saveOrUpdate();
+
+        Product newProduct = new Product();
+        newProduct.setArea("123");
+        newProduct.setDescription("Test Product");
+        newProduct.setBarcode("123");
+        newProduct.setExistence(100);
+        newProduct.setBlocked(false);
+        newProduct.setBrand("Test Brand");
+        newProduct.setPrice(100);
+        Discount discount = new Discount();
+        discount.setProduct(newProduct);
+        discount.setStartingDate(LocalDate.now());
+        discount.setEndingDate(LocalDate.now());
+        discount.setPercentage(25.);
+        newProduct.setDiscount(discount);
+
+        Vat vat = new Vat();
+        vat.setDescription("Standard");
+        vat.setPercentage(12);
+        vat.saveOrUpdate();
+
+        newProduct.setVat(vat);
+        newProduct.saveOrUpdate();
+
+
+        Shift shift = new Shift();
+        shift.setShiftName("Standard");
+        shift.setShiftStart(LocalTime.MIN);
+        shift.setShiftEnd(LocalTime.MAX.minusSeconds(1));
+        shift.saveOrUpdate();
+
+        Cashier cashier = new Cashier();
+        cashier.setDescription("Caja 1");
+        cashier.setEnabled(true);
+        cashier.setPrinter("Test Printer");
+        cashier.setPhysicalName("024a6ce95c27");
+        cashier.saveOrUpdate();
+
+        Assignment assignment = new Assignment();
+        assignment.setAssignmentStatus(Assignment.AssignmentStatus.Open);
+        assignment.setAssignmentDay(LocalDate.now());
+        assignment.setCashier(cashier);
+        assignment.setShift(shift);
+        assignment.saveOrUpdate();
+
+
     }
 }

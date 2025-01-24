@@ -26,6 +26,8 @@ import javafx.scene.layout.GridPane;
 import javafx.util.Duration;
 
 import java.beans.PropertyVetoException;
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashSet;
@@ -63,10 +65,12 @@ public class POSMainModel extends AbstractModel{
 
     private SimpleBooleanProperty clientPanelVisible = new SimpleBooleanProperty();
 
-    public POSMainModel(UserB userB, Assignment assignment) throws PropertyVetoException {
+    public POSMainModel(UserB userB, Assignment assignment) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         this.userB = userB;
         this.assignment = assignment;
-        invoiceInProgress.set(new Invoice());
+        Invoice invoice = new Invoice();
+        invoice.saveOrUpdate();
+        invoiceInProgress.set(invoice);
         initialize();
         initializeEnabledDollarRate();
     }
@@ -108,7 +112,7 @@ public class POSMainModel extends AbstractModel{
         timeline.setCycleCount(Animation.INDEFINITE);
         timeline.play();
 
-        employeeName.set("Cashier: " + userB.getName());
+        employeeName.set("Cashier: " + userB.getName() + " " + userB.getLastname());
         cashierName.set("Cash: " + assignment.getCashier().getDescription());
     }
 
@@ -280,7 +284,8 @@ public class POSMainModel extends AbstractModel{
             if (list.getFirst().getExistence() > 0){
                 Product productToAdd = list.getFirst();
 
-                addProductToInvoiceDetails(productToAdd);
+                InvoiceDetail invoiceDetail = addProductToInvoiceDetails(productToAdd);
+                invoiceDetail.saveOrUpdate();
                 productToAdd.setExistence(productToAdd.getExistence() - 1);
                 productToAdd.saveOrUpdate();
 
@@ -295,7 +300,7 @@ public class POSMainModel extends AbstractModel{
         }
     }
 
-    private void addProductToInvoiceDetails(Product productToAdd) {
+    private InvoiceDetail addProductToInvoiceDetails(Product productToAdd) {
         InvoiceDetail invoiceDetail = new InvoiceDetail();
         invoiceDetail.setInvoice(invoiceInProgress.get());
         invoiceDetail.setProduct(productToAdd);
@@ -305,6 +310,7 @@ public class POSMainModel extends AbstractModel{
         invoiceDetail.setCancelled(0);
         invoiceDetail.setCreationTime(LocalDateTime.now());
         invoiceInProgress.get().addInvoiceDetail(invoiceDetail);
+        return invoiceDetail;
     }
 
     public void removeItem(TableView<InvoiceDetail> itemsTableView) throws Exception {
@@ -359,7 +365,7 @@ public class POSMainModel extends AbstractModel{
         return result;
     }
 
-    public void invoiceInProgressToWaiting(){
+    public void invoiceInProgressToWaiting() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         // Return if there is no product
         if (invoiceInProgress.get().getInvoiceDetails().isEmpty()){
             DialogBuilder.createError("Error!", "SAUL POS",
@@ -369,7 +375,9 @@ public class POSMainModel extends AbstractModel{
 
         invoiceInProgress.get().setStatus(Invoice.InvoiceStatus.Waiting);
         invoiceWaiting.add(invoiceInProgress.getValue());
-        invoiceInProgress.set(new Invoice());
+        Invoice invoice = new Invoice();
+        invoice.saveOrUpdate();
+        invoiceInProgress.set(invoice);
 
         DialogBuilder.createInformation("Success!", "SAUL POS",
                 "Current invoice moved into waiting state").showAndWait();
