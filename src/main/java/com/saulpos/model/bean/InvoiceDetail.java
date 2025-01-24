@@ -33,7 +33,6 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
     private final ObjectProperty<Invoice> invoice = new SimpleObjectProperty<Invoice>();
 
     //codigo_de_articulo
-    @OneToOne
     private final SimpleObjectProperty<Product> product = new SimpleObjectProperty<Product>();
 
     //cantidad
@@ -51,7 +50,8 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
     @ColumnDefault("0.00")
     private final SimpleDoubleProperty discount = new SimpleDoubleProperty();
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "product_id", nullable = false)
     public Product getProduct() {
         return product.get();
     }
@@ -124,13 +124,5 @@ public class InvoiceDetail extends BeanImplementation<InvoiceDetail> {
     public void setInvoice(Invoice invoice) {
         this.invoice.set(invoice);
     }
-
-//    public void setSalePrice(double salePrice) {
-//        this.salePrice.set(salePrice);
-//    }
-
-//    public void setDiscount(double discount) {
-//        this.discount.set(discount);
-//    }
 
 }

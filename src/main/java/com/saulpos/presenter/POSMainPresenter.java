@@ -5,7 +5,6 @@ import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.InvoiceDetail;
-import com.saulpos.model.bean.Product;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
@@ -15,7 +14,6 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
-import javafx.beans.property.SimpleIntegerProperty;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -153,10 +151,12 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getObservableInvoiceDetails());
 
-        totalLabel.textProperty().bind(model.totalProperty().asString("%.2f"));
-        subtotalLabel.textProperty().bind(model.subtotalProperty().asString("%.2f"));
-        vatLabel.textProperty().bind(model.totalVatProperty().asString("%.2f"));
-        totalDollarLabel.textProperty().bind(model.totalUSDProperty().asString("%.4f"));
+
+
+        totalLabel.textProperty().bind(model.getInvoiceInProgress().totalProperty().asString("%.2f"));
+        subtotalLabel.textProperty().bind(model.getInvoiceInProgress().subtotalProperty().asString("%.2f"));
+        vatLabel.textProperty().bind(model.getInvoiceInProgress().vatProperty().asString("%.2f"));
+        totalDollarLabel.textProperty().bind(model.getInvoiceInProgress().totalInUSDProperty().asString("%.4f"));
 
         clientName.textProperty().bind(
                 Bindings.createStringBinding(
@@ -250,7 +250,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         totalUSDColumn.setCellValueFactory(cell -> {
-            String str = model.convertToDollar(cell.getValue().getProduct().getTotalAmount().getValue()).asString("%.4f").get();
+            String str = (cell.getValue().getProduct().getTotalAmount().divide(model.getInvoiceInProgress().getDollarRate())).asString("%.4f").get();
             return new SimpleDoubleProperty(Double.parseDouble(str)).asObject();
         });
         showExchangeRate();
@@ -328,10 +328,6 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     // test the invoice printing result
                     // need to save the invoice in DB
                     SoutPrinter printer = new SoutPrinter();
-                    model.getInvoiceInProgress().setTotalWithoutVat(model.getSubtotal());
-                    model.getInvoiceInProgress().setTotalWithVat(model.getTotal());
-                    model.getInvoiceInProgress().setVat(model.getTotalVat());
-                    model.getInvoiceInProgress().setTotalInUSD(model.getTotalUSD());
                     printer.printInvoice(model.getInvoiceInProgress());
                 }
                 case END -> {System.out.println("Se presionó END (Reporte Z)");}

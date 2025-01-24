@@ -13,11 +13,8 @@ import jakarta.persistence.criteria.Root;
 import javafx.animation.Animation;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.*;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.scene.control.*;
@@ -30,9 +27,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class POSMainModel extends AbstractModel{
 
@@ -52,13 +47,6 @@ public class POSMainModel extends AbstractModel{
 
     private SimpleStringProperty barcodeBar = new SimpleStringProperty();
 
-    private SimpleDoubleProperty total = new SimpleDoubleProperty(0);
-
-    private SimpleDoubleProperty totalVat = new SimpleDoubleProperty(0);
-
-    private SimpleDoubleProperty totalUSD = new SimpleDoubleProperty(0);
-
-    private SimpleDoubleProperty subtotal = new SimpleDoubleProperty(0);
     private SimpleObjectProperty<DollarRate> enabledDollarRate = new SimpleObjectProperty<>();
 
     private SimpleStringProperty cashierName = new SimpleStringProperty();
@@ -68,11 +56,13 @@ public class POSMainModel extends AbstractModel{
     public POSMainModel(UserB userB, Assignment assignment) throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         this.userB = userB;
         this.assignment = assignment;
-        Invoice invoice = new Invoice();
+        initialize();
+
+        initializeEnabledDollarRate();
+
+        Invoice invoice = new Invoice(getEnabledDollarRate().getExchangeRatePerDollar());
         invoice.saveOrUpdate();
         invoiceInProgress.set(invoice);
-        initialize();
-        initializeEnabledDollarRate();
     }
 
     @Override
@@ -85,18 +75,7 @@ public class POSMainModel extends AbstractModel{
 
     @Override
     public void addListeners() {
-        invoiceInProgress.getValue().getObservableInvoiceDetails().addListener(new ListChangeListener<InvoiceDetail>() {
-            @Override
-            public void onChanged(Change<? extends InvoiceDetail> change) {
-                calculateProductsCostDetails();
-            }
-        });
-        invoiceWaiting.addListener(new ListChangeListener<Invoice>() {
-            @Override
-            public void onChanged(Change<? extends Invoice> change) {
-                calculateProductsCostDetails();
-            }
-        });
+
     }
 
     @Override
@@ -188,54 +167,6 @@ public class POSMainModel extends AbstractModel{
         this.invoiceInProgress.set(invoiceInProgress);
     }
 
-    public double getTotal() {
-        return total.get();
-    }
-
-    public SimpleDoubleProperty totalProperty() {
-        return total;
-    }
-
-    public void setTotal(double total) {
-        this.total.set(total);
-    }
-
-    public double getTotalVat() {
-        return totalVat.get();
-    }
-
-    public SimpleDoubleProperty totalVatProperty() {
-        return totalVat;
-    }
-
-    public void setTotalVat(double totalVat) {
-        this.totalVat.set(totalVat);
-    }
-
-    public double getTotalUSD() {
-        return totalUSD.get();
-    }
-
-    public SimpleDoubleProperty totalUSDProperty() {
-        return totalUSD;
-    }
-
-    public void setTotalUSD(double totalUSD) {
-        this.totalUSD.set(totalUSD);
-    }
-
-    public double getSubtotal() {
-        return subtotal.get();
-    }
-
-    public SimpleDoubleProperty subtotalProperty() {
-        return subtotal;
-    }
-
-    public void setSubtotal(double subtotal) {
-        this.subtotal.set(subtotal);
-    }
-
     public SimpleObjectProperty<Invoice> invoiceInProgressProperty() {
         return invoiceInProgress;
     }
@@ -324,24 +255,13 @@ public class POSMainModel extends AbstractModel{
         System.out.println("Invoice Details size: " + invoiceInProgress.get().getInvoiceDetails().size());
     }
 
-    public DoubleBinding convertToDollar(double localCurrency){
-        if (getEnabledDollarRate().getExchangeRatePerDollar() > 0f){
-            // Calculation for: local currency -> dollar conversion
-            // For example: 148.84 Japanese Yen = 1$; so, '148.84' stores in 'exchangeRatePerDollar' column in DB
-            double value = Math.pow(getEnabledDollarRate().getExchangeRatePerDollar(), -1) * localCurrency;
-            return Bindings.createDoubleBinding(() -> value);
-        }else {
-            return Bindings.createDoubleBinding(() -> localCurrency);
-        }
-    }
-
     private void initializeEnabledDollarRate() {
         //find from db and set the enabled dollar rate in model constructor
         DollarRate dummyRate = new DollarRate();
         dummyRate.setLocalCurrencyName("Invalid rate");
         dummyRate.setExchangeRatePerDollar(0);
         try {
-            DollarRate enabledRate = findEnabledDollarRate();
+            DollarRate enabledRate = findActiveDollarRate();
             if (enabledRate != null) {
                 setEnabledDollarRate(enabledRate);
             }else {
@@ -353,7 +273,8 @@ public class POSMainModel extends AbstractModel{
         }
     }
 
-    private DollarRate findEnabledDollarRate() throws Exception {
+    private DollarRate findActiveDollarRate() throws Exception {
+        // Consider sending this to the DatabaseConnection layer.
         EntityManagerFactory entityManagerFactory = DatabaseConnection.getInstance().entityManagerFactory;
         EntityManager entityManager = entityManagerFactory.createEntityManager();
         CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
@@ -375,7 +296,7 @@ public class POSMainModel extends AbstractModel{
 
         invoiceInProgress.get().setStatus(Invoice.InvoiceStatus.Waiting);
         invoiceWaiting.add(invoiceInProgress.getValue());
-        Invoice invoice = new Invoice();
+        Invoice invoice = new Invoice(getEnabledDollarRate().getExchangeRatePerDollar());
         invoice.saveOrUpdate();
         invoiceInProgress.set(invoice);
 
@@ -513,7 +434,6 @@ public class POSMainModel extends AbstractModel{
                 //Check the credentials and apply discount.
                 if(validateGlobalDiscount(usernameField.getText(), passwordField.getText(), discountField.getText())){
                     double discount = Double.parseDouble(discountField.getText());
-                    setTotalUSD(totalUSD.subtract(totalUSD.multiply(discount).divide(100)).getValue());
                     getInvoiceInProgress().setGlobalDiscount(discount);
                     DialogBuilder.createInformation("Info!", "SAUL POS", "Discount implemented successfully.").showAndWait();
                 }else{
@@ -598,18 +518,5 @@ public class POSMainModel extends AbstractModel{
 
         //discount < 100%
         return !(Double.parseDouble(discount) >= 100);
-    }
-
-    private void calculateProductsCostDetails(){
-        total.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
-                .mapToDouble(value -> value.getProduct().getTotalAmount().getValue()).sum());
-        totalUSD.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
-                .mapToDouble(value -> convertToDollar(value.getProduct().getTotalAmount().getValue()).getValue()).sum());
-        subtotal.set(invoiceInProgress.getValue().getInvoiceDetails().stream().mapToDouble(value -> {
-            Double discountAmount = value.getProduct().priceProperty().multiply(value.getProduct().getCurrentDiscount()).divide(100).getValue();
-            return value.getProduct().priceProperty().getValue() - discountAmount;
-        }).sum());
-        totalVat.set(invoiceInProgress.getValue().getInvoiceDetails().stream()
-                .mapToDouble(value -> value.getProduct().getVatAmount().getValue()).sum());
     }
 }

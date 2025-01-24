@@ -1,11 +1,9 @@
 package com.saulpos.model.printer;
 
 import com.saulpos.model.bean.*;
-import javafx.collections.ObservableList;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 public class SoutPrinter implements AbstractPrinter{
 
@@ -43,8 +41,8 @@ public class SoutPrinter implements AbstractPrinter{
         System.out.println("---------Payment & Discount---------");
         System.out.printf("Global discountA: %.2f\n", invoice.getGlobalDiscount());
         System.out.printf("Vat: %.2f\n", invoice.getVat());
-        System.out.printf("Total without vat: %.2f\n", invoice.getTotalWithoutVat());
-        System.out.printf("Total with vat: %.2f\n", invoice.getTotalWithVat());
+        System.out.printf("Total without vat: %.2f\n", invoice.getSubtotal());
+        System.out.printf("Total with vat: %.2f\n", invoice.getTotal());
         System.out.printf("Total in USD(discount applied): %.2f\n", invoice.getTotalInUSD());
     }
 

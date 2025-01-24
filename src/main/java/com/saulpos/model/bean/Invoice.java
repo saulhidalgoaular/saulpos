@@ -17,16 +17,18 @@ package com.saulpos.model.bean;
 
 import com.saulpos.model.dao.BeanImplementation;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.*;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 
 @Entity
@@ -34,7 +36,52 @@ import java.util.Set;
 @Table
 public class Invoice extends BeanImplementation<Invoice> {
 
+    public Invoice(){
+        invoiceDetails.addListener(new ListChangeListener<InvoiceDetail>() {
+            @Override
+            public void onChanged(Change<? extends InvoiceDetail> change) {
+                calculateTotals();
 
+            }
+        });
+
+        globalDiscount.addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                calculateTotals();
+            }
+        });
+    }
+
+    public Invoice(Double dollarRate){
+        setDollarRate(dollarRate);
+    }
+
+    private void calculateTotals() {
+        subtotal.set(getInvoiceDetails().stream().mapToDouble(value -> {
+            Double discountAmount = value.getProduct().priceProperty().multiply(value.getProduct().getCurrentDiscount()).divide(100).getValue();
+            Double currentGlobalDiscount = value.getProduct().priceProperty().multiply((100 - globalDiscount.get())/100).getValue();
+            return value.getProduct().priceProperty().getValue() - discountAmount - currentGlobalDiscount;
+        }).sum());
+
+
+        vat.set(getInvoiceDetails().stream()
+                .mapToDouble(value2 -> value2.getProduct().getVatAmount().getValue()).sum());
+        total.set(subtotal.add(vat).getValue());
+        totalInUSD.set(convertToDollar( total.get() ).getValue());
+
+    }
+
+    public DoubleBinding convertToDollar(double localCurrency){
+        if (getDollarRate() > 0f){
+            // Calculation for: local currency -> dollar conversion
+            // For example: 148.84 Japanese Yen = 1$; so, '148.84' stores in 'exchangeRatePerDollar' column in DB
+            double value = Math.pow(getDollarRate(), -1) * localCurrency;
+            return Bindings.createDoubleBinding(() -> value);
+        }else {
+            return Bindings.createDoubleBinding(() -> localCurrency);
+        }
+    }
 
     public enum InvoiceStatus {
         InProgress, Cancelled, Waiting, Completed
@@ -42,21 +89,21 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     private final SimpleObjectProperty<InvoiceStatus> status = new SimpleObjectProperty<>(InvoiceStatus.InProgress);
 
+    private SimpleDoubleProperty dollarRate = new SimpleDoubleProperty();
+
     private final ObjectProperty<LocalDateTime> creationDate = new SimpleObjectProperty<>(LocalDateTime.now());
 
     private final ObjectProperty<LocalDateTime> printingDate = new SimpleObjectProperty<>();
 
     private final SimpleObjectProperty<Client> client = new SimpleObjectProperty();
 
-    private final SimpleDoubleProperty totalWithoutVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty subtotal = new SimpleDoubleProperty();
 
-    private final SimpleDoubleProperty totalWithVat = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty total = new SimpleDoubleProperty();
 
     private final SimpleDoubleProperty totalInUSD = new SimpleDoubleProperty();
 
-    @ColumnDefault("0.0000")
-    @NotNull
-    private final SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty();
+    private final SimpleDoubleProperty globalDiscount = new SimpleDoubleProperty(.0);
 
     //iva
     private final SimpleDoubleProperty vat = new SimpleDoubleProperty();
@@ -154,28 +201,28 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.client.set(client);
     }
 
-    public double getTotalWithoutVat() {
-        return totalWithoutVat.get();
+    public double getSubtotal() {
+        return subtotal.get();
     }
 
-    public SimpleDoubleProperty totalWithoutVatProperty() {
-        return totalWithoutVat;
+    public SimpleDoubleProperty subtotalProperty() {
+        return subtotal;
     }
 
-    public void setTotalWithoutVat(double totalWithoutVat) {
-        this.totalWithoutVat.set(totalWithoutVat);
+    public void setSubtotal(double subtotal) {
+        this.subtotal.set(subtotal);
     }
 
-    public double getTotalWithVat() {
-        return totalWithVat.get();
+    public double getTotal() {
+        return total.get();
     }
 
-    public SimpleDoubleProperty totalWithVatProperty() {
-        return totalWithVat;
+    public SimpleDoubleProperty totalProperty() {
+        return total;
     }
 
-    public void setTotalWithVat(double totalWithVat) {
-        this.totalWithVat.set(totalWithVat);
+    public void setTotal(double total) {
+        this.total.set(total);
     }
 
     public double getTotalInUSD() {
@@ -288,6 +335,18 @@ public class Invoice extends BeanImplementation<Invoice> {
 
     public void setStatus(InvoiceStatus status) {
         this.status.set(status);
+    }
+
+    public double getDollarRate() {
+        return dollarRate.get();
+    }
+
+    public SimpleDoubleProperty dollarRateProperty() {
+        return dollarRate;
+    }
+
+    public void setDollarRate(double dollarRate) {
+        this.dollarRate.set(dollarRate);
     }
 
     public void addInvoiceDetail(InvoiceDetail invoiceDetail){
