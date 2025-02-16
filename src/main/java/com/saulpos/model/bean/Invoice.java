@@ -60,7 +60,7 @@ public class Invoice extends BeanImplementation<Invoice> {
     private void calculateTotals() {
         subtotal.set(getInvoiceDetails().stream().mapToDouble(value -> {
             Double discountAmount = value.getProduct().priceProperty().multiply(value.getProduct().getCurrentDiscount()).divide(100).getValue();
-            Double currentGlobalDiscount = value.getProduct().priceProperty().multiply((100 - globalDiscount.get())/100).getValue();
+            Double currentGlobalDiscount = value.getProduct().priceProperty().multiply(globalDiscount.get()).divide(100).getValue();
             return value.getProduct().priceProperty().getValue() - discountAmount - currentGlobalDiscount;
         }).sum());
 

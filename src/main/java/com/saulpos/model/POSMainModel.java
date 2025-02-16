@@ -60,7 +60,8 @@ public class POSMainModel extends AbstractModel{
 
         initializeEnabledDollarRate();
 
-        Invoice invoice = new Invoice(getEnabledDollarRate().getExchangeRatePerDollar());
+        Invoice invoice = new Invoice();
+        invoice.setDollarRate(getEnabledDollarRate().getExchangeRatePerDollar());
         invoice.saveOrUpdate();
         invoiceInProgress.set(invoice);
     }
