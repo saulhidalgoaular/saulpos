@@ -6,6 +6,7 @@ import com.saulpos.model.POSMainModel;
 import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.InvoiceDetail;
 import com.saulpos.model.dao.HibernateDataProvider;
+import com.saulpos.model.exception.SaulPosException;
 import com.saulpos.model.printer.SoutPrinter;
 import com.saulpos.presenter.action.ClientButtonAction;
 import com.saulpos.view.*;
@@ -14,6 +15,8 @@ import de.jensd.fx.glyphs.fontawesome.FontAwesomeIcon;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -148,15 +151,22 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         cashierLabel.textProperty().bind(model.cashierNameProperty());
-        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
+        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeInputProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getObservableInvoiceDetails());
 
-
+        model.selectedInvoiceDetailProperty().bind(itemsTableView.getSelectionModel().selectedItemProperty());
 
         totalLabel.textProperty().bind(model.getInvoiceInProgress().totalProperty().asString("%.2f"));
         subtotalLabel.textProperty().bind(model.getInvoiceInProgress().subtotalProperty().asString("%.2f"));
         vatLabel.textProperty().bind(model.getInvoiceInProgress().vatProperty().asString("%.2f"));
         totalDollarLabel.textProperty().bind(model.getInvoiceInProgress().totalInUSDProperty().asString("%.4f"));
+
+        totalLabel.textProperty().addListener(new ChangeListener<String>() {
+            @Override
+            public void changed(ObservableValue<? extends String> observableValue, String s, String t1) {
+                System.out.println("Total " + model.getInvoiceInProgress().getTotal());
+            }
+        });
 
         clientName.textProperty().bind(
                 Bindings.createStringBinding(
@@ -225,7 +235,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             }
         });
         viewWaitingButton.setOnAction(e->{
-            restoreWaitingInvoice();
+            model.showInvoicesInWaitingState();
         });
         removeCashButton.setOnAction(e->{
             extractMoney();
@@ -279,11 +289,11 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     if(itemsTableView.isFocused() && !itemsTableView.getItems().isEmpty()
                             && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
                         try {
-                            model.removeItem(itemsTableView);
+                            model.removeItem();
                             System.out.println("Invoice product list after deletion: " +
                                     model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
                         }catch (Exception e) {
-                            throw new RuntimeException(e);
+                            DialogBuilder.createWarning("Warning", "SAUL POS", e.getMessage()).showAndWait();
                         }
                     }
                 }
@@ -334,22 +344,14 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                 case ENTER -> {
                     try {
                         if(barcodeTextField.getText() != null && !barcodeTextField.getText().isEmpty()){
-                            if(model.getEnabledDollarRate() == null){
-                                DollarRate dollarRate = model.getEnabledDollarRate();
-                                if(dollarRate != null){
-                                    model.setEnabledDollarRate(dollarRate);
-                                }
-                            }
-                            if(model.getInvoiceInProgress().getCreationDate() == null){
-                                model.getInvoiceInProgress().setCreationDate(LocalDateTime.now());
-                            }
-                            model.addItem();
+
+                            model.addItemToInvoice();
 
                             System.out.println("Invoice product list after add: " +
                                     model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
                         }
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        DialogBuilder.createWarning("Warning", "SAUL POS", e.getMessage()).showAndWait();
                     }
                 }
                 case UP -> {
@@ -400,11 +402,15 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
 
     private void addInvoiceInWaitingState() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
-        model.invoiceInProgressToWaiting();
+        try {
+            model.moveInvoiceToWaiting();
+        } catch (SaulPosException e) {
+            DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
+        }
     }
 
     private void restoreWaitingInvoice(){
-        model.invoiceWaitingToInProgress();
+        model.showInvoicesInWaitingState();
     }
 
     private void extractMoney(){
@@ -437,7 +443,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
     }
 
     private void proceedToPayment() {
-        if(itemsTableView.getItems().size() == 0){
+        if(itemsTableView.getItems().isEmpty()){
             DialogBuilder.createInformation("Info!", "SAUL POS",
                     "There is no product in product list").showAndWait();
             return;

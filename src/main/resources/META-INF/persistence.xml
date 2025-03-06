@@ -5,13 +5,18 @@
     <persistence-unit name="jpa-saulpos" transaction-type="RESOURCE_LOCAL">
         <properties>
             <property name="hibernate.dialect" value="org.hibernate.dialect.MariaDBDialect"/>
-            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/saulpos"/>
+            <property name="jakarta.persistence.jdbc.url" value="jdbc:mysql://saulpos_mariadb:3306/saulpos"/>
             <property name="jakarta.persistence.jdbc.user" value="root"/>
             <property name="jakarta.persistence.jdbc.password" value="saulhidalgo"/>
             <property name="jakarta.persistence.schema-generation.database.action" value="update"/>
             <property name="hibernate.event.merge.entity_copy_observer" value="allow"/>
-            <property name = "hibernate.show_sql" value = "true"/>
+
+            <!-- Enable SQL Logging -->
+            <property name="hibernate.show_sql" value="true"/>
             <property name="hibernate.format_sql" value="true"/>
+
+            <!-- Enable parameter logging (this will show the actual values in queries) -->
+            <property name="hibernate.type.descriptor.sql.BasicBinder" value="TRACE"/>
         </properties>
     </persistence-unit>
 </persistence>

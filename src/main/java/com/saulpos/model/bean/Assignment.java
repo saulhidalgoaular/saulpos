@@ -36,12 +36,9 @@ public class Assignment extends BeanImplementation<Assignment> {
         Open, Closed, Cancelled
     }
 
-    @OneToOne
-    @Column(nullable = false)
     @TableViewColumn
     private final SimpleObjectProperty<Shift> shift = new SimpleObjectProperty<>();
 
-    @OneToOne
     @TableViewColumn
     private final SimpleObjectProperty<Cashier> cashier = new SimpleObjectProperty<Cashier>();
 
@@ -70,7 +67,7 @@ public class Assignment extends BeanImplementation<Assignment> {
     public void setAssignmentStatus(AssignmentStatus assignmentStatus) {
         this.assignmentStatus.set(assignmentStatus);
     }
-    @OneToOne
+    @ManyToOne
     @JoinColumn(nullable = false)
     public Shift getShift() {
         return shift.get();
@@ -84,7 +81,7 @@ public class Assignment extends BeanImplementation<Assignment> {
         this.shift.set(shift);
     }
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(nullable = false)
     public Cashier getCashier() {
         return cashier.get();
