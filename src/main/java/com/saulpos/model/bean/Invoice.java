@@ -15,10 +15,7 @@
  */
 package com.saulpos.model.bean;
 
-import com.saulpos.javafxcrudgenerator.model.dao.AbstractDataProvider;
 import com.saulpos.model.dao.BeanImplementation;
-import com.saulpos.model.dao.DatabaseConnection;
-import com.saulpos.model.exception.SaulPosException;
 import jakarta.persistence.*;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -39,74 +36,51 @@ import java.util.List;
 @Table
 public class Invoice extends BeanImplementation<Invoice> {
 
-    private static final int DEFAULT_AMOUNT = 1;
+    public Invoice(){
+        invoiceDetails.addListener(new ListChangeListener<InvoiceDetail>() {
+            @Override
+            public void onChanged(Change<? extends InvoiceDetail> change) {
+                calculateTotals();
 
-    // Constructor
-    public Invoice() {
-        initializeBindings();
-        initializeListeners();
-    }
+            }
+        });
 
-    public Invoice(double dollarRate) {
-        this();
-        this.dollarRate.set(dollarRate);
-    }
-
-    // Bindings for dynamic updates
-    private void initializeBindings() {
-        subtotal.bind(Bindings.createDoubleBinding(
-                () -> invoiceDetails.stream()
-                        .mapToDouble(detail -> {
-                            double price = detail.getSalePrice();
-                            double discount = price * (globalDiscount.get() / 100);
-                            return price - discount;
-                        }).sum(),
-                invoiceDetails, globalDiscount
-        ));
-
-        vat.bind(Bindings.createDoubleBinding(
-                () -> invoiceDetails.stream()
-                        .mapToDouble(detail -> {
-                            double priceAfterDiscount = detail.getSalePrice() * (1 - globalDiscount.get() / 100);
-                            return priceAfterDiscount * (detail.getProduct().getVat().getPercentage() / 100); // Adjusted for percentage from 1 to 100
-                        }).sum(),
-                invoiceDetails, globalDiscount
-        ));
-
-        total.bind(Bindings.createDoubleBinding(
-                () -> subtotal.get() + vat.get(),
-                subtotal, vat
-        ));
-
-        totalInUSD.bind(Bindings.createDoubleBinding(
-                () -> dollarRate.get() > 0 ? total.get() / dollarRate.get() : total.get(),
-                total, dollarRate
-        ));
-    }
-
-    // Listeners for dynamic updates
-    private void initializeListeners() {
-        invoiceDetails.addListener((ListChangeListener<InvoiceDetail>) change -> {
-            while (change.next()) {
-                if (change.wasAdded() || change.wasRemoved()) {
-                    recalculateTotals();
-                }
+        globalDiscount.addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number t1) {
+                calculateTotals();
             }
         });
     }
 
-    private void recalculateTotals() {
-        // This method is mostly redundant due to bindings, but you can force recalculations here if needed.
+    public Invoice(Double dollarRate){
+        setDollarRate(dollarRate);
     }
 
-    // Add and remove invoice details
-    public void addInvoiceDetail(InvoiceDetail detail) {
-        invoiceDetails.add(detail);
+    private void calculateTotals() {
+        subtotal.set(getInvoiceDetails().stream().mapToDouble(value -> {
+            Double discountAmount = value.getProduct().priceProperty().multiply(value.getProduct().getCurrentDiscount()).divide(100).getValue();
+            Double currentGlobalDiscount = value.getProduct().priceProperty().multiply((100 - globalDiscount.get())/100).getValue();
+            return value.getProduct().priceProperty().getValue() - discountAmount - currentGlobalDiscount;
+        }).sum());
+
+
+        vat.set(getInvoiceDetails().stream()
+                .mapToDouble(value2 -> value2.getProduct().getVatAmount().getValue()).sum());
+        total.set(subtotal.add(vat).getValue());
+        totalInUSD.set(convertToDollar( total.get() ).getValue());
+
     }
 
-    // Conversion helper
-    public DoubleBinding convertToDollar(double localCurrency) {
-        return Bindings.createDoubleBinding(() -> localCurrency / dollarRate.get(), dollarRate);
+    public DoubleBinding convertToDollar(double localCurrency){
+        if (getDollarRate() > 0f){
+            // Calculation for: local currency -> dollar conversion
+            // For example: 148.84 Japanese Yen = 1$; so, '148.84' stores in 'exchangeRatePerDollar' column in DB
+            double value = Math.pow(getDollarRate(), -1) * localCurrency;
+            return Bindings.createDoubleBinding(() -> value);
+        }else {
+            return Bindings.createDoubleBinding(() -> localCurrency);
+        }
     }
 
     public enum InvoiceStatus {
@@ -375,46 +349,11 @@ public class Invoice extends BeanImplementation<Invoice> {
         this.dollarRate.set(dollarRate);
     }
 
-    public void addItemToInvoice(String barcode) throws Exception {
-        Product product = fetchProductByBarcode(barcode);
-        if (product == null || product.getExistence() <= 0) {
-            throw new SaulPosException("Product not found or out of stock.");
-        }
-
-        InvoiceDetail detail = createInvoiceDetail(product, DEFAULT_AMOUNT);
-        addInvoiceDetail(detail);
-        detail.saveOrUpdate();
-
-        // Update stock
-        product.setExistence(product.getExistence() - 1);
-        product.saveOrUpdate();
-
+    public void addInvoiceDetail(InvoiceDetail invoiceDetail){
+        invoiceDetails.add(invoiceDetail);
     }
 
-    public InvoiceDetail createInvoiceDetail(Product product, int amount) {
-        InvoiceDetail detail = new InvoiceDetail();
-        detail.setInvoice(this);
-        detail.setProduct(product);
-        detail.setSalePrice(product.priceProperty().get());
-        detail.setAmount(amount);
-        detail.setDiscount(product.getCurrentDiscount().get());
-        detail.setCreationTime(LocalDateTime.now());
-        return detail;
-    }
-
-    public void removeInvoiceDetail(InvoiceDetail invoiceDetail) throws Exception {
-        Product product = invoiceDetail.getProduct();
-        product.setExistence(product.getExistence() + invoiceDetail.getAmount());
+    public void removeInvoiceDetail(InvoiceDetail invoiceDetail){
         invoiceDetails.remove(invoiceDetail);
-        product.saveOrUpdate();
-        this.saveOrUpdate();
-        System.out.println("Invoice Details size: " + this.getInvoiceDetails().size());
-    }
-
-    private Product fetchProductByBarcode(String barcode) throws Exception {
-        Product sample = new Product();
-        sample.setBarcode(barcode);
-        List results = DatabaseConnection.getInstance().listBySample(Product.class, sample, AbstractDataProvider.SearchType.EQUAL);
-        return results.isEmpty() ? null : (Product) results.get(0);
     }
 }
