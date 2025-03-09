@@ -34,6 +34,7 @@ public class POSMainModel extends AbstractModel{
     private UserB userB;
     private Assignment assignment;
     private SimpleObjectProperty<Invoice> invoiceInProgress = new SimpleObjectProperty<>();
+    private SimpleObjectProperty<InvoiceDetail> selectedInvoiceDetail = new SimpleObjectProperty<>();
 
     private static final DateTimeFormatter TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -207,7 +208,19 @@ public class POSMainModel extends AbstractModel{
         this.clientPanelVisible.set(clientPanelVisible);
     }
 
-    public void addItem() throws Exception {
+    public InvoiceDetail getSelectedInvoiceDetail() {
+        return selectedInvoiceDetail.get();
+    }
+
+    public SimpleObjectProperty<InvoiceDetail> selectedInvoiceDetailProperty() {
+        return selectedInvoiceDetail;
+    }
+
+    public void setSelectedInvoiceDetail(InvoiceDetail selectedInvoiceDetail) {
+        this.selectedInvoiceDetail.set(selectedInvoiceDetail);
+    }
+
+    public void addItemToInvoice() throws Exception {
         Product product = new Product();
         product.setBarcode(barcodeBar.getValue());
         final List<Product> list = DatabaseConnection.getInstance().listBySample(Product.class, product, AbstractDataProvider.SearchType.EQUAL);
@@ -244,11 +257,10 @@ public class POSMainModel extends AbstractModel{
         return invoiceDetail;
     }
 
-    public void removeItem(TableView<InvoiceDetail> itemsTableView) throws Exception {
-        int selectedIndex = itemsTableView.getSelectionModel().getSelectedIndex();
-        InvoiceDetail removedProduct = itemsTableView.getItems().get(selectedIndex);
-        removedProduct.getProduct().setExistence(removedProduct.getProduct().getExistence() + 1);
-        itemsTableView.getItems().remove(selectedIndex);
+    public void removeSelectedItem() throws Exception {
+        InvoiceDetail removedProduct = selectedInvoiceDetail.get();
+        removedProduct.getProduct().setExistence(removedProduct.getProduct().getExistence() + removedProduct.getAmount());
+        invoiceInProgress.get().getObservableInvoiceDetails().remove(removedProduct);
         removedProduct.saveOrUpdate();
         invoiceInProgress.get().removeInvoiceDetail(removedProduct);
         invoiceInProgress.get().saveOrUpdate();

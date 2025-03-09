@@ -3,7 +3,6 @@ package com.saulpos.presenter;
 import com.saulpos.javafxcrudgenerator.view.DialogBuilder;
 import com.saulpos.model.LoginModel;
 import com.saulpos.model.POSMainModel;
-import com.saulpos.model.bean.DollarRate;
 import com.saulpos.model.bean.InvoiceDetail;
 import com.saulpos.model.dao.HibernateDataProvider;
 import com.saulpos.model.exception.SaulPosException;
@@ -17,6 +16,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -32,7 +32,6 @@ import javafx.scene.text.FontWeight;
 import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.time.LocalDateTime;
 
 //
 
@@ -151,10 +150,10 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
         dateLabel.textProperty().bind(model.dateValueProperty());
         employeeLabel.textProperty().bind(model.employeeNameProperty());
         cashierLabel.textProperty().bind(model.cashierNameProperty());
-        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeInputProperty());
+        Bindings.bindBidirectional(barcodeTextField.textProperty(), model.barcodeBarProperty());
         Bindings.bindContentBidirectional(itemsTableView.getItems(), model.getInvoiceInProgress().getObservableInvoiceDetails());
 
-        model.selectedInvoiceDetailProperty().bind(itemsTableView.getSelectionModel().selectedItemProperty());
+        itemsTableView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<InvoiceDetail>) _ -> updateNewSelectedItem());
 
         totalLabel.textProperty().bind(model.getInvoiceInProgress().totalProperty().asString("%.2f"));
         subtotalLabel.textProperty().bind(model.getInvoiceInProgress().subtotalProperty().asString("%.2f"));
@@ -289,7 +288,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
                     if(itemsTableView.isFocused() && !itemsTableView.getItems().isEmpty()
                             && itemsTableView.getSelectionModel().getSelectedIndex() > -1){
                         try {
-                            model.removeItem();
+                            model.removeSelectedItem();
                             System.out.println("Invoice product list after deletion: " +
                                     model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
                         }catch (Exception e) {
@@ -349,6 +348,7 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
                             System.out.println("Invoice product list after add: " +
                                     model.invoiceInProgressProperty().getValue().getInvoiceDetails().size());
+                            updateNewSelectedItem();
                         }
                     } catch (Exception e) {
                         DialogBuilder.createWarning("Warning", "SAUL POS", e.getMessage()).showAndWait();
@@ -376,7 +376,17 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
             newIndex = 0;
         }
         itemsTableView.getSelectionModel().select(newIndex);
+        updateNewSelectedItem();
     }
+
+    /**
+     *
+     */
+    // TODO I think it could be done better.
+    private void updateNewSelectedItem() {
+        model.setSelectedInvoiceDetail(itemsTableView.getSelectionModel().getSelectedItem());
+    }
+
     private void logout() {
         try {
             System.out.println("Logging out...");
@@ -403,8 +413,8 @@ public class POSMainPresenter extends AbstractPresenter<POSMainModel> {
 
     private void addInvoiceInWaitingState() throws PropertyVetoException, IOException, URISyntaxException, ClassNotFoundException {
         try {
-            model.moveInvoiceToWaiting();
-        } catch (SaulPosException e) {
+            model.invoiceInProgressToWaiting();
+        } catch (Exception e) {
             DialogBuilder.createExceptionDialog("Exception", "SAUL POS", e.getMessage(), e).showAndWait();
         }
     }
