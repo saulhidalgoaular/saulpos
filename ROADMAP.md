@@ -332,7 +332,7 @@ Out of Scope:
 1. Unit tests for calculation order.
 2. Integration tests for permissioned approvals.
 
-#### Card E2: Promotion Engine v1
+#### Card E2: Promotion Engine v1 [SOLVED]
 - Goal: Execute rule-based promotions.
 - Dependencies: E1, C1.
 - Data Model:
@@ -1076,7 +1076,7 @@ Out of Scope:
 | D2 | DONE |  |  | Added store+tender `rounding_policy` data model with migration `V12`; tax totals API (`POST /api/tax/preview`) now returns explicit `roundingAdjustment` and `totalPayable` with tender-aware rounding details and unit/integration coverage |
 | D3 | DONE |  |  | Implemented receipt-series allocation endpoint (`POST /api/receipts/allocate`) with migration `V13`, series/sequence/header model, `SALES_PROCESS` authorization, and integration + concurrency coverage for duplicate-free numbering |
 | E1 | DONE |  |  | Implemented discount primitives with migration `V14`, manual-reason-code enforcement, apply/remove/preview APIs, manager-threshold override permission checks, and unit/integration coverage for calculation order and approvals |
-| E2 | TODO |  |  |  |
+| E2 | DONE |  |  | Implemented promotion engine v1 with migration `V15`, `POST /api/promotions/evaluate`, time-window eligibility, deterministic overlap winner selection (priority > discount > id), and promo explanation output with unit/integration coverage |
 | E3 | TODO |  |  |  |
 | F1 | TODO |  |  |  |
 | F2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `E2` Promotion engine v1.
-2. `F1` Customer master.
-3. `G1` Cart lifecycle service.
+1. `F1` Customer master.
+2. `G1` Cart lifecycle service.
+3. `I1` Supplier master.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

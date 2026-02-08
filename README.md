@@ -28,6 +28,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `D2` Rounding policy.
 - `D3` Receipt sequence allocation.
 - `E1` Discount primitives.
+- `E2` Promotion engine v1.
 
 ## Monorepo Architecture
 
@@ -168,6 +169,23 @@ Backend source of truth:
 - Discount preview returns subtotal-before, total-discount, subtotal-after, line-level discount allocations, and tax-adjusted totals.
 - Manual discount actions are persisted in `discount_application` with actor, reason, timestamps, and active/removed lifecycle state.
 
+### Promotion Engine v1
+- Promotion evaluation API:
+  - `POST /api/promotions/evaluate`
+- Promotion model:
+  - `promotion`
+  - `promotion_rule`
+  - `promotion_window`
+- Supports rule-based eligibility with active time windows and deterministic overlap conflict resolution.
+- Current rule types:
+  - `PRODUCT_PERCENTAGE`
+  - `CART_FIXED`
+- Winner selection strategy for overlapping promotions:
+  - highest `priority`,
+  - then highest computed discount amount,
+  - then lowest promotion id.
+- Response includes applied promotion explanation text for receipt transparency.
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -186,6 +204,7 @@ Backend source of truth:
   - `V12__rounding_policy.sql`
   - `V13__receipt_sequence_allocation.sql`
   - `V14__discount_primitives.sql`
+  - `V15__promotion_engine_v1.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -253,11 +272,13 @@ Key settings include:
 - Unit tests for tax calculation modes (`INCLUSIVE`, `EXCLUSIVE`, exempt, zero-rated).
 - Unit tests for rounding policy midpoint and edge behavior (`NEAREST`, `UP`, `DOWN`).
 - Unit tests for discount calculation order (line then cart) and manager-threshold enforcement.
+- Unit tests for promotion rule evaluation (`PRODUCT_PERCENTAGE`, `CART_FIXED`) and deterministic overlap winner selection.
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.
 - Integration tests for `POST /api/tax/preview` covering deterministic line/total breakdown and missing-rule validation.
 - Integration tests for tax preview rounding output (`roundingAdjustment`, `totalPayable`) with and without tender-specific policy.
+- Integration tests for promotion evaluation endpoint, overlapping promotion conflicts, and explanation payloads.
 - Integration tests for receipt allocation sequencing, authorization enforcement, and concurrent allocation race safety.
 - Integration tests for discount apply/remove/preview flows, reason-code validation, and high-threshold permission enforcement.
 
