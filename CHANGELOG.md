@@ -1,6 +1,12 @@
 # Changelog
 
 ## Unreleased
+- Implemented Card D3 Receipt Sequence Allocation in `pos-server` and `pos-api`.
+- Added migration `V13__receipt_sequence_allocation.sql` with `receipt_series`, `receipt_sequence`, and `receipt_header` including uniqueness on `(series_id, number)` and `receipt_number`.
+- Added receipt allocation API contract and endpoint: `POST /api/receipts/allocate`.
+- Added concurrency-safe sequence allocation and immutable formatted receipt number generation per terminal series.
+- Added authorization rule requiring `SALES_PROCESS` permission for receipt allocation.
+- Added integration coverage for sequential receipt allocation, permission denial behavior, and concurrent duplicate-free allocation.
 - Implemented Card A3 Security Foundation in `pos-server`.
 - Added auth schema/migration (`V2__security_foundation.sql`) with `user_account`, role/permission mapping, session, and auth audit tables.
 - Added stateless auth endpoints: `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`.

@@ -294,20 +294,22 @@ Out of Scope:
 1. Unit tests for midpoint and edge values.
 2. Integration tests during checkout and refunds.
 
-#### Card D3: Receipt Sequence Allocation
+#### Card D3: Receipt Sequence Allocation [SOLVED]
 - Goal: Concurrency-safe, per-store/per-terminal receipt numbering.
 - Dependencies: B1, D1.
 - Data Model:
 1. `receipt_series`.
 2. `receipt_sequence`.
 3. `receipt_header`.
-- API Contract: checkout response includes immutable receipt number.
+- API Contract: `POST /api/receipts/allocate` returns immutable, series-scoped receipt number allocation.
 - Business Rules:
 1. Number uniqueness guaranteed inside a series.
 2. Number policy (gapped/gapless) explicitly documented.
+3. Allocation endpoint requires `SALES_PROCESS` permission.
 - Acceptance Criteria:
 1. Concurrent allocations produce no duplicates.
 2. Uniqueness constraint exists on `(series_id, number)`.
+3. Allocation response includes series metadata + formatted immutable receipt number.
 - Test Plan:
 1. Integration concurrency test with multi-threaded allocations.
 
@@ -1072,7 +1074,7 @@ Out of Scope:
 | C5 | DONE |  |  | Added sale mode configuration (`UNIT`, `WEIGHT`, `OPEN_PRICE`) with UOM/precision/open-price policy validation, migration `V10`, and open-price entry validation + audit flow (`open_price_entry_audit`) with unit/integration coverage |
 | D1 | DONE |  |  | Implemented `tax_group` + `store_tax_rule` with migration `V11`, product tax-group assignment (`product.tax_group_id`), and `POST /api/tax/preview` with deterministic inclusive/exclusive/exempt/zero-rated line+total tax breakdown and unit/integration coverage |
 | D2 | DONE |  |  | Added store+tender `rounding_policy` data model with migration `V12`; tax totals API (`POST /api/tax/preview`) now returns explicit `roundingAdjustment` and `totalPayable` with tender-aware rounding details and unit/integration coverage |
-| D3 | TODO |  |  |  |
+| D3 | DONE |  |  | Implemented receipt-series allocation endpoint (`POST /api/receipts/allocate`) with migration `V13`, series/sequence/header model, `SALES_PROCESS` authorization, and integration + concurrency coverage for duplicate-free numbering |
 | E1 | TODO |  |  |  |
 | E2 | TODO |  |  |  |
 | E3 | TODO |  |  |  |
@@ -1131,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `D3` Receipt sequence allocation.
-2. `E1` Discount primitives.
-3. `E2` Promotion engine v1.
+1. `E1` Discount primitives.
+2. `E2` Promotion engine v1.
+3. `F1` Customer master.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

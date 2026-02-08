@@ -26,6 +26,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `C5` Unit/weight/open-price item modes.
 - `D1` Tax engine v1.
 - `D2` Rounding policy.
+- `D3` Receipt sequence allocation.
 
 ## Monorepo Architecture
 
@@ -148,6 +149,13 @@ Backend source of truth:
   - `rounding` detail (`applied`, `method`, `increment`, `originalAmount`, `roundedAmount`, `adjustment`)
 - Rounding is policy-driven per store and tender, and always returned as an explicit totals line (no hidden adjustment).
 
+### Receipt Sequence Allocation
+- Receipt allocation API:
+  - `POST /api/receipts/allocate`
+- Allocates immutable receipt numbers per terminal-backed series with explicit policy metadata (`GAPLESS`/`GAPPED`).
+- Concurrency-safe sequence allocation with unique constraints on `(series_id, number)` and `receipt_number`.
+- Allocation endpoint is permission-protected (`SALES_PROCESS`) and returns both numeric and formatted receipt identifiers.
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -164,6 +172,7 @@ Backend source of truth:
   - `V10__unit_weight_open_price_item_modes.sql`
   - `V11__tax_engine_v1.sql`
   - `V12__rounding_policy.sql`
+  - `V13__receipt_sequence_allocation.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -235,6 +244,7 @@ Key settings include:
 - Error-handling integration tests for stable error contracts.
 - Integration tests for `POST /api/tax/preview` covering deterministic line/total breakdown and missing-rule validation.
 - Integration tests for tax preview rounding output (`roundingAdjustment`, `totalPayable`) with and without tender-specific policy.
+- Integration tests for receipt allocation sequencing, authorization enforcement, and concurrent allocation race safety.
 
 ## Project Planning and Status
 
