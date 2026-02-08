@@ -53,9 +53,11 @@ Out of Scope:
 6. No P1/P2 open issues for the card.
 
 ## 6. Phase Map and Dependencies
-1. `A -> B -> C -> D -> G -> H -> L -> M -> N`.
+1. `A -> B -> C -> D -> G -> H -> L -> M -> N -> O -> P`.
 2. `E/F/I/J/K` can start after `B/C/D/G` baseline is stable.
 3. No reporting (`L`) before stable source domains (`G/H/J`).
+4. UI phase (`O`) starts only after stable auth, catalog, cart, and checkout APIs (`B/C/G`).
+5. Final release phase (`P`) starts only after all mandatory cards and UAT pass.
 
 ## 7. Detailed Work Cards by Phase
 
@@ -688,12 +690,191 @@ Out of Scope:
 - Acceptance Criteria:
 1. Country module can be added without changing sales core contracts.
 
+### Phase O: UI/UX Delivery (`pos-client`)
+
+#### Card O1: UI Architecture and Design System
+- Goal: Define client architecture and reusable UI foundation.
+- Dependencies: B1, C1.
+- Impacted Modules: `pos-client`.
+- Deliverables:
+1. Screen map and navigation model.
+2. Shared component library (buttons, inputs, tables, dialogs, toasts).
+3. State management strategy and API client abstraction.
+- Acceptance Criteria:
+1. Documented UI architecture with folder conventions and state boundaries.
+2. Reusable components support keyboard-first POS workflows.
+3. Theme tokens and typography scale centralized.
+- Test Plan:
+1. Component rendering tests.
+2. Accessibility checks for focus order and contrast.
+
+#### Card O2: Authentication and Session UI
+- Goal: Implement login/logout/session-expiry experiences.
+- Dependencies: A3, O1.
+- API Contract: consumes auth endpoints from `A3`.
+- Acceptance Criteria:
+1. Login handles success, invalid credentials, locked account, and expired session.
+2. Session timeout/refresh behavior is visible and user-safe.
+3. Unauthorized navigation redirects to login.
+- Test Plan:
+1. UI integration tests for auth flows.
+2. Contract tests against auth DTOs.
+
+#### Card O3: Shift Open/Close and Cash Controls UI
+- Goal: Build shift lifecycle UI with cash reconciliation.
+- Dependencies: B3, O1.
+- Acceptance Criteria:
+1. Cashier can open shift with opening float.
+2. Paid-in/paid-out actions require reason capture.
+3. Shift close shows expected vs counted variance and confirmation.
+- Test Plan:
+1. UI integration tests for shift state transitions.
+
+#### Card O4: Product Search and Cart Screen
+- Goal: Deliver the main POS selling screen.
+- Dependencies: C1, C4, G1, O1.
+- Acceptance Criteria:
+1. Fast barcode input path with keyboard scanner flow.
+2. Product search with pagination and quick add to cart.
+3. Cart line edit/remove and total recalculation feedback.
+4. Clear error handling for unavailable products and invalid quantities.
+- Test Plan:
+1. UI integration tests for scan/search/add/edit/remove paths.
+2. Performance smoke tests for large catalogs.
+
+#### Card O5: Checkout and Payments UI
+- Goal: Complete payment capture and sale completion UX.
+- Dependencies: D2, G2, J1, O4.
+- Acceptance Criteria:
+1. Supports cash/card/split tender entry.
+2. Shows rounding adjustments and amount due/change.
+3. Handles checkout failures with recoverable retry guidance.
+4. Displays receipt number and post-sale actions.
+- Test Plan:
+1. Integration tests for successful and failed checkout paths.
+2. Edge-case tests for split tender validation.
+
+#### Card O6: Returns and Refunds UI
+- Goal: Enable cashier and manager return workflows.
+- Dependencies: G3, O1.
+- Acceptance Criteria:
+1. Lookup sale by receipt number and display eligible return lines.
+2. Partial quantity return supported with reason capture.
+3. Manager-approval path available when policy requires it.
+- Test Plan:
+1. Integration tests for partial/full return and approval scenarios.
+
+#### Card O7: Backoffice UI (Catalog, Pricing, Customers)
+- Goal: Provide operational maintenance screens.
+- Dependencies: C1, C3, F1, O1.
+- Acceptance Criteria:
+1. Catalog CRUD with validation feedback.
+2. Pricing override management by store.
+3. Customer create/edit/search with tax identity fields.
+- Test Plan:
+1. UI tests for form validation and CRUD operations.
+
+#### Card O8: Reporting and Export UI
+- Goal: Surface report filters, results, and export actions.
+- Dependencies: L1, L2, L3, L4, O1.
+- Acceptance Criteria:
+1. Reports filter by date/store/terminal/cashier where applicable.
+2. Tabular results load with pagination or streaming strategy.
+3. Export actions trigger CSV downloads with user feedback.
+- Test Plan:
+1. Integration tests for filter and export actions.
+
+#### Card O9: Hardware Interaction UI
+- Goal: Expose print and drawer actions safely in UI.
+- Dependencies: M1, M2, O4.
+- Acceptance Criteria:
+1. Print action status (queued/success/failure) visible to operator.
+2. Drawer open action shown only for authorized roles.
+- Test Plan:
+1. Integration tests with mocked hardware adapters.
+
+#### Card O10: Offline/Degraded Mode UX
+- Goal: Ensure predictable user behavior during service degradation.
+- Dependencies: K1, K2, O1.
+- Acceptance Criteria:
+1. Connectivity state clearly visible.
+2. Action-level feedback explains retry, queued, or blocked operations.
+3. No silent data loss from client interactions.
+- Test Plan:
+1. Integration tests with simulated API outages and recoveries.
+
+### Phase P: Final Productization and Release
+
+#### Card P1: End-to-End UAT Scenarios
+- Goal: Validate complete business workflows before release.
+- Dependencies: All mandatory domain and UI cards.
+- Deliverables:
+1. UAT suite for cashier, manager, inventory clerk, and admin personas.
+2. Signed UAT checklist with pass/fail evidence.
+- Acceptance Criteria:
+1. Core workflows pass without manual DB fixes.
+2. Blocking defects triaged and resolved.
+
+#### Card P2: Performance and Reliability Hardening
+- Goal: Verify production readiness under realistic load.
+- Dependencies: P1.
+- Deliverables:
+1. Load test scripts for peak checkout/reporting patterns.
+2. Reliability tests for restart, DB reconnect, and transient failures.
+- Acceptance Criteria:
+1. Checkout and lookup meet defined p95 targets.
+2. No data corruption in failure-recovery tests.
+
+#### Card P3: Security and Compliance Verification
+- Goal: Confirm baseline security posture and auditability.
+- Dependencies: P1.
+- Deliverables:
+1. RBAC regression test run.
+2. Sensitive action audit verification.
+3. Secret/configuration hardening checklist.
+- Acceptance Criteria:
+1. No high-severity security findings open.
+2. Required audit trails are complete and queryable.
+
+#### Card P4: Packaging, Deployment, and Operations
+- Goal: Produce repeatable deployment artifacts and runbooks.
+- Dependencies: P2, P3.
+- Deliverables:
+1. Versioned release artifact strategy.
+2. Environment configs for dev/staging/prod.
+3. Ops runbooks: startup, backup/restore, rollback, incident response.
+- Acceptance Criteria:
+1. Fresh environment can be deployed from docs only.
+2. Backup/restore tested and validated.
+
+#### Card P5: Documentation and Handover
+- Goal: Complete product and technical documentation for sustained operation.
+- Dependencies: P4.
+- Deliverables:
+1. User guide (cashier/manager/admin).
+2. API reference and integration notes.
+3. Architecture and maintenance guide.
+- Acceptance Criteria:
+1. New operator can execute daily tasks using docs alone.
+2. New engineer can run and extend system using docs alone.
+
+#### Card P6: Release Candidate and Go-Live
+- Goal: Execute final release process after iterative AI implementation cycles.
+- Dependencies: P1-P5.
+- Business Rules:
+1. Freeze scope at RC cut.
+2. Only blocker fixes allowed during stabilization window.
+- Acceptance Criteria:
+1. RC build signed off by product and engineering owners.
+2. Production deployment completed with post-release validation checklist.
+
 ## 8. Cross-Phase Testing Strategy
 1. Unit tests for all pure business logic.
 2. Integration tests for all REST endpoints and transactional boundaries.
 3. Concurrency tests for receipt sequence, checkout, and stock ledger.
 4. Contract tests for `pos-api` DTO compatibility.
 5. Migration tests on empty and non-empty databases.
+6. End-to-end UI tests for all critical cashier and manager workflows.
 
 ## 9. Cross-Phase Non-Functional Targets
 1. API p95 response targets defined per critical endpoint.
@@ -704,10 +885,15 @@ Out of Scope:
 ## 10. Execution Runbook for Agents
 1. Select next unblocked card by dependency order.
 2. Produce mini-design note in PR description.
-3. Implement migrations first, then domain, then API layer.
+3. Implement in order: migration -> domain -> API -> UI (if applicable).
 4. Add tests before finishing card.
 5. Run `mvn clean verify`.
 6. Update roadmap progress table and card status.
+7. After every 3-5 cards, run an iteration review:
+1. Validate against acceptance criteria.
+2. Capture defects and architecture corrections.
+3. Re-plan remaining cards with explicit deltas.
+8. Before moving to `P`, run full regression on API + UI + migrations.
 
 ## 11. Progress Tracking Table
 | Card ID | Status | Owner | PR | Notes |
@@ -756,8 +942,33 @@ Out of Scope:
 | M3 | TODO |  |  |  |
 | N1 | TODO |  |  |  |
 | N2 | TODO |  |  |  |
+| O1 | TODO |  |  |  |
+| O2 | TODO |  |  |  |
+| O3 | TODO |  |  |  |
+| O4 | TODO |  |  |  |
+| O5 | TODO |  |  |  |
+| O6 | TODO |  |  |  |
+| O7 | TODO |  |  |  |
+| O8 | TODO |  |  |  |
+| O9 | TODO |  |  |  |
+| O10 | TODO |  |  |  |
+| P1 | TODO |  |  |  |
+| P2 | TODO |  |  |  |
+| P3 | TODO |  |  |  |
+| P4 | TODO |  |  |  |
+| P5 | TODO |  |  |  |
+| P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
 1. `B1` Tenant and location model.
 2. `C1` Product and variant core.
 3. `D3 + G2` Receipt sequence + atomic checkout integration.
+
+## 13. Final Product Readiness Checklist
+1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
+2. UAT pass evidence attached.
+3. Performance/reliability thresholds met.
+4. Security and audit checks passed.
+5. Backup/restore and rollback rehearsed.
+6. Documentation complete and validated by non-authors.
+7. Go-live checklist executed and signed.
