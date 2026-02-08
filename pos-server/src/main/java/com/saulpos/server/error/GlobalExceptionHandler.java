@@ -2,6 +2,7 @@ package com.saulpos.server.error;
 
 import org.slf4j.MDC;
 import org.springframework.http.*;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -60,6 +61,17 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         logger.error("Unhandled exception [CorrelationID: " + MDC.get(CORRELATION_ID_LOG_VAR) + "]", ex);
 
         return createResponseEntity(problemDetail, null, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                ErrorCode.AUTH_FORBIDDEN.getStatus(),
+                ErrorCode.AUTH_FORBIDDEN.getMessage());
+        problemDetail.setTitle(ErrorCode.AUTH_FORBIDDEN.getMessage());
+        problemDetail.setProperty("code", ErrorCode.AUTH_FORBIDDEN.getCode());
+        addCorrelationId(problemDetail);
+        return createResponseEntity(problemDetail, null, ErrorCode.AUTH_FORBIDDEN.getStatus(), request);
     }
 
     private void addCorrelationId(ProblemDetail problemDetail) {

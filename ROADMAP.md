@@ -98,7 +98,7 @@ Out of Scope:
 1. Integration tests per error class asserting HTTP status + error code.
 2. Unit tests for exception mappers.
 
-#### Card A3: Security Foundation
+#### Card A3: Security Foundation [SOLVED]
 - Goal: Establish authentication and baseline hardening.
 - Dependencies: A1.
 - Impacted Modules: `pos-server`, `pos-api`.

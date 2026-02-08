@@ -37,6 +37,12 @@ mvn javafx:run
 -   **Soft Delete**: Enabled by default (audit trail). Configurable to HARD delete via `app.deletion-strategy=hard`.
 -   **Migrations**: Managed by Flyway (`pos-server/src/main/resources/db/migration`).
 
+## 🔐 Security Foundation (A3)
+-   Auth endpoints: `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`.
+-   Protected endpoint example: `GET /api/security/me`.
+-   Login security includes BCrypt password hashing and configurable brute-force lockout.
+-   Login success/failure and logout are persisted in `auth_audit_event`.
+
 ## 🛣️ Roadmap
 See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
 
