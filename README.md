@@ -27,6 +27,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `D1` Tax engine v1.
 - `D2` Rounding policy.
 - `D3` Receipt sequence allocation.
+- `E1` Discount primitives.
 
 ## Monorepo Architecture
 
@@ -156,6 +157,17 @@ Backend source of truth:
 - Concurrency-safe sequence allocation with unique constraints on `(series_id, number)` and `receipt_number`.
 - Allocation endpoint is permission-protected (`SALES_PROCESS`) and returns both numeric and formatted receipt identifiers.
 
+### Discount Primitives
+- Discount APIs:
+  - `POST /api/discounts/apply`
+  - `POST /api/discounts/{id}/remove`
+  - `POST /api/discounts/preview`
+- Supports line and cart discounts with `FIXED` and `PERCENTAGE` primitives.
+- Manual discounts require reason codes from `discount_reason_code`.
+- High-threshold discounts require explicit `DISCOUNT_OVERRIDE` permission.
+- Discount preview returns subtotal-before, total-discount, subtotal-after, line-level discount allocations, and tax-adjusted totals.
+- Manual discount actions are persisted in `discount_application` with actor, reason, timestamps, and active/removed lifecycle state.
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -173,6 +185,7 @@ Backend source of truth:
   - `V11__tax_engine_v1.sql`
   - `V12__rounding_policy.sql`
   - `V13__receipt_sequence_allocation.sql`
+  - `V14__discount_primitives.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -239,12 +252,14 @@ Key settings include:
 - Unit tests for sale-mode quantity precision and open-price policy validation.
 - Unit tests for tax calculation modes (`INCLUSIVE`, `EXCLUSIVE`, exempt, zero-rated).
 - Unit tests for rounding policy midpoint and edge behavior (`NEAREST`, `UP`, `DOWN`).
+- Unit tests for discount calculation order (line then cart) and manager-threshold enforcement.
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.
 - Integration tests for `POST /api/tax/preview` covering deterministic line/total breakdown and missing-rule validation.
 - Integration tests for tax preview rounding output (`roundingAdjustment`, `totalPayable`) with and without tender-specific policy.
 - Integration tests for receipt allocation sequencing, authorization enforcement, and concurrent allocation race safety.
+- Integration tests for discount apply/remove/preview flows, reason-code validation, and high-threshold permission enforcement.
 
 ## Project Planning and Status
 
