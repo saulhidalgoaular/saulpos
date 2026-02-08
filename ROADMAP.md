@@ -229,7 +229,7 @@ Out of Scope:
 1. Unit tests for resolver precedence.
 2. Integration tests across store contexts.
 
-#### Card C4: Search and Lookup Performance
+#### Card C4: Search and Lookup Performance [SOLVED]
 - Goal: Keep checkout item search fast under scale.
 - Dependencies: C1.
 - Data Model: indexes on normalized name, SKU, barcode.
@@ -1068,7 +1068,7 @@ Out of Scope:
 | C1 | DONE |  |  | Product/variant/barcode core with merchant SKU constraints and lookup APIs implemented |
 | C2 | DONE |  |  | Category hierarchy tree, reparenting, and cycle/inactive-assignment validation implemented |
 | C3 | DONE |  |  | Price resolution endpoint implemented with deterministic precedence (store override > active price book > base price), effective windows, migration `V8`, and unit/integration tests |
-| C4 | TODO |  |  |  |
+| C4 | DONE |  |  | Implemented `/api/catalog/products/search` with pagination and deterministic ordering, plus migration `V9` indexes for normalized SKU/name/barcode lookup |
 | C5 | TODO |  |  |  |
 | D1 | TODO |  |  |  |
 | D2 | TODO |  |  |  |
@@ -1131,9 +1131,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `C4` Search and lookup performance.
-2. `C5` Unit/weight/open-price item modes.
-3. `D1` Tax engine v1.
+1. `C5` Unit/weight/open-price item modes.
+2. `D1` Tax engine v1.
+3. `D2` Rounding policy.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

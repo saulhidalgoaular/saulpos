@@ -22,6 +22,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `C1` Product and variant core.
 - `C2` Category and department taxonomy.
 - `C3` Price books and store overrides.
+- `C4` Search and lookup performance.
 
 ## Monorepo Architecture
 
@@ -88,6 +89,7 @@ Backend source of truth:
 - Product APIs:
   - `POST /api/catalog/products`
   - `GET /api/catalog/products`
+  - `GET /api/catalog/products/search?merchantId={id}&q={query}&page={n}&size={n}`
   - `GET /api/catalog/products/{id}`
   - `PUT /api/catalog/products/{id}`
   - `POST /api/catalog/products/{id}/activate`
@@ -97,6 +99,7 @@ Backend source of truth:
   - `GET /api/catalog/categories/tree?merchantId={id}`
   - `POST /api/catalog/categories/{id}/reparent`
 - Enforced rules include merchant-scoped SKU uniqueness, cycle-safe category trees, and no new product assignment to inactive categories.
+- Search endpoint provides deterministic pagination (ordered by normalized SKU then ID) and supports query matching by SKU, name, or barcode.
 
 ### Pricing (Price Books and Store Overrides)
 - Price resolution API:
@@ -119,6 +122,7 @@ Backend source of truth:
   - `V6__product_and_variant_core.sql`
   - `V7__category_department_taxonomy.sql`
   - `V8__price_books_and_store_overrides.sql`
+  - `V9__catalog_search_and_lookup_performance.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -179,6 +183,7 @@ Key settings include:
 `pos-server` currently includes:
 - Integration tests for auth lifecycle, brute-force lockout, identity APIs, permission matrix, shift lifecycle, and catalog flows.
 - Integration tests for price resolution precedence and effective-date windows.
+- Integration tests for catalog search pagination, deterministic ordering, and barcode search matching.
 - Unit tests for pricing resolver precedence and fallback behavior.
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.

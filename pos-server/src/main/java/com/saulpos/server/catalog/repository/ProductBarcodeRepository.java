@@ -14,7 +14,7 @@ public interface ProductBarcodeRepository extends JpaRepository<ProductBarcodeEn
             join fetch b.variant v
             join fetch v.product p
             where p.merchant.id = :merchantId
-              and upper(b.barcode) = upper(:barcode)
+              and b.barcodeNormalized = :barcode
               and p.active = true
               and v.active = true
               and b.active = true

@@ -3,6 +3,7 @@ package com.saulpos.server.catalog.service;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductRequest;
 import com.saulpos.api.catalog.ProductResponse;
+import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.catalog.ProductVariantRequest;
 import com.saulpos.api.catalog.ProductVariantResponse;
 import com.saulpos.server.catalog.model.CategoryEntity;
@@ -17,6 +18,8 @@ import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +32,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,11 +64,33 @@ public class CatalogService {
 
     @Transactional(readOnly = true)
     public List<ProductResponse> listProducts(Long merchantId, Boolean active, String query) {
-        String normalizedQuery = normalizeSearchQuery(query);
-        return productRepository.search(merchantId, active, normalizedQuery)
+        String normalizedQueryPattern = toContainsPattern(normalizeSearchQuery(query));
+        return productRepository.search(merchantId, active, normalizedQueryPattern)
                 .stream()
                 .map(this::toProductResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public ProductSearchResponse searchProducts(Long merchantId, Boolean active, String query, int page, int size) {
+        requireMerchant(merchantId);
+        String normalizedQueryPattern = toContainsPattern(normalizeSearchQuery(query));
+
+        Page<Long> resultPage = productRepository.searchIds(
+                merchantId,
+                active,
+                normalizedQueryPattern,
+                PageRequest.of(page, size));
+
+        List<ProductResponse> items = toOrderedProductResponses(resultPage.getContent());
+        return new ProductSearchResponse(
+                items,
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.hasNext(),
+                resultPage.hasPrevious());
     }
 
     @Transactional(readOnly = true)
@@ -259,6 +287,28 @@ public class CatalogService {
         return normalized.isEmpty() ? null : normalized;
     }
 
+    private String toContainsPattern(String query) {
+        if (query == null) {
+            return null;
+        }
+        return "%" + query.toUpperCase(Locale.ROOT) + "%";
+    }
+
+    private List<ProductResponse> toOrderedProductResponses(List<Long> productIds) {
+        if (productIds.isEmpty()) {
+            return List.of();
+        }
+
+        Map<Long, ProductEntity> productsById = productRepository.findAllByIdWithDetails(productIds).stream()
+                .collect(Collectors.toMap(ProductEntity::getId, Function.identity(), (left, right) -> left));
+
+        return productIds.stream()
+                .map(productsById::get)
+                .filter(Objects::nonNull)
+                .map(this::toProductResponse)
+                .toList();
+    }
+
     private ProductResponse toProductResponse(ProductEntity product) {
         Map<Long, VariantAccumulator> variantsById = new LinkedHashMap<>();
         product.getVariants().stream()
@@ -306,7 +356,7 @@ public class CatalogService {
         private ProductVariantResponse toResponse() {
             Set<String> sortedBarcodes = barcodes.stream()
                     .sorted()
-                    .collect(java.util.stream.Collectors.toCollection(LinkedHashSet::new));
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             return new ProductVariantResponse(id, code, name, active, sortedBarcodes);
         }
     }

@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 @Getter
 @Setter
@@ -48,8 +49,14 @@ public class ProductEntity {
     @Column(nullable = false, length = 80)
     private String sku;
 
+    @Column(name = "sku_normalized", nullable = false, length = 80)
+    private String skuNormalized;
+
     @Column(nullable = false, length = 160)
     private String name;
+
+    @Column(name = "name_normalized", nullable = false, length = 160)
+    private String nameNormalized;
 
     @Column(name = "base_price", nullable = false, precision = 14, scale = 2)
     private BigDecimal basePrice = BigDecimal.ZERO;
@@ -76,6 +83,7 @@ public class ProductEntity {
 
     @PrePersist
     void prePersist() {
+        syncNormalizedFields();
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
@@ -83,6 +91,16 @@ public class ProductEntity {
 
     @PreUpdate
     void preUpdate() {
+        syncNormalizedFields();
         this.updatedAt = Instant.now();
+    }
+
+    private void syncNormalizedFields() {
+        this.skuNormalized = normalizeForSearch(this.sku);
+        this.nameNormalized = normalizeForSearch(this.name);
+    }
+
+    private String normalizeForSearch(String value) {
+        return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
     }
 }

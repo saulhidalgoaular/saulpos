@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.Instant;
+import java.util.Locale;
 
 @Getter
 @Setter
@@ -38,6 +39,9 @@ public class ProductBarcodeEntity {
     @Column(nullable = false, length = 64)
     private String barcode;
 
+    @Column(name = "barcode_normalized", nullable = false, length = 64)
+    private String barcodeNormalized;
+
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
@@ -49,6 +53,7 @@ public class ProductBarcodeEntity {
 
     @PrePersist
     void prePersist() {
+        this.barcodeNormalized = normalizeForSearch(this.barcode);
         Instant now = Instant.now();
         this.createdAt = now;
         this.updatedAt = now;
@@ -56,6 +61,11 @@ public class ProductBarcodeEntity {
 
     @PreUpdate
     void preUpdate() {
+        this.barcodeNormalized = normalizeForSearch(this.barcode);
         this.updatedAt = Instant.now();
+    }
+
+    private String normalizeForSearch(String value) {
+        return value == null ? null : value.trim().toUpperCase(Locale.ROOT);
     }
 }

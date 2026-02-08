@@ -212,6 +212,57 @@ class CatalogIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4001"));
     }
 
+    @Test
+    void searchEndpointSupportsPaginationOrderingAndBarcodeMatching() throws Exception {
+        createProduct("sku-search-003", "Search Match Three", "7702000000030");
+        createProduct("sku-search-001", "Search Match One", "7702000000010");
+        createProduct("sku-search-004", "Search Match Four", "7702000000040");
+        createProduct("sku-search-002", "Search Match Two", "7702000000020");
+        createProduct("sku-ignored-001", "Other Product", "7702999999999");
+
+        mockMvc.perform(get("/api/catalog/products/search")
+                        .param("merchantId", merchantId.toString())
+                        .param("q", "search")
+                        .param("page", "0")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.hasNext").value(true))
+                .andExpect(jsonPath("$.hasPrevious").value(false))
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].sku").value("SKU-SEARCH-001"))
+                .andExpect(jsonPath("$.items[1].sku").value("SKU-SEARCH-002"));
+
+        mockMvc.perform(get("/api/catalog/products/search")
+                        .param("merchantId", merchantId.toString())
+                        .param("q", "search")
+                        .param("page", "1")
+                        .param("size", "2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.page").value(1))
+                .andExpect(jsonPath("$.size").value(2))
+                .andExpect(jsonPath("$.totalElements").value(4))
+                .andExpect(jsonPath("$.totalPages").value(2))
+                .andExpect(jsonPath("$.hasNext").value(false))
+                .andExpect(jsonPath("$.hasPrevious").value(true))
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.items[0].sku").value("SKU-SEARCH-003"))
+                .andExpect(jsonPath("$.items[1].sku").value("SKU-SEARCH-004"));
+
+        mockMvc.perform(get("/api/catalog/products/search")
+                        .param("merchantId", merchantId.toString())
+                        .param("q", "7702000000040")
+                        .param("page", "0")
+                        .param("size", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].sku").value("SKU-SEARCH-004"));
+    }
+
     private Long createProduct(String sku, String name, String... barcodes) throws Exception {
         String barcodeList = java.util.Arrays.stream(barcodes)
                 .map(value -> '"' + value + '"')
