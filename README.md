@@ -21,6 +21,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `B3` Shift and cash session lifecycle.
 - `C1` Product and variant core.
 - `C2` Category and department taxonomy.
+- `C3` Price books and store overrides.
 
 ## Monorepo Architecture
 
@@ -97,6 +98,15 @@ Backend source of truth:
   - `POST /api/catalog/categories/{id}/reparent`
 - Enforced rules include merchant-scoped SKU uniqueness, cycle-safe category trees, and no new product assignment to inactive categories.
 
+### Pricing (Price Books and Store Overrides)
+- Price resolution API:
+  - `GET /api/catalog/prices/resolve?storeLocationId={id}&productId={id}&at={isoDateTime}`
+- Resolution precedence:
+  - store override,
+  - active price book item (effective window),
+  - product base price fallback.
+- Deterministic and auditable resolution is returned with source metadata (`STORE_OVERRIDE`, `PRICE_BOOK`, `BASE_PRICE`).
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -108,6 +118,7 @@ Backend source of truth:
   - `V5__shift_and_cash_session_lifecycle.sql`
   - `V6__product_and_variant_core.sql`
   - `V7__category_department_taxonomy.sql`
+  - `V8__price_books_and_store_overrides.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -167,6 +178,8 @@ Key settings include:
 
 `pos-server` currently includes:
 - Integration tests for auth lifecycle, brute-force lockout, identity APIs, permission matrix, shift lifecycle, and catalog flows.
+- Integration tests for price resolution precedence and effective-date windows.
+- Unit tests for pricing resolver precedence and fallback behavior.
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.

@@ -61,6 +61,10 @@ public class SecurityConfiguration {
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
                                 SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/prices/resolve")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/catalog/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/refunds/**")

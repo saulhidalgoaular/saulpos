@@ -19,19 +19,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "product", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_product_merchant_sku", columnNames = {"merchant_id", "sku"})
+@Table(name = "price_book", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_price_book_merchant_code", columnNames = {"merchant_id", "code"})
 })
-public class ProductEntity {
+public class PriceBookEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -41,38 +40,29 @@ public class ProductEntity {
     @JoinColumn(name = "merchant_id", nullable = false)
     private MerchantEntity merchant;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
-
     @Column(nullable = false, length = 80)
-    private String sku;
+    private String code;
 
     @Column(nullable = false, length = 160)
     private String name;
 
-    @Column(name = "base_price", nullable = false, precision = 14, scale = 2)
-    private BigDecimal basePrice = BigDecimal.ZERO;
+    @Column(name = "effective_from")
+    private Instant effectiveFrom;
 
-    @Column(length = 255)
-    private String description;
+    @Column(name = "effective_to")
+    private Instant effectiveTo;
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductVariantEntity> variants = new ArrayList<>();
+    @OneToMany(mappedBy = "priceBook", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<PriceBookItemEntity> items = new LinkedHashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    public void addVariant(ProductVariantEntity variant) {
-        variant.setProduct(this);
-        variants.add(variant);
-    }
 
     @PrePersist
     void prePersist() {

@@ -1,7 +1,6 @@
 package com.saulpos.server.catalog.model;
 
-import com.saulpos.server.identity.model.MerchantEntity;
-import jakarta.persistence.CascadeType;
+import com.saulpos.server.identity.model.StoreLocationEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -10,69 +9,52 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "product", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_product_merchant_sku", columnNames = {"merchant_id", "sku"})
-})
-public class ProductEntity {
+@Table(name = "store_price_override")
+public class StorePriceOverrideEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "merchant_id", nullable = false)
-    private MerchantEntity merchant;
+    @JoinColumn(name = "store_location_id", nullable = false)
+    private StoreLocationEntity storeLocation;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "category_id")
-    private CategoryEntity category;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
+    private ProductEntity product;
 
-    @Column(nullable = false, length = 80)
-    private String sku;
+    @Column(nullable = false, precision = 14, scale = 2)
+    private BigDecimal price;
 
-    @Column(nullable = false, length = 160)
-    private String name;
+    @Column(name = "effective_from")
+    private Instant effectiveFrom;
 
-    @Column(name = "base_price", nullable = false, precision = 14, scale = 2)
-    private BigDecimal basePrice = BigDecimal.ZERO;
-
-    @Column(length = 255)
-    private String description;
+    @Column(name = "effective_to")
+    private Instant effectiveTo;
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
-
-    @OneToMany(mappedBy = "product", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ProductVariantEntity> variants = new ArrayList<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    public void addVariant(ProductVariantEntity variant) {
-        variant.setProduct(this);
-        variants.add(variant);
-    }
 
     @PrePersist
     void prePersist() {

@@ -20,6 +20,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -32,6 +34,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class CatalogService {
+
+    private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
@@ -124,6 +128,7 @@ public class CatalogService {
         product.setCategory(resolveCategory(request.categoryId(), merchant.getId(), existingCategoryId));
         product.setSku(sku);
         product.setName(normalizeName(request.name()));
+        product.setBasePrice(normalizeMoney(request.basePrice()));
         product.setDescription(normalizeDescription(request.description()));
     }
 
@@ -227,6 +232,17 @@ public class CatalogService {
         return normalized.isEmpty() ? null : normalized;
     }
 
+    private BigDecimal normalizeMoney(BigDecimal amount) {
+        if (amount == null) {
+            return ZERO;
+        }
+        BigDecimal normalized = amount.setScale(2, RoundingMode.HALF_UP);
+        if (normalized.compareTo(ZERO) < 0) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "basePrice must be non-negative");
+        }
+        return normalized;
+    }
+
     private String normalizeBarcode(String barcode) {
         String normalized = barcode.trim().toUpperCase(Locale.ROOT);
         if (normalized.isEmpty()) {
@@ -267,6 +283,7 @@ public class CatalogService {
                 product.getCategory() != null ? product.getCategory().getId() : null,
                 product.getSku(),
                 product.getName(),
+                product.getBasePrice(),
                 product.getDescription(),
                 product.isActive(),
                 new ArrayList<>(variants));

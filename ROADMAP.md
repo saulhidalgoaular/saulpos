@@ -211,7 +211,7 @@ Out of Scope:
 1. Unit tests for tree validation.
 2. Integration tests for hierarchy operations.
 
-#### Card C3: Price Books and Store Overrides
+#### Card C3: Price Books and Store Overrides [SOLVED]
 - Goal: Allow base and per-store pricing.
 - Dependencies: C1, B1.
 - Data Model:
@@ -1067,7 +1067,7 @@ Out of Scope:
 | B3 | DONE |  |  | Shift open/cash movements/close lifecycle with reconciliation and transition checks implemented |
 | C1 | DONE |  |  | Product/variant/barcode core with merchant SKU constraints and lookup APIs implemented |
 | C2 | DONE |  |  | Category hierarchy tree, reparenting, and cycle/inactive-assignment validation implemented |
-| C3 | TODO |  |  |  |
+| C3 | DONE |  |  | Price resolution endpoint implemented with deterministic precedence (store override > active price book > base price), effective windows, migration `V8`, and unit/integration tests |
 | C4 | TODO |  |  |  |
 | C5 | TODO |  |  |  |
 | D1 | TODO |  |  |  |
@@ -1131,9 +1131,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `B1` Tenant and location model.
-2. `C1` Product and variant core.
-3. `D3 + G2` Receipt sequence + atomic checkout integration.
+1. `C4` Search and lookup performance.
+2. `C5` Unit/weight/open-price item modes.
+3. `D1` Tax engine v1.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

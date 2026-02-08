@@ -253,6 +253,19 @@ class PermissionMatrixIntegrationTest {
                         .param("merchantId", "1")
                         .param("barcode", "1234567890"))
                 .andExpect(status().isNotFound());
+
+        mockMvc.perform(get("/api/catalog/prices/resolve")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .param("storeLocationId", "1")
+                        .param("productId", "1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/catalog/prices/resolve")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .param("storeLocationId", "1")
+                        .param("productId", "1"))
+                .andExpect(status().isNotFound());
     }
 
     private Map<String, PermissionEntity> seedPermissions() {
