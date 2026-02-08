@@ -177,7 +177,7 @@ Out of Scope:
 
 ### Phase C: Catalog for Convenience Stores
 
-#### Card C1: Product and Variant Core
+#### Card C1: Product and Variant Core [SOLVED]
 - Goal: Implement product master data for fast checkout.
 - Dependencies: B1.
 - Data Model:

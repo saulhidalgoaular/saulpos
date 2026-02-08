@@ -71,6 +71,10 @@ class PermissionMatrixIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM product_barcode");
+        jdbcTemplate.execute("DELETE FROM product_variant");
+        jdbcTemplate.execute("DELETE FROM product");
+        jdbcTemplate.execute("DELETE FROM category");
         jdbcTemplate.execute("DELETE FROM store_user_assignment");
         jdbcTemplate.execute("DELETE FROM terminal_device");
         jdbcTemplate.execute("DELETE FROM store_location");
@@ -227,6 +231,28 @@ class PermissionMatrixIntegrationTest {
         mockMvc.perform(get("/api/identity/merchants")
                         .header("Authorization", "Bearer " + configToken))
                 .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/catalog/products")
+                        .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/catalog/products")
+                        .header("Authorization", "Bearer " + configToken))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/catalog/products/lookup")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .param("merchantId", "1")
+                        .param("barcode", "1234567890"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/catalog/products/lookup")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .param("merchantId", "1")
+                        .param("barcode", "1234567890"))
+                .andExpect(status().isNotFound());
     }
 
     private Map<String, PermissionEntity> seedPermissions() {

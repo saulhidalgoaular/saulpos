@@ -16,3 +16,8 @@
 - Added shift APIs: `POST /api/shifts/open`, `POST /api/shifts/{id}/cash-movements`, `POST /api/shifts/{id}/close`, and `GET /api/shifts/{id}` for expected vs counted reconciliation.
 - Enforced one open shift per cashier+terminal, deterministic close variance calculation, and sales-permission protection for `/api/shifts/**`.
 - Added state transition unit tests, lifecycle integration tests, and a concurrency race test for open-shift creation.
+- Implemented Card C1 Product and Variant Core in `pos-server` and `pos-api`.
+- Added migration `V6__product_and_variant_core.sql` with `category`, `product`, `product_variant`, and `product_barcode` tables including merchant-scoped SKU uniqueness and barcode lookup indexes.
+- Added catalog APIs: `POST/GET/PUT /api/catalog/products`, `GET /api/catalog/products/{id}`, activation endpoints, and `GET /api/catalog/products/lookup`.
+- Added barcode lookup authorization split: lookup supports `SALES_PROCESS` (and configuration admins), while catalog management remains `CONFIGURATION_MANAGE`.
+- Added catalog integration tests for CRUD/list/lookup flows and repository constraint tests for duplicate SKU enforcement.

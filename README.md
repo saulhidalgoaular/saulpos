@@ -61,6 +61,12 @@ mvn javafx:run
 -   Retrieve shift reconciliation totals: `GET /api/shifts/{id}`
 -   Shift endpoints are permission-protected under `SALES_PROCESS`.
 
+## 📦 Product and Variant Core (C1)
+-   Product CRUD and filtering: `POST/GET/PUT /api/catalog/products`, `GET /api/catalog/products/{id}`
+-   Product activation lifecycle: `POST /api/catalog/products/{id}/activate`, `POST /api/catalog/products/{id}/deactivate`
+-   Barcode sellable lookup by merchant: `GET /api/catalog/products/lookup?merchantId={id}&barcode={code}`
+-   SKU uniqueness is enforced per merchant and each sellable variant can hold multiple barcodes.
+
 ## 🛣️ Roadmap
 See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
 

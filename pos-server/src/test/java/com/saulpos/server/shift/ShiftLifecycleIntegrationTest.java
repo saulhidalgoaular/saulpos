@@ -61,6 +61,10 @@ class ShiftLifecycleIntegrationTest {
     void setUp() {
         jdbcTemplate.execute("DELETE FROM cash_movement");
         jdbcTemplate.execute("DELETE FROM cash_shift");
+        jdbcTemplate.execute("DELETE FROM product_barcode");
+        jdbcTemplate.execute("DELETE FROM product_variant");
+        jdbcTemplate.execute("DELETE FROM product");
+        jdbcTemplate.execute("DELETE FROM category");
         jdbcTemplate.execute("DELETE FROM store_user_assignment");
         jdbcTemplate.execute("DELETE FROM terminal_device");
         jdbcTemplate.execute("DELETE FROM store_location");

@@ -57,6 +57,12 @@ public class SecurityConfiguration {
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers("/api/shifts/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.GET, "/api/catalog/products/lookup")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers("/api/catalog/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/refunds/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS))
                         .requestMatchers("/api/inventory/**")
