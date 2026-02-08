@@ -54,6 +54,13 @@ mvn javafx:run
     - `REPORT_VIEW` for `/api/reports/**`
     - `CONFIGURATION_MANAGE` for `/api/identity/**` and role/configuration APIs
 
+## 💵 Shift and Cash Session Lifecycle (B3)
+-   Open shift: `POST /api/shifts/open`
+-   Register paid-in/paid-out cash movements: `POST /api/shifts/{id}/cash-movements`
+-   Close shift with counted cash and variance capture: `POST /api/shifts/{id}/close`
+-   Retrieve shift reconciliation totals: `GET /api/shifts/{id}`
+-   Shift endpoints are permission-protected under `SALES_PROCESS`.
+
 ## 🛣️ Roadmap
 See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
 

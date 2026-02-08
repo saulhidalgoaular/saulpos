@@ -155,7 +155,7 @@ Out of Scope:
 1. Integration test matrix per role/action.
 2. Unit tests for permission evaluator.
 
-#### Card B3: Shift and Cash Session Lifecycle
+#### Card B3: Shift and Cash Session Lifecycle [SOLVED]
 - Goal: Track cashier shift state and cash drawer reconciliation.
 - Dependencies: B2.
 - Data Model:

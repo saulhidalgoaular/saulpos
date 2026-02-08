@@ -178,6 +178,20 @@ class PermissionMatrixIntegrationTest {
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isNotFound());
 
+        mockMvc.perform(post("/api/shifts/open")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .content("{}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/shifts/open")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("Authorization", "Bearer " + salesToken)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+
         mockMvc.perform(post("/api/refunds/submit")
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isForbidden())

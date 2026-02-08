@@ -55,6 +55,8 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/api/sales/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers("/api/shifts/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers("/api/refunds/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS))
                         .requestMatchers("/api/inventory/**")
