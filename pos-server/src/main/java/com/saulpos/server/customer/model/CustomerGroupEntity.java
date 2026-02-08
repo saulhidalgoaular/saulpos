@@ -14,6 +14,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -26,8 +27,10 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "customer")
-public class CustomerEntity {
+@Table(name = "customer_group", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_customer_group_merchant_code", columnNames = {"merchant_id", "code"})
+})
+public class CustomerGroupEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,49 +40,23 @@ public class CustomerEntity {
     @JoinColumn(name = "merchant_id", nullable = false)
     private MerchantEntity merchant;
 
-    @Column(name = "display_name", length = 160)
-    private String displayName;
+    @Column(nullable = false, length = 80)
+    private String code;
 
-    @Column(name = "invoice_required", nullable = false)
-    private boolean invoiceRequired = false;
-
-    @Column(name = "credit_enabled", nullable = false)
-    private boolean creditEnabled = false;
+    @Column(nullable = false, length = 160)
+    private String name;
 
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CustomerTaxIdentityEntity> taxIdentities = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CustomerContactEntity> contacts = new LinkedHashSet<>();
-
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<CustomerGroupAssignmentEntity> groupAssignments = new LinkedHashSet<>();
+    @OneToMany(mappedBy = "customerGroup", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CustomerGroupAssignmentEntity> assignments = new LinkedHashSet<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
-
-    public void addTaxIdentity(CustomerTaxIdentityEntity taxIdentity) {
-        taxIdentity.setCustomer(this);
-        taxIdentity.setMerchant(this.merchant);
-        this.taxIdentities.add(taxIdentity);
-    }
-
-    public void addContact(CustomerContactEntity contact) {
-        contact.setCustomer(this);
-        contact.setMerchant(this.merchant);
-        this.contacts.add(contact);
-    }
-
-    public void addGroupAssignment(CustomerGroupAssignmentEntity groupAssignment) {
-        groupAssignment.setCustomer(this);
-        this.groupAssignments.add(groupAssignment);
-    }
 
     @PrePersist
     void prePersist() {

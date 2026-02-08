@@ -2,6 +2,9 @@ package com.saulpos.server.customer.web;
 
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.customer.CustomerGroupAssignmentRequest;
+import com.saulpos.api.customer.CustomerGroupRequest;
+import com.saulpos.api.customer.CustomerGroupResponse;
 import com.saulpos.server.customer.service.CustomerService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -35,10 +38,23 @@ public class CustomerController {
         return customerService.createCustomer(request);
     }
 
+    @PostMapping("/groups")
+    @ResponseStatus(HttpStatus.CREATED)
+    public CustomerGroupResponse createGroup(@Valid @RequestBody CustomerGroupRequest request) {
+        return customerService.createCustomerGroup(request);
+    }
+
     @GetMapping
     public List<CustomerResponse> list(@RequestParam(value = "merchantId", required = false) Long merchantId,
                                        @RequestParam(value = "active", required = false) Boolean active) {
         return customerService.listCustomers(merchantId, active);
+    }
+
+    @GetMapping("/groups")
+    public List<CustomerGroupResponse> listGroups(
+            @RequestParam("merchantId") @NotNull(message = "merchantId is required") Long merchantId,
+            @RequestParam(value = "active", required = false) Boolean active) {
+        return customerService.listCustomerGroups(merchantId, active);
     }
 
     @GetMapping("/{id}")
@@ -52,6 +68,12 @@ public class CustomerController {
         return customerService.updateCustomer(id, request);
     }
 
+    @PutMapping("/{id}/groups")
+    public CustomerResponse assignGroups(@PathVariable("id") Long id,
+                                         @Valid @RequestBody CustomerGroupAssignmentRequest request) {
+        return customerService.assignCustomerGroups(id, request);
+    }
+
     @PostMapping("/{id}/activate")
     public CustomerResponse activate(@PathVariable("id") Long id) {
         return customerService.setCustomerActive(id, true);
@@ -60,6 +82,11 @@ public class CustomerController {
     @PostMapping("/{id}/deactivate")
     public CustomerResponse deactivate(@PathVariable("id") Long id) {
         return customerService.setCustomerActive(id, false);
+    }
+
+    @GetMapping("/{id}/groups")
+    public List<CustomerGroupResponse> listCustomerGroups(@PathVariable("id") Long id) {
+        return customerService.listCustomerGroupsForCustomer(id);
     }
 
     @GetMapping("/lookup")

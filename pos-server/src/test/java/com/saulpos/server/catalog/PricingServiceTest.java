@@ -10,6 +10,10 @@ import com.saulpos.server.catalog.repository.PriceBookItemRepository;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.catalog.repository.StorePriceOverrideRepository;
 import com.saulpos.server.catalog.service.PricingService;
+import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.model.CustomerGroupAssignmentEntity;
+import com.saulpos.server.customer.model.CustomerGroupEntity;
+import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.MerchantEntity;
@@ -40,6 +44,9 @@ class PricingServiceTest {
     private ProductRepository productRepository;
 
     @Mock
+    private CustomerRepository customerRepository;
+
+    @Mock
     private StorePriceOverrideRepository storePriceOverrideRepository;
 
     @Mock
@@ -52,6 +59,7 @@ class PricingServiceTest {
         pricingService = new PricingService(
                 storeLocationRepository,
                 productRepository,
+                customerRepository,
                 storePriceOverrideRepository,
                 priceBookItemRepository);
     }
@@ -152,6 +160,45 @@ class PricingServiceTest {
                 .satisfies(ex -> assertThat(((BaseException) ex).getErrorCode()).isEqualTo(ErrorCode.VALIDATION_ERROR));
     }
 
+    @Test
+    void resolvePriceUsesCustomerGroupPriceBookBeforeGenericPriceBook() {
+        StoreLocationEntity storeLocation = storeLocation(14L, 6L);
+        ProductEntity product = product(54L, 6L, "10.00");
+        CustomerEntity customer = customer(90L, 6L, 700L);
+
+        PriceBookEntity groupPriceBook = new PriceBookEntity();
+        groupPriceBook.setId(901L);
+        PriceBookItemEntity groupItem = new PriceBookItemEntity();
+        groupItem.setPriceBook(groupPriceBook);
+        groupItem.setPrice(new BigDecimal("7.25"));
+
+        when(storeLocationRepository.findById(14L)).thenReturn(Optional.of(storeLocation));
+        when(productRepository.findById(54L)).thenReturn(Optional.of(product));
+        when(customerRepository.findByIdWithDetails(90L)).thenReturn(Optional.of(customer));
+        when(storePriceOverrideRepository.findApplicable(org.mockito.ArgumentMatchers.eq(14L),
+                org.mockito.ArgumentMatchers.eq(54L),
+                org.mockito.ArgumentMatchers.any(Instant.class),
+                org.mockito.ArgumentMatchers.any(Instant.class)))
+                .thenReturn(List.of());
+        when(priceBookItemRepository.findApplicableForCustomerGroups(
+                org.mockito.ArgumentMatchers.eq(6L),
+                org.mockito.ArgumentMatchers.eq(54L),
+                org.mockito.ArgumentMatchers.eq(List.of(700L)),
+                org.mockito.ArgumentMatchers.any(Instant.class),
+                org.mockito.ArgumentMatchers.any(Instant.class)))
+                .thenReturn(List.of(groupItem));
+
+        PriceResolutionResponse response = pricingService.resolvePrice(
+                14L,
+                54L,
+                90L,
+                Instant.parse("2026-04-15T12:00:00Z"));
+
+        assertThat(response.source()).isEqualTo(PriceResolutionSource.CUSTOMER_GROUP_PRICE_BOOK);
+        assertThat(response.resolvedPrice()).isEqualByComparingTo("7.25");
+        assertThat(response.sourceId()).isEqualTo(901L);
+    }
+
     private StoreLocationEntity storeLocation(Long storeLocationId, Long merchantId) {
         MerchantEntity merchant = new MerchantEntity();
         merchant.setId(merchantId);
@@ -171,5 +218,27 @@ class PricingServiceTest {
         product.setMerchant(merchant);
         product.setBasePrice(new BigDecimal(basePrice));
         return product;
+    }
+
+    private CustomerEntity customer(Long customerId, Long merchantId, Long customerGroupId) {
+        MerchantEntity merchant = new MerchantEntity();
+        merchant.setId(merchantId);
+
+        CustomerGroupEntity customerGroup = new CustomerGroupEntity();
+        customerGroup.setId(customerGroupId);
+        customerGroup.setMerchant(merchant);
+        customerGroup.setCode("WHOLESALE");
+        customerGroup.setName("Wholesale");
+        customerGroup.setActive(true);
+
+        CustomerGroupAssignmentEntity assignment = new CustomerGroupAssignmentEntity();
+        assignment.setCustomerGroup(customerGroup);
+        assignment.setActive(true);
+
+        CustomerEntity customer = new CustomerEntity();
+        customer.setId(customerId);
+        customer.setMerchant(merchant);
+        customer.addGroupAssignment(assignment);
+        return customer;
     }
 }

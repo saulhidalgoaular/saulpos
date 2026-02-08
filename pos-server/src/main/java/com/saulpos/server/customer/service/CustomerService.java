@@ -3,13 +3,19 @@ package com.saulpos.server.customer.service;
 import com.saulpos.api.customer.CustomerContactRequest;
 import com.saulpos.api.customer.CustomerContactResponse;
 import com.saulpos.api.customer.CustomerContactType;
+import com.saulpos.api.customer.CustomerGroupAssignmentRequest;
+import com.saulpos.api.customer.CustomerGroupRequest;
+import com.saulpos.api.customer.CustomerGroupResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityResponse;
 import com.saulpos.server.customer.model.CustomerContactEntity;
 import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.model.CustomerGroupAssignmentEntity;
+import com.saulpos.server.customer.model.CustomerGroupEntity;
 import com.saulpos.server.customer.model.CustomerTaxIdentityEntity;
+import com.saulpos.server.customer.repository.CustomerGroupRepository;
 import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.customer.repository.CustomerTaxIdentityRepository;
 import com.saulpos.server.error.BaseException;
@@ -28,6 +34,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -35,6 +42,7 @@ import java.util.Set;
 public class CustomerService {
 
     private final CustomerRepository customerRepository;
+    private final CustomerGroupRepository customerGroupRepository;
     private final CustomerTaxIdentityRepository customerTaxIdentityRepository;
     private final MerchantRepository merchantRepository;
 
@@ -120,6 +128,87 @@ public class CustomerService {
         return customers.stream()
                 .map(this::toCustomerResponse)
                 .toList();
+    }
+
+    @Transactional
+    public CustomerGroupResponse createCustomerGroup(CustomerGroupRequest request) {
+        MerchantEntity merchant = requireMerchant(request.merchantId());
+        String code = normalizeGroupCode(request.code());
+        String name = normalizeRequiredText(request.name(), "name is required");
+
+        if (customerGroupRepository.existsByMerchant_IdAndCode(merchant.getId(), code)) {
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "customer group already exists for merchantId=%d code=%s".formatted(merchant.getId(), code));
+        }
+
+        CustomerGroupEntity customerGroup = new CustomerGroupEntity();
+        customerGroup.setMerchant(merchant);
+        customerGroup.setCode(code);
+        customerGroup.setName(name);
+        customerGroup.setActive(request.active() == null || request.active());
+
+        return toCustomerGroupResponse(customerGroupRepository.save(customerGroup));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerGroupResponse> listCustomerGroups(Long merchantId, Boolean active) {
+        requireMerchant(merchantId);
+        return customerGroupRepository.search(merchantId, active).stream()
+                .map(this::toCustomerGroupResponse)
+                .toList();
+    }
+
+    @Transactional
+    public CustomerResponse assignCustomerGroups(Long customerId, CustomerGroupAssignmentRequest request) {
+        CustomerEntity customer = requireCustomerWithDetails(customerId);
+        List<Long> requestedGroupIds = sanitizeRequestedGroupIds(request.customerGroupIds());
+
+        if (requestedGroupIds.isEmpty()) {
+            customer.getGroupAssignments().clear();
+            return toCustomerResponse(customerRepository.save(customer));
+        }
+
+        Map<Long, CustomerGroupEntity> groupsById = customerGroupRepository.findAllById(requestedGroupIds).stream()
+                .collect(LinkedHashMap::new, (map, group) -> map.put(group.getId(), group), Map::putAll);
+        if (groupsById.size() != requestedGroupIds.size()) {
+            Long missingId = requestedGroupIds.stream()
+                    .filter(id -> !groupsById.containsKey(id))
+                    .findFirst()
+                    .orElse(null);
+            throw new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                    "customer group not found: " + missingId);
+        }
+
+        Map<Long, CustomerGroupAssignmentEntity> existingByGroupId = new LinkedHashMap<>();
+        for (CustomerGroupAssignmentEntity assignment : customer.getGroupAssignments()) {
+            existingByGroupId.put(assignment.getCustomerGroup().getId(), assignment);
+        }
+
+        customer.getGroupAssignments().clear();
+        for (Long groupId : requestedGroupIds) {
+            CustomerGroupEntity customerGroup = groupsById.get(groupId);
+            if (!customer.getMerchant().getId().equals(customerGroup.getMerchant().getId())) {
+                throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                        "customer group merchant mismatch for customerId=%d groupId=%d"
+                                .formatted(customer.getId(), customerGroup.getId()));
+            }
+
+            CustomerGroupAssignmentEntity assignment = existingByGroupId.get(groupId);
+            if (assignment == null) {
+                assignment = new CustomerGroupAssignmentEntity();
+            }
+            assignment.setCustomerGroup(customerGroup);
+            assignment.setActive(true);
+            customer.addGroupAssignment(assignment);
+        }
+
+        return toCustomerResponse(customerRepository.save(customer));
+    }
+
+    @Transactional(readOnly = true)
+    public List<CustomerGroupResponse> listCustomerGroupsForCustomer(Long customerId) {
+        CustomerEntity customer = requireCustomerWithDetails(customerId);
+        return toCustomerGroupResponses(customer);
     }
 
     private void applyCustomerData(CustomerEntity customer, CustomerRequest request, MerchantEntity merchant) {
@@ -310,6 +399,10 @@ public class CustomerService {
         return normalized.toUpperCase(Locale.ROOT);
     }
 
+    private String normalizeGroupCode(String code) {
+        return normalizeRequiredText(code, "code is required").toUpperCase(Locale.ROOT);
+    }
+
     private String normalizeDocumentValue(String documentValue) {
         return normalizeRequiredText(documentValue, "documentValue is required");
     }
@@ -360,7 +453,44 @@ public class CustomerService {
         return contactType.name() + "|" + normalizedValue;
     }
 
+    private List<Long> sanitizeRequestedGroupIds(List<Long> customerGroupIds) {
+        if (customerGroupIds == null) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "customerGroupIds is required");
+        }
+        Set<Long> uniqueIds = new LinkedHashSet<>();
+        for (Long customerGroupId : customerGroupIds) {
+            if (customerGroupId == null) {
+                throw new BaseException(ErrorCode.VALIDATION_ERROR, "customerGroupIds cannot contain null values");
+            }
+            uniqueIds.add(customerGroupId);
+        }
+        return new ArrayList<>(uniqueIds);
+    }
+
+    private List<CustomerGroupResponse> toCustomerGroupResponses(CustomerEntity customer) {
+        return customer.getGroupAssignments().stream()
+                .filter(CustomerGroupAssignmentEntity::isActive)
+                .map(CustomerGroupAssignmentEntity::getCustomerGroup)
+                .filter(Objects::nonNull)
+                .filter(CustomerGroupEntity::isActive)
+                .sorted(Comparator.comparing(CustomerGroupEntity::getCode)
+                        .thenComparing(CustomerGroupEntity::getId, Comparator.nullsLast(Long::compareTo)))
+                .map(this::toCustomerGroupResponse)
+                .toList();
+    }
+
+    private CustomerGroupResponse toCustomerGroupResponse(CustomerGroupEntity customerGroup) {
+        return new CustomerGroupResponse(
+                customerGroup.getId(),
+                customerGroup.getMerchant().getId(),
+                customerGroup.getCode(),
+                customerGroup.getName(),
+                customerGroup.isActive());
+    }
+
     private CustomerResponse toCustomerResponse(CustomerEntity customer) {
+        List<CustomerGroupResponse> groups = toCustomerGroupResponses(customer);
+
         List<CustomerTaxIdentityResponse> taxIdentities = customer.getTaxIdentities().stream()
                 .sorted(Comparator.comparing(CustomerTaxIdentityEntity::getDocumentType)
                         .thenComparing(CustomerTaxIdentityEntity::getId, Comparator.nullsLast(Long::compareTo)))
@@ -390,6 +520,7 @@ public class CustomerService {
                 customer.isInvoiceRequired(),
                 customer.isCreditEnabled(),
                 customer.isActive(),
+                groups,
                 taxIdentities,
                 contacts);
     }

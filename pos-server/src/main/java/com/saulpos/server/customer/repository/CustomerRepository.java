@@ -12,11 +12,11 @@ import java.util.Optional;
 
 public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> {
 
-    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts"})
+    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts", "groupAssignments", "groupAssignments.customerGroup"})
     @Query("select c from CustomerEntity c where c.id = :id")
     Optional<CustomerEntity> findByIdWithDetails(@Param("id") Long id);
 
-    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts"})
+    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts", "groupAssignments", "groupAssignments.customerGroup"})
     @Query("""
             select distinct c from CustomerEntity c
             where (:merchantId is null or c.merchant.id = :merchantId)
@@ -27,7 +27,7 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> 
             @Param("merchantId") Long merchantId,
             @Param("active") Boolean active);
 
-    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts"})
+    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts", "groupAssignments", "groupAssignments.customerGroup"})
     @Query("""
             select distinct c from CustomerEntity c
             join c.taxIdentities ti
@@ -43,7 +43,7 @@ public interface CustomerRepository extends JpaRepository<CustomerEntity, Long> 
             @Param("documentType") String documentType,
             @Param("documentValueNormalized") String documentValueNormalized);
 
-    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts"})
+    @EntityGraph(attributePaths = {"merchant", "taxIdentities", "contacts", "groupAssignments", "groupAssignments.customerGroup"})
     @Query("""
             select distinct c from CustomerEntity c
             join c.contacts cc

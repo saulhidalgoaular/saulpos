@@ -31,6 +31,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `E2` Promotion engine v1.
 - `E3` Loyalty hooks.
 - `F1` Customer master.
+- `F2` Customer groups and pricing hooks.
 
 ## Monorepo Architecture
 
@@ -100,6 +101,17 @@ Backend source of truth:
   - `customer_contact`
 - Enforced rules include merchant-scoped document uniqueness, optional customer profile fields for rapid checkout capture, and invoice/credit customer flags.
 
+### Customer Groups and Pricing Hooks
+- Customer group APIs:
+  - `POST /api/customers/groups`
+  - `GET /api/customers/groups?merchantId={id}&active={bool}`
+  - `PUT /api/customers/{id}/groups`
+  - `GET /api/customers/{id}/groups`
+- Customer model now includes group membership support:
+  - `customer_group`
+  - `customer_group_assignment`
+- Customer responses now include assigned groups, and assignment validation enforces merchant consistency between customer and group.
+
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`
 - `POST /api/shifts/{id}/cash-movements`
@@ -138,12 +150,13 @@ Backend source of truth:
 
 ### Pricing (Price Books and Store Overrides)
 - Price resolution API:
-  - `GET /api/catalog/prices/resolve?storeLocationId={id}&productId={id}&at={isoDateTime}`
+  - `GET /api/catalog/prices/resolve?storeLocationId={id}&productId={id}&customerId={id?}&at={isoDateTime}`
 - Resolution precedence:
   - store override,
+  - customer-group scoped price book (when `customerId` is provided and customer has active group assignments),
   - active price book item (effective window),
   - product base price fallback.
-- Deterministic and auditable resolution is returned with source metadata (`STORE_OVERRIDE`, `PRICE_BOOK`, `BASE_PRICE`).
+- Deterministic and auditable resolution is returned with source metadata (`STORE_OVERRIDE`, `CUSTOMER_GROUP_PRICE_BOOK`, `PRICE_BOOK`, `BASE_PRICE`).
 
 ### Tax Engine v1
 - Tax preview API for cart calculations:
@@ -238,6 +251,7 @@ Backend source of truth:
   - `V15__promotion_engine_v1.sql`
   - `V16__customer_master.sql`
   - `V17__loyalty_hooks.sql`
+  - `V18__customer_groups_and_pricing_hooks.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -314,6 +328,9 @@ Key settings include:
 - Integration tests for promotion evaluation endpoint, overlapping promotion conflicts, and explanation payloads.
 - Integration tests for receipt allocation sequencing, authorization enforcement, and concurrent allocation race safety.
 - Integration tests for discount apply/remove/preview flows, reason-code validation, and high-threshold permission enforcement.
+- Integration tests for customer-group create/list/assignment flows and cross-merchant assignment rejection.
+- Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
+- Unit tests for pricing resolution with customer-group contexts.
 
 ## Project Planning and Status
 

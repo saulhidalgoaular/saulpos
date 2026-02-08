@@ -29,9 +29,11 @@ public class PriceController {
             @RequestParam("productId")
             @NotNull(message = "productId is required")
             Long productId,
+            @RequestParam(value = "customerId", required = false)
+            Long customerId,
             @RequestParam(value = "at", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             Instant at) {
-        return pricingService.resolvePrice(storeLocationId, productId, at);
+        return pricingService.resolvePrice(storeLocationId, productId, customerId, at);
     }
 }

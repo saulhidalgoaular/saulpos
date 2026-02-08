@@ -380,7 +380,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for validations and lookup.
 
-#### Card F2: Customer Groups and Pricing Hooks
+#### Card F2: Customer Groups and Pricing Hooks [SOLVED]
 - Goal: Differentiate retail/wholesale or custom segments.
 - Dependencies: F1, C3.
 - Data Model: `customer_group`, customer-to-group mapping.
@@ -1079,7 +1079,7 @@ Out of Scope:
 | E2 | DONE |  |  | Implemented promotion engine v1 with migration `V15`, `POST /api/promotions/evaluate`, time-window eligibility, deterministic overlap winner selection (priority > discount > id), and promo explanation output with unit/integration coverage |
 | E3 | DONE |  |  | Implemented loyalty hook extension points with migration `V17` (`loyalty_event`), config toggle (`app.loyalty.enabled`), earn/redeem APIs (`/api/loyalty/earn`, `/api/loyalty/redeem`), stub provider SPI, and resilient `DISABLED`/`UNAVAILABLE` fallback behavior validated by integration tests |
 | F1 | DONE |  |  | Implemented customer master with migration `V16`, customer/tax-identity/contact models, CRUD + lookup APIs (`document`/`email`/`phone`), merchant-scoped document uniqueness, and integration coverage for optional-field validation and lookup flows |
-| F2 | TODO |  |  |  |
+| F2 | DONE |  |  | Implemented `customer_group` + `customer_group_assignment` with migration `V18`, customer group create/list + assignment APIs, and customer-context pricing precedence `store override > customer-group price book > standard price book > base price` via `GET /api/catalog/prices/resolve` |
 | F3 | TODO |  |  |  |
 | G1 | TODO |  |  |  |
 | G2 | TODO |  |  |  |
@@ -1134,8 +1134,8 @@ Out of Scope:
 
 ## 12. Immediate Next Three Cards
 1. `G1` Cart lifecycle service.
-2. `F2` Customer groups and pricing hooks.
-3. `I1` Supplier master.
+2. `I1` Supplier master.
+3. `J1` Tender and split payments (after `G1` baseline).
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

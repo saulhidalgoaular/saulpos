@@ -10,6 +10,11 @@ import com.saulpos.server.catalog.repository.PriceBookItemRepository;
 import com.saulpos.server.catalog.repository.PriceBookRepository;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.catalog.repository.StorePriceOverrideRepository;
+import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.model.CustomerGroupAssignmentEntity;
+import com.saulpos.server.customer.model.CustomerGroupEntity;
+import com.saulpos.server.customer.repository.CustomerGroupRepository;
+import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
@@ -64,12 +69,23 @@ class PricingIntegrationTest {
     @Autowired
     private StorePriceOverrideRepository storePriceOverrideRepository;
 
+    @Autowired
+    private CustomerRepository customerRepository;
+
+    @Autowired
+    private CustomerGroupRepository customerGroupRepository;
+
     private Long merchantId;
     private Long storeLocationId;
     private Long productId;
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM customer_group_assignment");
+        jdbcTemplate.execute("DELETE FROM customer_group");
+        jdbcTemplate.execute("DELETE FROM customer_contact");
+        jdbcTemplate.execute("DELETE FROM customer_tax_identity");
+        jdbcTemplate.execute("DELETE FROM customer");
         jdbcTemplate.execute("DELETE FROM cash_movement");
         jdbcTemplate.execute("DELETE FROM cash_shift");
         jdbcTemplate.execute("DELETE FROM store_price_override");
@@ -128,7 +144,7 @@ class PricingIntegrationTest {
     @Test
     void resolveUsesStoreOverrideBeforePriceBookAndBasePrice() throws Exception {
         Instant at = Instant.parse("2026-02-01T12:00:00Z");
-        createPriceBookWithItem("PB-C3-01", "Book 1", new BigDecimal("9.20"), at.minusSeconds(3600), null, true);
+        createPriceBookWithItem("PB-C3-01", "Book 1", new BigDecimal("9.20"), at.minusSeconds(3600), null, true, null);
         StorePriceOverrideEntity override = createStoreOverride(new BigDecimal("8.35"), at.minusSeconds(1200), null, true);
 
         mockMvc.perform(get("/api/catalog/prices/resolve")
@@ -149,14 +165,16 @@ class PricingIntegrationTest {
                 new BigDecimal("7.10"),
                 Instant.parse("2026-01-01T00:00:00Z"),
                 Instant.parse("2026-01-31T23:59:59Z"),
-                true);
+                true,
+                null);
         createPriceBookWithItem(
                 "PB-C3-CURRENT",
                 "Current Book",
                 new BigDecimal("9.45"),
                 Instant.parse("2026-02-01T00:00:00Z"),
                 null,
-                true);
+                true,
+                null);
 
         mockMvc.perform(get("/api/catalog/prices/resolve")
                         .param("storeLocationId", storeLocationId.toString())
@@ -183,7 +201,8 @@ class PricingIntegrationTest {
                 new BigDecimal("5.00"),
                 Instant.parse("2027-01-01T00:00:00Z"),
                 null,
-                true);
+                true,
+                null);
         createStoreOverride(
                 new BigDecimal("4.99"),
                 Instant.parse("2027-01-01T00:00:00Z"),
@@ -200,12 +219,46 @@ class PricingIntegrationTest {
                 .andExpect(jsonPath("$.sourceId").value(productId));
     }
 
+    @Test
+    void resolveUsesCustomerGroupPriceBookWhenCustomerContextIsProvided() throws Exception {
+        CustomerEntity customer = createCustomer("Customer Group Buyer");
+        CustomerGroupEntity wholesaleGroup = createCustomerGroup("WHOLESALE", "Wholesale Group");
+        assignCustomerToGroup(customer, wholesaleGroup);
+
+        createPriceBookWithItem(
+                "PB-C3-GENERAL",
+                "General Book",
+                new BigDecimal("9.90"),
+                Instant.parse("2026-01-01T00:00:00Z"),
+                null,
+                true,
+                null);
+        createPriceBookWithItem(
+                "PB-C3-WHOLESALE",
+                "Wholesale Book",
+                new BigDecimal("7.25"),
+                Instant.parse("2026-01-01T00:00:00Z"),
+                null,
+                true,
+                wholesaleGroup.getId());
+
+        mockMvc.perform(get("/api/catalog/prices/resolve")
+                        .param("storeLocationId", storeLocationId.toString())
+                        .param("productId", productId.toString())
+                        .param("customerId", customer.getId().toString())
+                        .param("at", "2026-04-01T12:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.source").value("CUSTOMER_GROUP_PRICE_BOOK"))
+                .andExpect(jsonPath("$.resolvedPrice").value(7.25));
+    }
+
     private void createPriceBookWithItem(String code,
                                          String name,
                                          BigDecimal price,
                                          Instant effectiveFrom,
                                          Instant effectiveTo,
-                                         boolean active) {
+                                         boolean active,
+                                         Long customerGroupId) {
         PriceBookEntity priceBook = new PriceBookEntity();
         priceBook.setMerchant(merchantRepository.getReferenceById(merchantId));
         priceBook.setCode(code);
@@ -213,6 +266,9 @@ class PricingIntegrationTest {
         priceBook.setEffectiveFrom(effectiveFrom);
         priceBook.setEffectiveTo(effectiveTo);
         priceBook.setActive(active);
+        if (customerGroupId != null) {
+            priceBook.setCustomerGroup(customerGroupRepository.getReferenceById(customerGroupId));
+        }
         priceBook = priceBookRepository.save(priceBook);
 
         PriceBookItemEntity item = new PriceBookItemEntity();
@@ -234,5 +290,30 @@ class PricingIntegrationTest {
         override.setEffectiveTo(effectiveTo);
         override.setActive(active);
         return storePriceOverrideRepository.save(override);
+    }
+
+    private CustomerEntity createCustomer(String displayName) {
+        CustomerEntity customer = new CustomerEntity();
+        customer.setMerchant(merchantRepository.getReferenceById(merchantId));
+        customer.setDisplayName(displayName);
+        customer.setActive(true);
+        return customerRepository.save(customer);
+    }
+
+    private CustomerGroupEntity createCustomerGroup(String code, String name) {
+        CustomerGroupEntity customerGroup = new CustomerGroupEntity();
+        customerGroup.setMerchant(merchantRepository.getReferenceById(merchantId));
+        customerGroup.setCode(code);
+        customerGroup.setName(name);
+        customerGroup.setActive(true);
+        return customerGroupRepository.save(customerGroup);
+    }
+
+    private void assignCustomerToGroup(CustomerEntity customer, CustomerGroupEntity customerGroup) {
+        CustomerGroupAssignmentEntity assignment = new CustomerGroupAssignmentEntity();
+        assignment.setCustomerGroup(customerGroup);
+        assignment.setActive(true);
+        customer.addGroupAssignment(assignment);
+        customerRepository.save(customer);
     }
 }

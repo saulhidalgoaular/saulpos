@@ -8,6 +8,9 @@ import com.saulpos.server.catalog.model.StorePriceOverrideEntity;
 import com.saulpos.server.catalog.repository.PriceBookItemRepository;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.catalog.repository.StorePriceOverrideRepository;
+import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.model.CustomerGroupAssignmentEntity;
+import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
@@ -19,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -29,11 +33,17 @@ public class PricingService {
 
     private final StoreLocationRepository storeLocationRepository;
     private final ProductRepository productRepository;
+    private final CustomerRepository customerRepository;
     private final StorePriceOverrideRepository storePriceOverrideRepository;
     private final PriceBookItemRepository priceBookItemRepository;
 
     @Transactional(readOnly = true)
     public PriceResolutionResponse resolvePrice(Long storeLocationId, Long productId, Instant at) {
+        return resolvePrice(storeLocationId, productId, null, at);
+    }
+
+    @Transactional(readOnly = true)
+    public PriceResolutionResponse resolvePrice(Long storeLocationId, Long productId, Long customerId, Instant at) {
         StoreLocationEntity storeLocation = requireStoreLocation(storeLocationId);
         ProductEntity product = requireProduct(productId);
         ensureSameMerchant(storeLocation, product);
@@ -55,6 +65,43 @@ public class PricingService {
                     override.getEffectiveFrom(),
                     override.getEffectiveTo(),
                     resolvedAt);
+        }
+
+        if (customerId != null) {
+            CustomerEntity customer = requireCustomer(customerId);
+            ensureSameMerchant(storeLocation, customer);
+
+            List<Long> customerGroupIds = customer.getGroupAssignments().stream()
+                    .filter(CustomerGroupAssignmentEntity::isActive)
+                    .map(CustomerGroupAssignmentEntity::getCustomerGroup)
+                    .filter(customerGroup -> customerGroup != null && customerGroup.isActive())
+                    .map(customerGroup -> customerGroup.getId())
+                    .distinct()
+                    .toList();
+
+            if (!customerGroupIds.isEmpty()) {
+                Optional<PriceBookItemEntity> customerGroupPriceBookItem = priceBookItemRepository
+                        .findApplicableForCustomerGroups(
+                                storeLocation.getMerchant().getId(),
+                                productId,
+                                customerGroupIds,
+                                resolvedAt,
+                                MINIMUM_EFFECTIVE_INSTANT)
+                        .stream()
+                        .findFirst();
+                if (customerGroupPriceBookItem.isPresent()) {
+                    PriceBookItemEntity item = customerGroupPriceBookItem.get();
+                    return new PriceResolutionResponse(
+                            storeLocationId,
+                            productId,
+                            normalizeMoney(item.getPrice()),
+                            PriceResolutionSource.CUSTOMER_GROUP_PRICE_BOOK,
+                            item.getPriceBook().getId(),
+                            item.getPriceBook().getEffectiveFrom(),
+                            item.getPriceBook().getEffectiveTo(),
+                            resolvedAt);
+                }
+            }
         }
 
         Optional<PriceBookItemEntity> priceBookItem = priceBookItemRepository
@@ -96,10 +143,22 @@ public class PricingService {
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "product not found: " + productId));
     }
 
+    private CustomerEntity requireCustomer(Long customerId) {
+        return customerRepository.findByIdWithDetails(customerId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "customer not found: " + customerId));
+    }
+
     private void ensureSameMerchant(StoreLocationEntity storeLocation, ProductEntity product) {
         if (!storeLocation.getMerchant().getId().equals(product.getMerchant().getId())) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR,
                     "product does not belong to store merchant context");
+        }
+    }
+
+    private void ensureSameMerchant(StoreLocationEntity storeLocation, CustomerEntity customer) {
+        if (!storeLocation.getMerchant().getId().equals(customer.getMerchant().getId())) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "customer does not belong to store merchant context");
         }
     }
 

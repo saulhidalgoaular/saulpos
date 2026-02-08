@@ -9,6 +9,7 @@ public record CustomerResponse(
         boolean invoiceRequired,
         boolean creditEnabled,
         boolean active,
+        List<CustomerGroupResponse> groups,
         List<CustomerTaxIdentityResponse> taxIdentities,
         List<CustomerContactResponse> contacts
 ) {
