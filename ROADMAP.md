@@ -279,7 +279,7 @@ Out of Scope:
 1. Unit tests for each tax mode.
 2. Integration tests with checkout flows.
 
-#### Card D2: Rounding Policy
+#### Card D2: Rounding Policy [SOLVED]
 - Goal: Implement currency and tender rounding logic.
 - Dependencies: D1.
 - Data Model: `rounding_policy` per store and tender type.
@@ -1071,7 +1071,7 @@ Out of Scope:
 | C4 | DONE |  |  | Implemented `/api/catalog/products/search` with pagination and deterministic ordering, plus migration `V9` indexes for normalized SKU/name/barcode lookup |
 | C5 | DONE |  |  | Added sale mode configuration (`UNIT`, `WEIGHT`, `OPEN_PRICE`) with UOM/precision/open-price policy validation, migration `V10`, and open-price entry validation + audit flow (`open_price_entry_audit`) with unit/integration coverage |
 | D1 | DONE |  |  | Implemented `tax_group` + `store_tax_rule` with migration `V11`, product tax-group assignment (`product.tax_group_id`), and `POST /api/tax/preview` with deterministic inclusive/exclusive/exempt/zero-rated line+total tax breakdown and unit/integration coverage |
-| D2 | TODO |  |  |  |
+| D2 | DONE |  |  | Added store+tender `rounding_policy` data model with migration `V12`; tax totals API (`POST /api/tax/preview`) now returns explicit `roundingAdjustment` and `totalPayable` with tender-aware rounding details and unit/integration coverage |
 | D3 | TODO |  |  |  |
 | E1 | TODO |  |  |  |
 | E2 | TODO |  |  |  |
@@ -1131,9 +1131,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `D2` Rounding policy.
-2. `D3` Receipt sequence allocation.
-3. `E1` Discount primitives.
+1. `D3` Receipt sequence allocation.
+2. `E1` Discount primitives.
+3. `E2` Promotion engine v1.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

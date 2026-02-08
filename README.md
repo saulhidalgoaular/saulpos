@@ -25,6 +25,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `C4` Search and lookup performance.
 - `C5` Unit/weight/open-price item modes.
 - `D1` Tax engine v1.
+- `D2` Rounding policy.
 
 ## Monorepo Architecture
 
@@ -136,7 +137,16 @@ Backend source of truth:
 - Tax configuration model:
   - `tax_group`
   - `store_tax_rule`
-  - product-level tax-group assignment via `product.tax_group_id`
+- product-level tax-group assignment via `product.tax_group_id`
+
+### Rounding Policy
+- Store/tender rounding policy model:
+  - `rounding_policy`
+- `POST /api/tax/preview` now supports optional `tenderType` (`CASH`, `CARD`) and returns explicit rounding fields:
+  - `roundingAdjustment`
+  - `totalPayable`
+  - `rounding` detail (`applied`, `method`, `increment`, `originalAmount`, `roundedAmount`, `adjustment`)
+- Rounding is policy-driven per store and tender, and always returned as an explicit totals line (no hidden adjustment).
 
 ## Data and Migration Strategy
 
@@ -153,6 +163,7 @@ Backend source of truth:
   - `V9__catalog_search_and_lookup_performance.sql`
   - `V10__unit_weight_open_price_item_modes.sql`
   - `V11__tax_engine_v1.sql`
+  - `V12__rounding_policy.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -218,10 +229,12 @@ Key settings include:
 - Unit tests for pricing resolver precedence and fallback behavior.
 - Unit tests for sale-mode quantity precision and open-price policy validation.
 - Unit tests for tax calculation modes (`INCLUSIVE`, `EXCLUSIVE`, exempt, zero-rated).
+- Unit tests for rounding policy midpoint and edge behavior (`NEAREST`, `UP`, `DOWN`).
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.
 - Integration tests for `POST /api/tax/preview` covering deterministic line/total breakdown and missing-rule validation.
+- Integration tests for tax preview rounding output (`roundingAdjustment`, `totalPayable`) with and without tender-specific policy.
 
 ## Project Planning and Status
 

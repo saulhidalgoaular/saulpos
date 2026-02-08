@@ -1,6 +1,8 @@
 package com.saulpos.server.tax;
 
+import com.saulpos.api.tax.RoundingMethod;
 import com.saulpos.api.tax.TaxMode;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.server.catalog.model.CategoryEntity;
 import com.saulpos.server.catalog.model.ProductEntity;
 import com.saulpos.server.catalog.repository.CategoryRepository;
@@ -9,8 +11,10 @@ import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
 import com.saulpos.server.identity.repository.StoreLocationRepository;
+import com.saulpos.server.tax.model.RoundingPolicyEntity;
 import com.saulpos.server.tax.model.StoreTaxRuleEntity;
 import com.saulpos.server.tax.model.TaxGroupEntity;
+import com.saulpos.server.tax.repository.RoundingPolicyRepository;
 import com.saulpos.server.tax.repository.StoreTaxRuleRepository;
 import com.saulpos.server.tax.repository.TaxGroupRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -61,12 +65,16 @@ class TaxPreviewIntegrationTest {
     @Autowired
     private StoreTaxRuleRepository storeTaxRuleRepository;
 
+    @Autowired
+    private RoundingPolicyRepository roundingPolicyRepository;
+
     private MerchantEntity merchant;
     private StoreLocationEntity storeLocation;
     private CategoryEntity category;
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM rounding_policy");
         jdbcTemplate.execute("DELETE FROM store_tax_rule");
         jdbcTemplate.execute("DELETE FROM open_price_entry_audit");
         jdbcTemplate.execute("DELETE FROM store_price_override");
@@ -221,6 +229,69 @@ class TaxPreviewIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4001"));
     }
 
+    @Test
+    void previewAppliesCashRoundingPolicyAndReturnsExplicitAdjustmentLine() throws Exception {
+        TaxGroupEntity vat18 = createTaxGroup("VAT18", "VAT 18", "18.0000", false);
+        ProductEntity product = createProduct("SKU-D2-CASH", "Cash Rounded Product", "8.50", vat18);
+        createStoreTaxRule(vat18, TaxMode.EXCLUSIVE, false);
+        createRoundingPolicy(TenderType.CASH, RoundingMethod.NEAREST, "0.05");
+
+        mockMvc.perform(post("/api/tax/preview")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeLocationId": %d,
+                                  "at": "2026-02-10T12:00:00Z",
+                                  "tenderType": "CASH",
+                                  "lines": [
+                                    {
+                                      "productId": %d,
+                                      "quantity": 1.000
+                                    }
+                                  ]
+                                }
+                                """.formatted(storeLocation.getId(), product.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalGross").value(10.03))
+                .andExpect(jsonPath("$.roundingAdjustment").value(0.02))
+                .andExpect(jsonPath("$.totalPayable").value(10.05))
+                .andExpect(jsonPath("$.rounding.applied").value(true))
+                .andExpect(jsonPath("$.rounding.tenderType").value("CASH"))
+                .andExpect(jsonPath("$.rounding.method").value("NEAREST"))
+                .andExpect(jsonPath("$.rounding.increment").value(0.05))
+                .andExpect(jsonPath("$.rounding.roundedAmount").value(10.05));
+    }
+
+    @Test
+    void previewKeepsPayableEqualToGrossWhenTenderRoundingPolicyIsMissing() throws Exception {
+        TaxGroupEntity vat18 = createTaxGroup("VAT18", "VAT 18", "18.0000", false);
+        ProductEntity product = createProduct("SKU-D2-CARD", "Card Product", "8.50", vat18);
+        createStoreTaxRule(vat18, TaxMode.EXCLUSIVE, false);
+
+        mockMvc.perform(post("/api/tax/preview")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeLocationId": %d,
+                                  "at": "2026-02-10T12:00:00Z",
+                                  "tenderType": "CARD",
+                                  "lines": [
+                                    {
+                                      "productId": %d,
+                                      "quantity": 1.000
+                                    }
+                                  ]
+                                }
+                                """.formatted(storeLocation.getId(), product.getId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalGross").value(10.03))
+                .andExpect(jsonPath("$.roundingAdjustment").value(0.00))
+                .andExpect(jsonPath("$.totalPayable").value(10.03))
+                .andExpect(jsonPath("$.rounding.applied").value(false))
+                .andExpect(jsonPath("$.rounding.tenderType").value("CARD"))
+                .andExpect(jsonPath("$.rounding.roundedAmount").value(10.03));
+    }
+
     private TaxGroupEntity createTaxGroup(String code, String name, String ratePercent, boolean zeroRated) {
         TaxGroupEntity taxGroup = new TaxGroupEntity();
         taxGroup.setMerchant(merchant);
@@ -254,5 +325,17 @@ class TaxPreviewIntegrationTest {
         taxRule.setActive(true);
         taxRule.setEffectiveFrom(Instant.parse("2026-01-01T00:00:00Z"));
         return storeTaxRuleRepository.save(taxRule);
+    }
+
+    private RoundingPolicyEntity createRoundingPolicy(TenderType tenderType,
+                                                      RoundingMethod method,
+                                                      String incrementAmount) {
+        RoundingPolicyEntity policy = new RoundingPolicyEntity();
+        policy.setStoreLocation(storeLocation);
+        policy.setTenderType(tenderType);
+        policy.setRoundingMethod(method);
+        policy.setIncrementAmount(new BigDecimal(incrementAmount));
+        policy.setActive(true);
+        return roundingPolicyRepository.save(policy);
     }
 }

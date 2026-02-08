@@ -2,10 +2,13 @@ package com.saulpos.server.tax;
 
 import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.PriceResolutionSource;
+import com.saulpos.api.tax.RoundingMethod;
+import com.saulpos.api.tax.RoundingSummary;
 import com.saulpos.api.tax.TaxMode;
 import com.saulpos.api.tax.TaxPreviewLineRequest;
 import com.saulpos.api.tax.TaxPreviewResponse;
 import com.saulpos.api.tax.TaxPreviewRequest;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.server.catalog.model.ProductEntity;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.catalog.service.PricingService;
@@ -15,6 +18,7 @@ import com.saulpos.server.identity.repository.StoreLocationRepository;
 import com.saulpos.server.tax.model.StoreTaxRuleEntity;
 import com.saulpos.server.tax.model.TaxGroupEntity;
 import com.saulpos.server.tax.repository.StoreTaxRuleRepository;
+import com.saulpos.server.tax.service.RoundingService;
 import com.saulpos.server.tax.service.TaxService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +33,10 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.nullable;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -47,6 +54,9 @@ class TaxServiceTest {
     @Mock
     private PricingService pricingService;
 
+    @Mock
+    private RoundingService roundingService;
+
     private TaxService taxService;
 
     @BeforeEach
@@ -55,7 +65,15 @@ class TaxServiceTest {
                 storeLocationRepository,
                 productRepository,
                 storeTaxRuleRepository,
-                pricingService);
+                pricingService,
+                roundingService);
+
+        lenient().when(roundingService.apply(anyLong(), nullable(TenderType.class), any(BigDecimal.class)))
+                .thenAnswer(invocation -> {
+                    TenderType tenderType = invocation.getArgument(1);
+                    BigDecimal amount = invocation.getArgument(2);
+                    return noRounding(tenderType, amount);
+                });
     }
 
     @Test
@@ -74,6 +92,7 @@ class TaxServiceTest {
         TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
                 10L,
                 at,
+                null,
                 List.of(new TaxPreviewLineRequest(100L, new BigDecimal("2.000"), new BigDecimal("10.00")))));
 
         assertThat(response.subtotalNet()).isEqualByComparingTo("20.00");
@@ -83,6 +102,9 @@ class TaxServiceTest {
         assertThat(response.lines()).hasSize(1);
         assertThat(response.lines().getFirst().taxAmount()).isEqualByComparingTo("3.60");
         assertThat(response.lines().getFirst().taxMode()).isEqualTo(TaxMode.EXCLUSIVE);
+        assertThat(response.roundingAdjustment()).isEqualByComparingTo("0.00");
+        assertThat(response.totalPayable()).isEqualByComparingTo("23.60");
+        assertThat(response.rounding().applied()).isFalse();
     }
 
     @Test
@@ -101,6 +123,7 @@ class TaxServiceTest {
         TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
                 11L,
                 at,
+                null,
                 List.of(new TaxPreviewLineRequest(101L, new BigDecimal("1.000"), new BigDecimal("11.80")))));
 
         assertThat(response.subtotalNet()).isEqualByComparingTo("10.00");
@@ -127,6 +150,7 @@ class TaxServiceTest {
         TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
                 12L,
                 at,
+                null,
                 List.of(new TaxPreviewLineRequest(102L, new BigDecimal("1.000"), new BigDecimal("15.50")))));
 
         assertThat(response.subtotalNet()).isEqualByComparingTo("15.50");
@@ -153,6 +177,7 @@ class TaxServiceTest {
         TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
                 13L,
                 at,
+                null,
                 List.of(new TaxPreviewLineRequest(103L, new BigDecimal("1.000"), new BigDecimal("7.25")))));
 
         assertThat(response.subtotalNet()).isEqualByComparingTo("7.25");
@@ -189,11 +214,47 @@ class TaxServiceTest {
         TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
                 14L,
                 at,
+                null,
                 List.of(new TaxPreviewLineRequest(104L, new BigDecimal("1.000"), null))));
 
         assertThat(response.subtotalNet()).isEqualByComparingTo("8.25");
         assertThat(response.totalTax()).isEqualByComparingTo("1.49");
         assertThat(response.totalGross()).isEqualByComparingTo("9.74");
+    }
+
+    @Test
+    void previewReturnsExplicitRoundingAdjustmentAndPayableTotal() {
+        Instant at = Instant.parse("2026-02-10T12:00:00Z");
+        StoreLocationEntity storeLocation = storeLocation(15L, 6L);
+        TaxGroupEntity taxGroup = taxGroup(705L, "VAT18", "18.0000", false);
+        ProductEntity product = product(105L, 6L, taxGroup);
+        StoreTaxRuleEntity taxRule = storeTaxRule(15L, taxGroup, TaxMode.EXCLUSIVE, false);
+
+        when(storeLocationRepository.findById(15L)).thenReturn(Optional.of(storeLocation));
+        when(productRepository.findById(105L)).thenReturn(Optional.of(product));
+        when(storeTaxRuleRepository.findApplicable(eq(15L), eq(705L), eq(at), any()))
+                .thenReturn(List.of(taxRule));
+        when(roundingService.apply(eq(15L), eq(TenderType.CASH), eq(new BigDecimal("10.03"))))
+                .thenReturn(new RoundingSummary(
+                        true,
+                        TenderType.CASH,
+                        RoundingMethod.NEAREST,
+                        new BigDecimal("0.05"),
+                        new BigDecimal("10.03"),
+                        new BigDecimal("10.05"),
+                        new BigDecimal("0.02")));
+
+        TaxPreviewResponse response = taxService.preview(new TaxPreviewRequest(
+                15L,
+                at,
+                TenderType.CASH,
+                List.of(new TaxPreviewLineRequest(105L, new BigDecimal("1.000"), new BigDecimal("8.50")))));
+
+        assertThat(response.totalGross()).isEqualByComparingTo("10.03");
+        assertThat(response.roundingAdjustment()).isEqualByComparingTo("0.02");
+        assertThat(response.totalPayable()).isEqualByComparingTo("10.05");
+        assertThat(response.rounding().applied()).isTrue();
+        assertThat(response.rounding().method()).isEqualTo(RoundingMethod.NEAREST);
     }
 
     private StoreLocationEntity storeLocation(Long storeLocationId, Long merchantId) {
@@ -242,5 +303,17 @@ class TaxServiceTest {
         storeTaxRule.setExempt(exempt);
         storeTaxRule.setActive(true);
         return storeTaxRule;
+    }
+
+    private RoundingSummary noRounding(TenderType tenderType, BigDecimal amount) {
+        BigDecimal normalized = amount.setScale(2, java.math.RoundingMode.HALF_UP);
+        return new RoundingSummary(
+                false,
+                tenderType,
+                null,
+                null,
+                normalized,
+                normalized,
+                BigDecimal.ZERO.setScale(2, java.math.RoundingMode.HALF_UP));
     }
 }

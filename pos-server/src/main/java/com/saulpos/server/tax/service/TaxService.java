@@ -5,6 +5,7 @@ import com.saulpos.api.tax.TaxPreviewLineRequest;
 import com.saulpos.api.tax.TaxPreviewLineResponse;
 import com.saulpos.api.tax.TaxPreviewRequest;
 import com.saulpos.api.tax.TaxPreviewResponse;
+import com.saulpos.api.tax.RoundingSummary;
 import com.saulpos.server.catalog.model.ProductEntity;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.catalog.service.PricingService;
@@ -37,6 +38,7 @@ public class TaxService {
     private final ProductRepository productRepository;
     private final StoreTaxRuleRepository storeTaxRuleRepository;
     private final PricingService pricingService;
+    private final RoundingService roundingService;
 
     @Transactional(readOnly = true)
     public TaxPreviewResponse preview(TaxPreviewRequest request) {
@@ -82,13 +84,18 @@ public class TaxService {
             lineNumber++;
         }
 
+        RoundingSummary rounding = roundingService.apply(request.storeLocationId(), request.tenderType(), totalGross);
+
         return new TaxPreviewResponse(
                 request.storeLocationId(),
                 request.at(),
                 lines,
                 subtotalNet,
                 totalTax,
-                totalGross);
+                totalGross,
+                rounding.adjustment(),
+                rounding.roundedAmount(),
+                rounding);
     }
 
     private LineAmounts calculateLineAmounts(BigDecimal quantity,

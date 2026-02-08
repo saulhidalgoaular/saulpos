@@ -10,6 +10,9 @@ public record TaxPreviewResponse(
         List<TaxPreviewLineResponse> lines,
         BigDecimal subtotalNet,
         BigDecimal totalTax,
-        BigDecimal totalGross
+        BigDecimal totalGross,
+        BigDecimal roundingAdjustment,
+        BigDecimal totalPayable,
+        RoundingSummary rounding
 ) {
 }

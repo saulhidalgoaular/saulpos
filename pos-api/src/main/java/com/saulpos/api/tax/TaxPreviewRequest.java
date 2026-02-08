@@ -12,6 +12,7 @@ public record TaxPreviewRequest(
         Long storeLocationId,
         @NotNull(message = "at is required")
         Instant at,
+        TenderType tenderType,
         @NotEmpty(message = "lines are required")
         List<@Valid TaxPreviewLineRequest> lines
 ) {
