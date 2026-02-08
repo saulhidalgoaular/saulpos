@@ -363,7 +363,7 @@ Out of Scope:
 
 ### Phase F: Customers and Commercial Profiles
 
-#### Card F1: Customer Master
+#### Card F1: Customer Master [SOLVED]
 - Goal: Store customer identity and compliance fields.
 - Dependencies: B1.
 - Data Model:
@@ -1078,7 +1078,7 @@ Out of Scope:
 | E1 | DONE |  |  | Implemented discount primitives with migration `V14`, manual-reason-code enforcement, apply/remove/preview APIs, manager-threshold override permission checks, and unit/integration coverage for calculation order and approvals |
 | E2 | DONE |  |  | Implemented promotion engine v1 with migration `V15`, `POST /api/promotions/evaluate`, time-window eligibility, deterministic overlap winner selection (priority > discount > id), and promo explanation output with unit/integration coverage |
 | E3 | TODO |  |  |  |
-| F1 | TODO |  |  |  |
+| F1 | DONE |  |  | Implemented customer master with migration `V16`, customer/tax-identity/contact models, CRUD + lookup APIs (`document`/`email`/`phone`), merchant-scoped document uniqueness, and integration coverage for optional-field validation and lookup flows |
 | F2 | TODO |  |  |  |
 | F3 | TODO |  |  |  |
 | G1 | TODO |  |  |  |
@@ -1133,7 +1133,7 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `F1` Customer master.
+1. `E3` Loyalty hooks.
 2. `G1` Cart lifecycle service.
 3. `I1` Supplier master.
 

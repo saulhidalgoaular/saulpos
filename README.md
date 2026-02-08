@@ -29,6 +29,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `D3` Receipt sequence allocation.
 - `E1` Discount primitives.
 - `E2` Promotion engine v1.
+- `F1` Customer master.
 
 ## Monorepo Architecture
 
@@ -80,6 +81,23 @@ Backend source of truth:
   - `/api/identity/store-user-assignments`
 - Supports create/list/get/update plus activate/deactivate lifecycle endpoints.
 - Integrity rules include unique codes and assignment consistency.
+
+### Customer Master
+- Customer APIs:
+  - `POST /api/customers`
+  - `GET /api/customers`
+  - `GET /api/customers/{id}`
+  - `PUT /api/customers/{id}`
+  - `POST /api/customers/{id}/activate`
+  - `POST /api/customers/{id}/deactivate`
+  - `GET /api/customers/lookup?merchantId={id}&documentType={type}&documentValue={value}`
+  - `GET /api/customers/lookup?merchantId={id}&email={email}`
+  - `GET /api/customers/lookup?merchantId={id}&phone={phone}`
+- Customer model:
+  - `customer`
+  - `customer_tax_identity`
+  - `customer_contact`
+- Enforced rules include merchant-scoped document uniqueness, optional customer profile fields for rapid checkout capture, and invoice/credit customer flags.
 
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`
@@ -205,6 +223,7 @@ Backend source of truth:
   - `V13__receipt_sequence_allocation.sql`
   - `V14__discount_primitives.sql`
   - `V15__promotion_engine_v1.sql`
+  - `V16__customer_master.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
