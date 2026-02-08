@@ -69,14 +69,17 @@ Out of Scope:
 - Impacted Modules: root, `pos-server`.
 - Data Model: migration baseline version.
 - API Contract: none.
-- Business Rules: single command should bootstrap local stack.
+- Business Rules:
+1. Single command should compile and run tests in containerized dev environments without nested Docker.
+2. Integration tests must be runnable via JUnit profiles (default in-memory DB, optional external PostgreSQL).
 - Acceptance Criteria:
-1. `docker-compose.yml` provides PostgreSQL and optional Adminer.
+1. Maven test profiles are defined for default no-Docker execution and optional external PostgreSQL compatibility checks.
 2. Flyway baseline migration exists and applies on clean DB.
-3. CI profile runs compile + tests + coverage.
+3. CI profile runs compile + tests + coverage without Docker-in-Docker dependency.
 - Test Plan:
-1. Start stack from scratch and run `mvn clean verify`.
-2. Verify Flyway history table creation and version tracking.
+1. Run `mvn clean verify` using default JUnit test profile in the current containerized dev environment.
+2. Run optional PostgreSQL compatibility suite (for example `mvn -Pit-postgres verify`) against a pre-provisioned external PostgreSQL instance.
+3. Verify Flyway history table creation and version tracking.
 
 #### Card A2: Error Contract + Observability
 - Goal: Standardize runtime diagnostics and API errors.
@@ -1027,10 +1030,12 @@ Out of Scope:
 ## 8. Cross-Phase Testing Strategy
 1. Unit tests for all pure business logic.
 2. Integration tests for all REST endpoints and transactional boundaries.
-3. Concurrency tests for receipt sequence, checkout, and stock ledger.
-4. Contract tests for `pos-api` DTO compatibility.
-5. Migration tests on empty and non-empty databases.
-6. End-to-end UI tests for all critical cashier and manager workflows.
+3. Default integration path uses JUnit test profiles without Docker dependency (in-memory DB + mocks where appropriate).
+4. Optional PostgreSQL compatibility suite runs against pre-provisioned external DB environments.
+5. Concurrency tests for receipt sequence, checkout, and stock ledger.
+6. Contract tests for `pos-api` DTO compatibility.
+7. Migration tests on empty and non-empty databases.
+8. End-to-end UI tests for all critical cashier and manager workflows.
 
 ## 9. Cross-Phase Non-Functional Targets
 1. API p95 response targets defined per critical endpoint.
@@ -1043,7 +1048,7 @@ Out of Scope:
 2. Produce mini-design note in PR description.
 3. Implement in order: migration -> domain -> API -> UI (if applicable).
 4. Add tests before finishing card.
-5. Run `mvn clean verify`.
+5. Run `mvn clean verify` (default no-Docker JUnit profile).
 6. Update roadmap progress table and card status.
 7. After every 3-5 cards, run an iteration review:
 1. Validate against acceptance criteria.
