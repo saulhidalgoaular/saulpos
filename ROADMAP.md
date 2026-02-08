@@ -1059,14 +1059,14 @@ Out of Scope:
 ## 11. Progress Tracking Table
 | Card ID | Status | Owner | PR | Notes |
 |---|---|---|---|---|
-| A1 | TODO |  |  |  |
-| A2 | TODO |  |  |  |
-| A3 | TODO |  |  |  |
+| A1 | DONE |  |  | Runtime/build baseline hardened with repeatable migrations and test execution profiles |
+| A2 | DONE |  |  | RFC7807 error contract, correlation ID propagation, metrics, and structured logging implemented |
+| A3 | DONE |  |  | Authentication/session lifecycle, brute-force protection, and auth audit trail implemented |
 | B1 | DONE |  |  | Implemented tenant/location model with APIs, migration, and integration tests |
-| B2 | TODO |  |  |  |
-| B3 | TODO |  |  |  |
-| C1 | TODO |  |  |  |
-| C2 | TODO |  |  |  |
+| B2 | DONE |  |  | Permission catalog, role-permission APIs, and deny-by-default authorization matrix implemented |
+| B3 | DONE |  |  | Shift open/cash movements/close lifecycle with reconciliation and transition checks implemented |
+| C1 | DONE |  |  | Product/variant/barcode core with merchant SKU constraints and lookup APIs implemented |
+| C2 | DONE |  |  | Category hierarchy tree, reparenting, and cycle/inactive-assignment validation implemented |
 | C3 | TODO |  |  |  |
 | C4 | TODO |  |  |  |
 | C5 | TODO |  |  |  |

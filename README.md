@@ -1,80 +1,181 @@
-# SaulPOS v2 (Local-First Architecture)
+# SaulPOS v2
 
-This is the rewritten version of SaulPOS, designed for production environments with a **Local-First API** approach.
+SaulPOS v2 is a local-first, API-driven point-of-sale platform for convenience stores in Latin America.
+The project is being rebuilt as a modular monorepo with deterministic backend behavior, testable business rules, and clear roadmap-driven delivery.
 
-## 🏗️ Architecture
-The project is split into Maven modules:
--   **`pos-core`**: Shared logic, base entities, utilities.
--   **`pos-api`**: Shared DTOs and API interfaces.
--   **`pos-server`**: Spring Boot application. Handles database, auth, printing, and business logic.
--   **`pos-client`**: JavaFX application. A "dumb" client that consumes the API.
+## Product Overview
 
-## 🚀 Getting Started
+SaulPOS v2 is designed for multi-store retail operations that need:
+- Fast checkout behavior with server-authoritative business logic.
+- Strong authentication and role-based access control.
+- Deterministic money/cash workflows (shift lifecycle and reconciliation).
+- Auditable operations through stable error contracts, correlation IDs, and structured logs.
+- Controlled schema evolution through Flyway migrations.
+
+Current implementation status is concentrated on roadmap foundation + early core domains:
+- `A1` Runtime and build baseline.
+- `A2` Error contract and observability.
+- `A3` Security foundation.
+- `B1` Tenant/location/terminal/store-assignment model.
+- `B2` Permission matrix and enforcement.
+- `B3` Shift and cash session lifecycle.
+- `C1` Product and variant core.
+- `C2` Category and department taxonomy.
+
+## Monorepo Architecture
+
+Modules:
+- `pos-core`: shared cross-cutting abstractions (for example soft-delete contract).
+- `pos-api`: transport contracts (request/response DTOs) shared by server/client.
+- `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
+- `pos-client`: JavaFX client module (currently thin and API-consumer oriented).
+
+Backend source of truth:
+- All critical business behavior is implemented in `pos-server`.
+- `pos-client` is intentionally "dumb" and should only consume APIs.
+
+## Implemented Domain Capabilities
+
+### Foundation and Observability
+- RFC7807-compatible error payloads with stable machine-readable codes (`POS-xxxx`).
+- Correlation ID propagation through `X-Correlation-ID` and log MDC.
+- Structured JSON logging (Logstash encoder).
+- Actuator health/info/metrics endpoints enabled.
+
+### Authentication and Security
+- Token-based session auth with access + refresh token lifecycle:
+  - `POST /api/auth/login`
+  - `POST /api/auth/refresh`
+  - `POST /api/auth/logout`
+- Protected auth context endpoint:
+  - `GET /api/security/me`
+- Security controls:
+  - BCrypt password hashing.
+  - Failed-attempt lockout policy.
+  - Auth audit records for login success/failure and logout.
+
+### Role and Permission Matrix
+- Current permissions and catalog:
+  - `GET /api/security/permissions/current`
+  - `GET /api/security/permissions/catalog`
+- Role management:
+  - `GET /api/security/roles`
+  - `POST /api/security/roles`
+  - `PUT /api/security/roles/{id}/permissions`
+- Deny-by-default enforcement for sensitive domains (sales/refunds/inventory/reports/configuration).
+
+### Identity and Store Structure
+- Merchant, store, terminal, and store-user assignment APIs:
+  - `/api/identity/merchants`
+  - `/api/identity/stores`
+  - `/api/identity/terminals`
+  - `/api/identity/store-user-assignments`
+- Supports create/list/get/update plus activate/deactivate lifecycle endpoints.
+- Integrity rules include unique codes and assignment consistency.
+
+### Shift and Cash Session Lifecycle
+- `POST /api/shifts/open`
+- `POST /api/shifts/{id}/cash-movements`
+- `POST /api/shifts/{id}/close`
+- `GET /api/shifts/{id}`
+- Business constraints include:
+  - one open shift per cashier + terminal,
+  - finite-state transition checks,
+  - counted-vs-expected reconciliation with variance capture.
+
+### Catalog and Category Hierarchy
+- Product APIs:
+  - `POST /api/catalog/products`
+  - `GET /api/catalog/products`
+  - `GET /api/catalog/products/{id}`
+  - `PUT /api/catalog/products/{id}`
+  - `POST /api/catalog/products/{id}/activate`
+  - `POST /api/catalog/products/{id}/deactivate`
+  - `GET /api/catalog/products/lookup?merchantId={id}&barcode={code}`
+- Category hierarchy APIs:
+  - `GET /api/catalog/categories/tree?merchantId={id}`
+  - `POST /api/catalog/categories/{id}/reparent`
+- Enforced rules include merchant-scoped SKU uniqueness, cycle-safe category trees, and no new product assignment to inactive categories.
+
+## Data and Migration Strategy
+
+- Flyway migrations live in `pos-server/src/main/resources/db/migration`.
+- Implemented migration chain:
+  - `V1__baseline.sql`
+  - `V2__security_foundation.sql`
+  - `V3__tenant_and_location_model.sql`
+  - `V4__permission_matrix_and_enforcement.sql`
+  - `V5__shift_and_cash_session_lifecycle.sql`
+  - `V6__product_and_variant_core.sql`
+  - `V7__category_department_taxonomy.sql`
+- Deletion policy is configurable with:
+  - `app.deletion-strategy=soft` (default)
+  - `app.deletion-strategy=hard`
+
+## Local Development
 
 ### Prerequisites
--   Java 21
--   Maven 3.8+
--   PostgreSQL or MariaDB (optional, defaults to H2 for quick start)
+- Java 21
+- Maven 3.8+
+- PostgreSQL (default runtime configuration points to PostgreSQL on `localhost:5432`)
 
-### Build
+### Build all modules
+
 ```bash
 mvn clean install
 ```
 
-### Run Server
+### Run full test suite (default profile / in-memory test profile)
+
+```bash
+mvn clean verify
+```
+
+### Optional PostgreSQL compatibility test run
+
+```bash
+mvn -Pit-postgres verify
+```
+
+### Run backend
+
 ```bash
 cd pos-server
 mvn spring-boot:run
 ```
 
-### Run Client
+### Run JavaFX client
+
 ```bash
 cd pos-client
 mvn javafx:run
 ```
 
-## 🗄️ Database Strategy
--   **Soft Delete**: Enabled by default (audit trail). Configurable to HARD delete via `app.deletion-strategy=hard`.
--   **Migrations**: Managed by Flyway (`pos-server/src/main/resources/db/migration`).
+## Configuration Highlights
 
-## 🔐 Security Foundation (A3)
--   Auth endpoints: `POST /api/auth/login`, `POST /api/auth/refresh`, `POST /api/auth/logout`.
--   Protected endpoint example: `GET /api/security/me`.
--   Login security includes BCrypt password hashing and configurable brute-force lockout.
--   Login success/failure and logout are persisted in `auth_audit_event`.
+Main runtime properties are in `pos-server/src/main/resources/application.properties`.
+Key settings include:
+- `server.port=8080`
+- `spring.datasource.*` (PostgreSQL defaults)
+- `app.security.max-failed-attempts`
+- `app.security.lock-duration-minutes`
+- `app.security.access-token-ttl-minutes`
+- `app.security.refresh-token-ttl-minutes`
+- `management.endpoints.web.exposure.include=health,info,metrics`
 
-## 🛡️ Permission Matrix (B2)
--   Permission introspection: `GET /api/security/permissions/current`.
--   Permission catalog: `GET /api/security/permissions/catalog`.
--   Role management: `GET /api/security/roles`, `POST /api/security/roles`, `PUT /api/security/roles/{id}/permissions`.
--   Sensitive domains are deny-by-default and require explicit permissions:
-    - `SALES_PROCESS` for `/api/sales/**`
-    - `REFUND_PROCESS` for `/api/refunds/**`
-    - `INVENTORY_ADJUST` for `/api/inventory/**`
-    - `REPORT_VIEW` for `/api/reports/**`
-    - `CONFIGURATION_MANAGE` for `/api/identity/**` and role/configuration APIs
+## Testing Coverage (Implemented Domains)
 
-## 💵 Shift and Cash Session Lifecycle (B3)
--   Open shift: `POST /api/shifts/open`
--   Register paid-in/paid-out cash movements: `POST /api/shifts/{id}/cash-movements`
--   Close shift with counted cash and variance capture: `POST /api/shifts/{id}/close`
--   Retrieve shift reconciliation totals: `GET /api/shifts/{id}`
--   Shift endpoints are permission-protected under `SALES_PROCESS`.
+`pos-server` currently includes:
+- Integration tests for auth lifecycle, brute-force lockout, identity APIs, permission matrix, shift lifecycle, and catalog flows.
+- Concurrency coverage for open-shift race conditions.
+- Repository and validator tests for catalog and category constraints.
+- Error-handling integration tests for stable error contracts.
 
-## 📦 Product and Variant Core (C1)
--   Product CRUD and filtering: `POST/GET/PUT /api/catalog/products`, `GET /api/catalog/products/{id}`
--   Product activation lifecycle: `POST /api/catalog/products/{id}/activate`, `POST /api/catalog/products/{id}/deactivate`
--   Barcode sellable lookup by merchant: `GET /api/catalog/products/lookup?merchantId={id}&barcode={code}`
--   SKU uniqueness is enforced per merchant and each sellable variant can hold multiple barcodes.
+## Project Planning and Status
 
-## 🌳 Category and Department Taxonomy (C2)
--   Hierarchy tree retrieval: `GET /api/catalog/categories/tree?merchantId={id}`
--   Move/reparent category: `POST /api/catalog/categories/{id}/reparent`
--   Category hierarchy updates reject cycles.
--   Inactive (soft-deleted) categories cannot receive new product assignments.
+- Detailed execution plan and card-by-card statuses: `ROADMAP.md`
+- Incremental delivery log: `CHANGELOG.md`
 
-## 🛣️ Roadmap
-See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
+## Legacy Branch
 
-## 📜 Legacy Code
-The original monolithic code has been moved to the `legacy-v1` branch.
+The original monolithic version is preserved in the `legacy-v1` branch.
