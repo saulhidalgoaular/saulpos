@@ -350,7 +350,7 @@ Out of Scope:
 1. Unit tests for each rule type.
 2. Integration tests for overlapping scenarios.
 
-#### Card E3: Loyalty Hooks
+#### Card E3: Loyalty Hooks [SOLVED]
 - Goal: Create extension points without hard coupling.
 - Dependencies: E2, F1.
 - Data Model: optional `loyalty_event` abstraction.
@@ -1077,7 +1077,7 @@ Out of Scope:
 | D3 | DONE |  |  | Implemented receipt-series allocation endpoint (`POST /api/receipts/allocate`) with migration `V13`, series/sequence/header model, `SALES_PROCESS` authorization, and integration + concurrency coverage for duplicate-free numbering |
 | E1 | DONE |  |  | Implemented discount primitives with migration `V14`, manual-reason-code enforcement, apply/remove/preview APIs, manager-threshold override permission checks, and unit/integration coverage for calculation order and approvals |
 | E2 | DONE |  |  | Implemented promotion engine v1 with migration `V15`, `POST /api/promotions/evaluate`, time-window eligibility, deterministic overlap winner selection (priority > discount > id), and promo explanation output with unit/integration coverage |
-| E3 | TODO |  |  |  |
+| E3 | DONE |  |  | Implemented loyalty hook extension points with migration `V17` (`loyalty_event`), config toggle (`app.loyalty.enabled`), earn/redeem APIs (`/api/loyalty/earn`, `/api/loyalty/redeem`), stub provider SPI, and resilient `DISABLED`/`UNAVAILABLE` fallback behavior validated by integration tests |
 | F1 | DONE |  |  | Implemented customer master with migration `V16`, customer/tax-identity/contact models, CRUD + lookup APIs (`document`/`email`/`phone`), merchant-scoped document uniqueness, and integration coverage for optional-field validation and lookup flows |
 | F2 | TODO |  |  |  |
 | F3 | TODO |  |  |  |
@@ -1133,8 +1133,8 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `E3` Loyalty hooks.
-2. `G1` Cart lifecycle service.
+1. `G1` Cart lifecycle service.
+2. `F2` Customer groups and pricing hooks.
 3. `I1` Supplier master.
 
 ## 13. Final Product Readiness Checklist

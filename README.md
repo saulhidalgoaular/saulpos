@@ -29,6 +29,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `D3` Receipt sequence allocation.
 - `E1` Discount primitives.
 - `E2` Promotion engine v1.
+- `E3` Loyalty hooks.
 - `F1` Customer master.
 
 ## Monorepo Architecture
@@ -204,6 +205,18 @@ Backend source of truth:
   - then lowest promotion id.
 - Response includes applied promotion explanation text for receipt transparency.
 
+### Loyalty Hooks
+- Loyalty hook APIs:
+  - `POST /api/loyalty/earn`
+  - `POST /api/loyalty/redeem`
+- Loyalty extension model:
+  - `loyalty_event`
+- Integration behavior:
+  - configuration toggle `app.loyalty.enabled` enables/disables provider calls,
+  - when disabled, operations return deterministic `DISABLED` status and continue,
+  - provider runtime failures return deterministic `UNAVAILABLE` status without breaking the calling flow.
+- Includes a default stub provider contract (`LoyaltyProvider`) for earn/redeem extension points without hard coupling.
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -224,6 +237,7 @@ Backend source of truth:
   - `V14__discount_primitives.sql`
   - `V15__promotion_engine_v1.sql`
   - `V16__customer_master.sql`
+  - `V17__loyalty_hooks.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`

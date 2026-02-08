@@ -336,6 +336,34 @@ class PermissionMatrixIntegrationTest {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("POS-4004"));
 
+        mockMvc.perform(post("/api/loyalty/earn")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeLocationId": 1,
+                                  "customerId": 1,
+                                  "reference": "SEC-LOY-1",
+                                  "saleGrossAmount": 10.00
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/loyalty/earn")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeLocationId": 1,
+                                  "customerId": 1,
+                                  "reference": "SEC-LOY-2",
+                                  "saleGrossAmount": 10.00
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
         mockMvc.perform(post("/api/tax/preview")
                         .header("Authorization", "Bearer " + salesToken)
                         .contentType(MediaType.APPLICATION_JSON)
