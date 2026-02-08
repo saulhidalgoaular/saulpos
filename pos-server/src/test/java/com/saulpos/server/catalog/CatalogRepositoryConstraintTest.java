@@ -29,6 +29,8 @@ class CatalogRepositoryConstraintTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM cash_movement");
+        jdbcTemplate.execute("DELETE FROM cash_shift");
         jdbcTemplate.execute("DELETE FROM product_barcode");
         jdbcTemplate.execute("DELETE FROM product_variant");
         jdbcTemplate.execute("DELETE FROM product");
