@@ -240,6 +240,23 @@ Out of Scope:
 1. Integration tests for pagination and sorting.
 2. Performance smoke tests with seeded dataset.
 
+#### Card C5: Unit/Weight/Open-Price Item Modes
+- Goal: Support common convenience-store selling modes.
+- Dependencies: C1, C3.
+- Data Model:
+1. `product_sale_mode` (`UNIT`, `WEIGHT`, `OPEN_PRICE`).
+2. `product_uom` and quantity precision rules.
+- API Contract: product configuration fields + validation for decimal quantity and open-price entry.
+- Business Rules:
+1. `WEIGHT` products allow decimal quantities with precision limits.
+2. `OPEN_PRICE` entry requires permission and min/max policy validation.
+- Acceptance Criteria:
+1. Totals, tax, and rounding remain deterministic for decimal quantity and open-price items.
+2. Manual open-price entries are audited with actor and reason where required.
+- Test Plan:
+1. Unit tests for quantity precision and validation.
+2. Integration tests for weighted and open-price checkout flows.
+
 ### Phase D: Tax, Rounding, Receipt Numbering
 
 #### Card D1: Tax Engine v1
@@ -443,6 +460,46 @@ Out of Scope:
 1. Integration tests for partial and full returns.
 2. Permission tests for approval workflow.
 
+#### Card G4: Suspended/Parked Sales
+- Goal: Let operators park and resume carts during busy checkout operations.
+- Dependencies: G1, B3.
+- Data Model:
+1. cart status extensions (`ACTIVE`, `PARKED`, `EXPIRED`, `CANCELLED`).
+2. `parked_cart_reference` metadata.
+- API Contract:
+1. park cart endpoint.
+2. resume parked cart endpoint.
+3. list parked carts endpoint by store/terminal.
+- Business Rules:
+1. Resuming a parked cart enforces terminal/cashier policy constraints.
+2. Parked carts expire per configurable policy and cannot be checked out after expiry without explicit restore flow.
+- Acceptance Criteria:
+1. Resume operation restores lines/totals/promotions deterministically.
+2. Park/resume/cancel events are fully audited.
+- Test Plan:
+1. Integration tests for park/resume/expiry lifecycle.
+2. Concurrency tests for simultaneous resume attempts.
+
+#### Card G5: Void and Price Override Controls
+- Goal: Standardize controlled line void, transaction cancel, and price override flows.
+- Dependencies: G1, B2, E1.
+- Data Model:
+1. `sale_override_event`.
+2. `void_reason_code` and approval metadata.
+- API Contract:
+1. line void endpoint.
+2. line price override endpoint.
+3. cart cancel/void endpoint before final checkout.
+- Business Rules:
+1. Restricted override thresholds require manager approval.
+2. Reason code is mandatory for voids and overrides.
+- Acceptance Criteria:
+1. Totals and tax are recomputed correctly after void/override actions.
+2. Override and void actions are traceable in audit and reporting domains.
+- Test Plan:
+1. Unit tests for override validation and recomputation order.
+2. Integration tests for permissioned approval workflows.
+
 ### Phase H: Inventory Ledger
 
 #### Card H1: Inventory Movement Ledger
@@ -504,6 +561,26 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for partial receive and completion.
 
+#### Card H5: Lot and Expiry Tracking
+- Goal: Add lot-level traceability and expiry controls for regulated/perishable items.
+- Dependencies: H1, C1, I2.
+- Data Model:
+1. `inventory_lot`.
+2. `inventory_lot_balance`.
+3. lot-to-movement linkage records.
+- API Contract:
+1. receiving endpoints accept lot/expiry details.
+2. stock query endpoints can return lot-level balances and expiry state.
+- Business Rules:
+1. Lot tracking is configurable per product.
+2. Expired lots are blocked from sale except with explicit override permission if policy allows.
+- Acceptance Criteria:
+1. FEFO allocation is supported for lot-tracked products.
+2. Traceability exists from sale/return back to original receipt lot.
+- Test Plan:
+1. Unit tests for FEFO selection logic.
+2. Integration tests for receiving, selling, and expiring lot scenarios.
+
 ### Phase I: Purchasing and Suppliers
 
 #### Card I1: Supplier Master
@@ -539,6 +616,24 @@ Out of Scope:
 1. Cost updates are deterministic and auditable.
 - Test Plan:
 1. Unit tests for weighted average calculations.
+
+#### Card I4: Supplier Returns
+- Goal: Return damaged/expired inventory to suppliers with full traceability.
+- Dependencies: I2, H1.
+- Data Model:
+1. `supplier_return`.
+2. `supplier_return_line`.
+3. supplier return reference document metadata.
+- API Contract: create/approve/post supplier return endpoints.
+- Business Rules:
+1. Return quantity cannot exceed available quantity from received stock.
+2. Posting a supplier return creates outbound inventory movements and financial references.
+- Acceptance Criteria:
+1. Supplier return lifecycle is tracked (`DRAFT`, `APPROVED`, `POSTED`).
+2. Cost and stock impacts are auditable.
+- Test Plan:
+1. Integration tests for partial/full supplier returns.
+2. Unit tests for quantity eligibility rules.
 
 ### Phase J: Payments, Gift Cards, Store Credit
 
@@ -638,6 +733,17 @@ Out of Scope:
 - Acceptance Criteria:
 1. CSV includes headers, deterministic column order, UTF-8 output.
 
+#### Card L5: Exception and Override Reports
+- Goal: Provide operational oversight for sensitive POS actions.
+- Dependencies: G5, B3, J2.
+- API Contract: endpoints for void/override/no-sale/refund-exception reporting.
+- Acceptance Criteria:
+1. Filters available by date/store/cashier/terminal/reason code.
+2. Report rows include actor, approver, terminal, and correlation ID.
+- Test Plan:
+1. Integration tests for filter combinations and authorization.
+2. Reconciliation tests against source transaction/audit records.
+
 ### Phase M: Hardware Integration Layer
 
 #### Card M1: Printer Abstraction and Templates
@@ -663,6 +769,23 @@ Out of Scope:
 - Dependencies: C4.
 - Acceptance Criteria:
 1. Interfaces documented and stubs available.
+
+#### Card M4: Receipt Reprint and Journal Retrieval
+- Goal: Support common receipt recovery workflows without mutating financial history.
+- Dependencies: M1, G2, B2.
+- Data Model: optional `receipt_print_event`.
+- API Contract:
+1. receipt retrieval endpoint by sale/receipt number.
+2. receipt reprint endpoint.
+- Business Rules:
+1. Reprint permission is role-controlled and every reprint is audited.
+2. Reprint operations never alter sale totals, payments, or fiscal state.
+- Acceptance Criteria:
+1. Reprinted receipts are marked as `COPY` with operator and timestamp.
+2. Reprint failures are retriable and visible to operators.
+- Test Plan:
+1. Integration tests for authorized/unauthorized reprint attempts.
+2. Unit tests for print event/audit persistence.
 
 ### Phase N: LATAM Fiscal Plugin Layer
 
@@ -803,6 +926,39 @@ Out of Scope:
 - Test Plan:
 1. Integration tests with simulated API outages and recoveries.
 
+#### Card O11: Suspended Sales and Override UX
+- Goal: Deliver cashier-friendly controls for parked carts and sensitive line operations.
+- Dependencies: G4, G5, O4.
+- Acceptance Criteria:
+1. Cashier can park, list, and resume carts from the selling screen with keyboard-first flow.
+2. Line void and price override paths capture reason and approval context.
+3. Restricted actions are hidden/disabled for unauthorized roles.
+- Test Plan:
+1. UI integration tests for park/resume and override flows.
+2. Authorization UI tests for role-specific behavior.
+
+#### Card O12: Lot/Expiry and Supplier Return UX
+- Goal: Expose lot-aware inventory and supplier-return workflows in backoffice.
+- Dependencies: H5, I4, O7.
+- Acceptance Criteria:
+1. Receiving UI captures lot number and expiry for configured products.
+2. Stock views show expiry-aware balances and warnings.
+3. Supplier return workflow supports draft, approval, and posting.
+- Test Plan:
+1. UI integration tests for lot capture and validation.
+2. End-to-end tests for supplier return lifecycle.
+
+#### Card O13: Receipt Reprint and Exception Monitoring UX
+- Goal: Surface receipt recovery and exception oversight in operational UI.
+- Dependencies: M4, L5, O8.
+- Acceptance Criteria:
+1. Authorized users can search historical receipts and trigger reprint.
+2. Exception views show voids, overrides, no-sale drawer opens, and refund anomalies.
+3. Drill-down provides actor, approver, reason, and terminal context.
+- Test Plan:
+1. UI integration tests for receipt lookup/reprint.
+2. UI tests for exception filter/report interactions.
+
 ### Phase P: Final Productization and Release
 
 #### Card P1: End-to-End UAT Scenarios
@@ -908,6 +1064,7 @@ Out of Scope:
 | C2 | TODO |  |  |  |
 | C3 | TODO |  |  |  |
 | C4 | TODO |  |  |  |
+| C5 | TODO |  |  |  |
 | D1 | TODO |  |  |  |
 | D2 | TODO |  |  |  |
 | D3 | TODO |  |  |  |
@@ -920,13 +1077,17 @@ Out of Scope:
 | G1 | TODO |  |  |  |
 | G2 | TODO |  |  |  |
 | G3 | TODO |  |  |  |
+| G4 | TODO |  |  |  |
+| G5 | TODO |  |  |  |
 | H1 | TODO |  |  |  |
 | H2 | TODO |  |  |  |
 | H3 | TODO |  |  |  |
 | H4 | TODO |  |  |  |
+| H5 | TODO |  |  |  |
 | I1 | TODO |  |  |  |
 | I2 | TODO |  |  |  |
 | I3 | TODO |  |  |  |
+| I4 | TODO |  |  |  |
 | J1 | TODO |  |  |  |
 | J2 | TODO |  |  |  |
 | J3 | TODO |  |  |  |
@@ -937,9 +1098,11 @@ Out of Scope:
 | L2 | TODO |  |  |  |
 | L3 | TODO |  |  |  |
 | L4 | TODO |  |  |  |
+| L5 | TODO |  |  |  |
 | M1 | TODO |  |  |  |
 | M2 | TODO |  |  |  |
 | M3 | TODO |  |  |  |
+| M4 | TODO |  |  |  |
 | N1 | TODO |  |  |  |
 | N2 | TODO |  |  |  |
 | O1 | TODO |  |  |  |
@@ -952,6 +1115,9 @@ Out of Scope:
 | O8 | TODO |  |  |  |
 | O9 | TODO |  |  |  |
 | O10 | TODO |  |  |  |
+| O11 | TODO |  |  |  |
+| O12 | TODO |  |  |  |
+| O13 | TODO |  |  |  |
 | P1 | TODO |  |  |  |
 | P2 | TODO |  |  |  |
 | P3 | TODO |  |  |  |
