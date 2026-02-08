@@ -63,7 +63,7 @@ Out of Scope:
 
 ### Phase A: Foundation Hardening
 
-#### Card A1: Runtime and Build Baseline
+#### Card A1: Runtime and Build Baseline [SOLVED]
 - Goal: Make local + CI environment reproducible.
 - Dependencies: none.
 - Impacted Modules: root, `pos-server`.
