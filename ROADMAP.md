@@ -262,7 +262,7 @@ Out of Scope:
 
 ### Phase D: Tax, Rounding, Receipt Numbering
 
-#### Card D1: Tax Engine v1
+#### Card D1: Tax Engine v1 [SOLVED]
 - Goal: Compute tax correctly per line and totals.
 - Dependencies: C1, C3.
 - Data Model:
@@ -1070,7 +1070,7 @@ Out of Scope:
 | C3 | DONE |  |  | Price resolution endpoint implemented with deterministic precedence (store override > active price book > base price), effective windows, migration `V8`, and unit/integration tests |
 | C4 | DONE |  |  | Implemented `/api/catalog/products/search` with pagination and deterministic ordering, plus migration `V9` indexes for normalized SKU/name/barcode lookup |
 | C5 | DONE |  |  | Added sale mode configuration (`UNIT`, `WEIGHT`, `OPEN_PRICE`) with UOM/precision/open-price policy validation, migration `V10`, and open-price entry validation + audit flow (`open_price_entry_audit`) with unit/integration coverage |
-| D1 | TODO |  |  |  |
+| D1 | DONE |  |  | Implemented `tax_group` + `store_tax_rule` with migration `V11`, product tax-group assignment (`product.tax_group_id`), and `POST /api/tax/preview` with deterministic inclusive/exclusive/exempt/zero-rated line+total tax breakdown and unit/integration coverage |
 | D2 | TODO |  |  |  |
 | D3 | TODO |  |  |  |
 | E1 | TODO |  |  |  |
@@ -1131,9 +1131,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `D1` Tax engine v1.
-2. `D2` Rounding policy.
-3. `D3` Receipt sequence allocation.
+1. `D2` Rounding policy.
+2. `D3` Receipt sequence allocation.
+3. `E1` Discount primitives.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

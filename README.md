@@ -24,6 +24,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `C3` Price books and store overrides.
 - `C4` Search and lookup performance.
 - `C5` Unit/weight/open-price item modes.
+- `D1` Tax engine v1.
 
 ## Monorepo Architecture
 
@@ -121,6 +122,22 @@ Backend source of truth:
   - product base price fallback.
 - Deterministic and auditable resolution is returned with source metadata (`STORE_OVERRIDE`, `PRICE_BOOK`, `BASE_PRICE`).
 
+### Tax Engine v1
+- Tax preview API for cart calculations:
+  - `POST /api/tax/preview`
+- Supports store-configured tax modes:
+  - `INCLUSIVE`
+  - `EXCLUSIVE`
+- Supports tax treatments:
+  - standard rated
+  - exempt
+  - zero-rated
+- Returns deterministic line-level breakdown (`netAmount`, `taxAmount`, `grossAmount`) plus totals.
+- Tax configuration model:
+  - `tax_group`
+  - `store_tax_rule`
+  - product-level tax-group assignment via `product.tax_group_id`
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -135,6 +152,7 @@ Backend source of truth:
   - `V8__price_books_and_store_overrides.sql`
   - `V9__catalog_search_and_lookup_performance.sql`
   - `V10__unit_weight_open_price_item_modes.sql`
+  - `V11__tax_engine_v1.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -199,9 +217,11 @@ Key settings include:
 - Integration tests for weighted item configuration and open-price policy validation/audit flow.
 - Unit tests for pricing resolver precedence and fallback behavior.
 - Unit tests for sale-mode quantity precision and open-price policy validation.
+- Unit tests for tax calculation modes (`INCLUSIVE`, `EXCLUSIVE`, exempt, zero-rated).
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.
+- Integration tests for `POST /api/tax/preview` covering deterministic line/total breakdown and missing-rule validation.
 
 ## Project Planning and Status
 

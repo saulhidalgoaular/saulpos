@@ -7,6 +7,7 @@ public record ProductResponse(
         Long id,
         Long merchantId,
         Long categoryId,
+        Long taxGroupId,
         String sku,
         String name,
         BigDecimal basePrice,

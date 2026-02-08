@@ -22,6 +22,8 @@ import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
+import com.saulpos.server.tax.model.TaxGroupEntity;
+import com.saulpos.server.tax.repository.TaxGroupRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.data.domain.Page;
@@ -55,6 +57,7 @@ public class CatalogService {
     private final CategoryRepository categoryRepository;
     private final ProductBarcodeRepository productBarcodeRepository;
     private final MerchantRepository merchantRepository;
+    private final TaxGroupRepository taxGroupRepository;
     private final ProductSaleModePolicyValidator saleModePolicyValidator;
     private final OpenPriceEntryAuditRepository openPriceEntryAuditRepository;
 
@@ -206,6 +209,7 @@ public class CatalogService {
 
         product.setMerchant(merchant);
         product.setCategory(resolveCategory(request.categoryId(), merchant.getId(), existingCategoryId));
+        product.setTaxGroup(resolveTaxGroup(request.taxGroupId(), merchant.getId()));
         product.setSku(sku);
         product.setName(normalizeName(request.name()));
         product.setBasePrice(normalizeMoney(request.basePrice()));
@@ -290,6 +294,15 @@ public class CatalogService {
                     "inactive category cannot receive new product assignments: " + categoryId);
         }
         return category;
+    }
+
+    private TaxGroupEntity resolveTaxGroup(Long taxGroupId, Long merchantId) {
+        if (taxGroupId == null) {
+            return null;
+        }
+        return taxGroupRepository.findByIdAndMerchantIdAndActiveTrue(taxGroupId, merchantId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "tax group not found for merchantId=%d taxGroupId=%d".formatted(merchantId, taxGroupId)));
     }
 
     private ProductEntity requireProductWithDetails(Long id) {
@@ -389,6 +402,7 @@ public class CatalogService {
                 product.getId(),
                 product.getMerchant().getId(),
                 product.getCategory() != null ? product.getCategory().getId() : null,
+                product.getTaxGroup() != null ? product.getTaxGroup().getId() : null,
                 product.getSku(),
                 product.getName(),
                 product.getBasePrice(),

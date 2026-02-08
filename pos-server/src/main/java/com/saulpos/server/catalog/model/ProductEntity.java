@@ -3,6 +3,7 @@ package com.saulpos.server.catalog.model;
 import com.saulpos.api.catalog.ProductSaleMode;
 import com.saulpos.api.catalog.ProductUnitOfMeasure;
 import com.saulpos.server.identity.model.MerchantEntity;
+import com.saulpos.server.tax.model.TaxGroupEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,6 +50,10 @@ public class ProductEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private CategoryEntity category;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tax_group_id")
+    private TaxGroupEntity taxGroup;
 
     @Column(nullable = false, length = 80)
     private String sku;

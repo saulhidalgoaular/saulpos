@@ -14,6 +14,7 @@ public record ProductRequest(
         @NotNull(message = "merchantId is required")
         Long merchantId,
         Long categoryId,
+        Long taxGroupId,
         @NotBlank(message = "sku is required")
         @Size(max = 80, message = "sku must be at most 80 characters")
         String sku,
