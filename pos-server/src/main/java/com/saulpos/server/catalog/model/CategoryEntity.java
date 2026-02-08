@@ -45,6 +45,10 @@ public class CategoryEntity {
     @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private CategoryEntity parent;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 

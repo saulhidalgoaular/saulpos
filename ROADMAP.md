@@ -196,7 +196,7 @@ Out of Scope:
 1. Repository tests for unique constraints.
 2. Integration tests for CRUD and lookup.
 
-#### Card C2: Category and Department Taxonomy
+#### Card C2: Category and Department Taxonomy [SOLVED]
 - Goal: Support reporting-ready product grouping.
 - Dependencies: C1.
 - Data Model: hierarchical `category` with parent reference.

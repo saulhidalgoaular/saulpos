@@ -182,6 +182,36 @@ class CatalogIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4009"));
     }
 
+    @Test
+    void inactiveCategoryCannotReceiveNewProductAssignments() throws Exception {
+        CategoryEntity inactiveCategory = new CategoryEntity();
+        inactiveCategory.setMerchant(merchantRepository.getReferenceById(merchantId));
+        inactiveCategory.setCode("INACTIVE-C2");
+        inactiveCategory.setName("Inactive Category");
+        inactiveCategory.setActive(false);
+        inactiveCategory = categoryRepository.save(inactiveCategory);
+
+        mockMvc.perform(post("/api/catalog/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "merchantId": %d,
+                                  "categoryId": %d,
+                                  "sku": "sku-inactive-001",
+                                  "name": "Blocked Product",
+                                  "variants": [
+                                    {
+                                      "code": "unit",
+                                      "name": "Unit",
+                                      "barcodes": ["7790001112299"]
+                                    }
+                                  ]
+                                }
+                                """.formatted(merchantId, inactiveCategory.getId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
     private Long createProduct(String sku, String name, String... barcodes) throws Exception {
         String barcodeList = java.util.Arrays.stream(barcodes)
                 .map(value -> '"' + value + '"')

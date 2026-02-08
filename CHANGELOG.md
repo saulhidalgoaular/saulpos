@@ -21,3 +21,8 @@
 - Added catalog APIs: `POST/GET/PUT /api/catalog/products`, `GET /api/catalog/products/{id}`, activation endpoints, and `GET /api/catalog/products/lookup`.
 - Added barcode lookup authorization split: lookup supports `SALES_PROCESS` (and configuration admins), while catalog management remains `CONFIGURATION_MANAGE`.
 - Added catalog integration tests for CRUD/list/lookup flows and repository constraint tests for duplicate SKU enforcement.
+- Implemented Card C2 Category and Department Taxonomy in `pos-server` and `pos-api`.
+- Added migration `V7__category_department_taxonomy.sql` introducing hierarchical categories with `parent_id` and integrity constraints.
+- Added category hierarchy APIs: `GET /api/catalog/categories/tree` and `POST /api/catalog/categories/{id}/reparent`.
+- Enforced cycle-safe reparenting and blocked new product assignments to inactive categories.
+- Added tree-validation unit tests and hierarchy/product-assignment integration tests.

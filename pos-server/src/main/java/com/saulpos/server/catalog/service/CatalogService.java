@@ -46,7 +46,7 @@ public class CatalogService {
 
         ProductEntity product = new ProductEntity();
         product.setMerchant(merchant);
-        applyProductData(product, request, merchant, sku);
+        applyProductData(product, request, merchant, sku, null);
         syncVariants(product, request.variants());
 
         return toProductResponse(productRepository.save(product));
@@ -74,7 +74,8 @@ public class CatalogService {
         ensureSkuAvailable(merchant.getId(), sku, id);
 
         product.setMerchant(merchant);
-        applyProductData(product, request, merchant, sku);
+        Long existingCategoryId = product.getCategory() != null ? product.getCategory().getId() : null;
+        applyProductData(product, request, merchant, sku, existingCategoryId);
 
         product.getVariants().clear();
         productRepository.saveAndFlush(product);
@@ -114,9 +115,13 @@ public class CatalogService {
                 barcodeEntity.getBarcode());
     }
 
-    private void applyProductData(ProductEntity product, ProductRequest request, MerchantEntity merchant, String sku) {
+    private void applyProductData(ProductEntity product,
+                                  ProductRequest request,
+                                  MerchantEntity merchant,
+                                  String sku,
+                                  Long existingCategoryId) {
         product.setMerchant(merchant);
-        product.setCategory(resolveCategory(request.categoryId(), merchant.getId()));
+        product.setCategory(resolveCategory(request.categoryId(), merchant.getId(), existingCategoryId));
         product.setSku(sku);
         product.setName(normalizeName(request.name()));
         product.setDescription(normalizeDescription(request.description()));
@@ -181,13 +186,19 @@ public class CatalogService {
         }
     }
 
-    private CategoryEntity resolveCategory(Long categoryId, Long merchantId) {
+    private CategoryEntity resolveCategory(Long categoryId, Long merchantId, Long existingCategoryId) {
         if (categoryId == null) {
             return null;
         }
-        return categoryRepository.findByIdAndMerchantId(categoryId, merchantId)
+        CategoryEntity category = categoryRepository.findByIdAndMerchantId(categoryId, merchantId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
                         "category not found for merchantId=%d categoryId=%d".formatted(merchantId, categoryId)));
+
+        if (!category.isActive() && (existingCategoryId == null || !existingCategoryId.equals(categoryId))) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "inactive category cannot receive new product assignments: " + categoryId);
+        }
+        return category;
     }
 
     private ProductEntity requireProductWithDetails(Long id) {

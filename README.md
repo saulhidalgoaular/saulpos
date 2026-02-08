@@ -67,6 +67,12 @@ mvn javafx:run
 -   Barcode sellable lookup by merchant: `GET /api/catalog/products/lookup?merchantId={id}&barcode={code}`
 -   SKU uniqueness is enforced per merchant and each sellable variant can hold multiple barcodes.
 
+## 🌳 Category and Department Taxonomy (C2)
+-   Hierarchy tree retrieval: `GET /api/catalog/categories/tree?merchantId={id}`
+-   Move/reparent category: `POST /api/catalog/categories/{id}/reparent`
+-   Category hierarchy updates reject cycles.
+-   Inactive (soft-deleted) categories cannot receive new product assignments.
+
 ## 🛣️ Roadmap
 See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
 
