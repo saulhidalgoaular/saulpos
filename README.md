@@ -43,6 +43,17 @@ mvn javafx:run
 -   Login security includes BCrypt password hashing and configurable brute-force lockout.
 -   Login success/failure and logout are persisted in `auth_audit_event`.
 
+## 🛡️ Permission Matrix (B2)
+-   Permission introspection: `GET /api/security/permissions/current`.
+-   Permission catalog: `GET /api/security/permissions/catalog`.
+-   Role management: `GET /api/security/roles`, `POST /api/security/roles`, `PUT /api/security/roles/{id}/permissions`.
+-   Sensitive domains are deny-by-default and require explicit permissions:
+    - `SALES_PROCESS` for `/api/sales/**`
+    - `REFUND_PROCESS` for `/api/refunds/**`
+    - `INVENTORY_ADJUST` for `/api/inventory/**`
+    - `REPORT_VIEW` for `/api/reports/**`
+    - `CONFIGURATION_MANAGE` for `/api/identity/**` and role/configuration APIs
+
 ## 🛣️ Roadmap
 See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
 

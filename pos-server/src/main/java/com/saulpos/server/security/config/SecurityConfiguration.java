@@ -1,5 +1,7 @@
 package com.saulpos.server.security.config;
 
+import com.saulpos.server.security.authorization.PermissionCodes;
+import com.saulpos.server.security.authorization.SecurityAuthority;
 import com.saulpos.server.security.filter.BearerTokenAuthenticationFilter;
 import com.saulpos.server.security.web.ProblemAccessDeniedHandler;
 import com.saulpos.server.security.web.ProblemAuthenticationEntryPoint;
@@ -51,7 +53,20 @@ public class SecurityConfiguration {
                                 "/error",
                                 "/test/**")
                         .permitAll()
-                        .requestMatchers("/api/security/**", "/api/auth/logout").authenticated()
+                        .requestMatchers("/api/sales/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers("/api/refunds/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS))
+                        .requestMatchers("/api/inventory/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.INVENTORY_ADJUST))
+                        .requestMatchers("/api/reports/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.REPORT_VIEW))
+                        .requestMatchers("/api/identity/**", "/api/security/roles/**", "/api/security/permissions/catalog")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers("/api/security/me", "/api/security/permissions/current", "/api/auth/logout")
+                        .authenticated()
+                        .requestMatchers("/api/security/**")
+                        .authenticated()
                         .anyRequest().authenticated())
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(authenticationEntryPoint)

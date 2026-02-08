@@ -137,7 +137,7 @@ Out of Scope:
 1. Repository tests for constraints.
 2. Integration tests for assignment edge cases.
 
-#### Card B2: Permission Matrix and Enforcement
+#### Card B2: Permission Matrix and Enforcement [SOLVED]
 - Goal: Enforce fine-grained permissions for POS operations.
 - Dependencies: B1.
 - Impacted Modules: `pos-server`, `pos-api`.

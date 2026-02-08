@@ -1,6 +1,7 @@
 package com.saulpos.server.security.filter;
 
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.security.authorization.SecurityAuthority;
 import com.saulpos.server.security.service.AccessTokenValidationResult;
 import com.saulpos.server.security.service.AccessTokenValidationStatus;
 import com.saulpos.server.security.service.AuthenticatedUser;
@@ -20,6 +21,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -53,8 +55,10 @@ public class BearerTokenAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(AuthenticatedUser user) {
-        List<SimpleGrantedAuthority> authorities = user.roles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role))
+        List<SimpleGrantedAuthority> authorities = Stream.concat(
+                        user.roles().stream().map(SecurityAuthority::role),
+                        user.permissions().stream().map(SecurityAuthority::permission))
+                .map(SimpleGrantedAuthority::new)
                 .toList();
         UsernamePasswordAuthenticationToken authenticationToken =
                 new UsernamePasswordAuthenticationToken(user, null, authorities);

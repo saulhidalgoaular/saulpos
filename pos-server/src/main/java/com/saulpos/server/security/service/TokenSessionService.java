@@ -47,11 +47,13 @@ public class TokenSessionService {
         }
 
         Set<String> roleCodes = userRoleRepository.findRoleCodesByUserId(user.getId());
+        Set<String> permissionCodes = userRoleRepository.findPermissionCodesByUserId(user.getId());
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(
                 user.getId(),
                 session.getId(),
                 user.getUsername(),
-                roleCodes);
+                roleCodes,
+                permissionCodes);
 
         return AccessTokenValidationResult.authenticated(authenticatedUser);
     }
@@ -131,5 +133,10 @@ public class TokenSessionService {
     @Transactional(readOnly = true)
     public Set<String> findRoleCodesByUserId(Long userId) {
         return userRoleRepository.findRoleCodesByUserId(userId);
+    }
+
+    @Transactional(readOnly = true)
+    public Set<String> findPermissionCodesByUserId(Long userId) {
+        return userRoleRepository.findPermissionCodesByUserId(userId);
     }
 }

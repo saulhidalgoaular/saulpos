@@ -1,10 +1,9 @@
-package com.saulpos.server.security.service;
+package com.saulpos.api.security;
 
 import java.util.Set;
 
-public record AuthenticatedUser(
+public record CurrentUserPermissionsResponse(
         Long userId,
-        Long sessionId,
         String username,
         Set<String> roles,
         Set<String> permissions

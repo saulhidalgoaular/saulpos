@@ -26,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@WithMockUser(username = "admin", roles = {"MANAGER"})
+@WithMockUser(username = "admin", authorities = {"PERM_CONFIGURATION_MANAGE"})
 class IdentityIntegrationTest {
 
     @Autowired
