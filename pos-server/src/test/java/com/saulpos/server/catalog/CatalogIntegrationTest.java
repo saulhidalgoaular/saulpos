@@ -50,6 +50,7 @@ class CatalogIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM open_price_entry_audit");
         jdbcTemplate.execute("DELETE FROM cash_movement");
         jdbcTemplate.execute("DELETE FROM cash_shift");
         jdbcTemplate.execute("DELETE FROM product_barcode");
@@ -82,6 +83,115 @@ class CatalogIntegrationTest {
         category.setActive(true);
         category = categoryRepository.save(category);
         categoryId = category.getId();
+    }
+
+    @Test
+    void weightedProductModeIsPersistedAndReturned() throws Exception {
+        mockMvc.perform(post("/api/catalog/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "merchantId": %d,
+                                  "categoryId": %d,
+                                  "sku": "sku-weight-001",
+                                  "name": "Bulk Rice",
+                                  "saleMode": "WEIGHT",
+                                  "quantityUom": "KILOGRAM",
+                                  "quantityPrecision": 3,
+                                  "description": "Weighted item",
+                                  "variants": [
+                                    {
+                                      "code": "unit",
+                                      "name": "Unit",
+                                      "barcodes": ["7790011111111"]
+                                    }
+                                  ]
+                                }
+                                """.formatted(merchantId, categoryId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.saleMode").value("WEIGHT"))
+                .andExpect(jsonPath("$.quantityUom").value("KILOGRAM"))
+                .andExpect(jsonPath("$.quantityPrecision").value(3))
+                .andExpect(jsonPath("$.openPriceMin").isEmpty())
+                .andExpect(jsonPath("$.openPriceMax").isEmpty())
+                .andExpect(jsonPath("$.openPriceRequiresReason").value(false));
+
+        mockMvc.perform(get("/api/catalog/products/lookup")
+                        .param("merchantId", merchantId.toString())
+                        .param("barcode", "7790011111111"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.saleMode").value("WEIGHT"))
+                .andExpect(jsonPath("$.quantityUom").value("KILOGRAM"))
+                .andExpect(jsonPath("$.quantityPrecision").value(3));
+    }
+
+    @Test
+    @WithMockUser(username = "open-price-cashier", authorities = {"PERM_CONFIGURATION_MANAGE", "PERM_OPEN_PRICE_ENTRY"})
+    void openPriceValidationRequiresReasonAndAuditsAcceptedEntries() throws Exception {
+        MvcResult createResult = mockMvc.perform(post("/api/catalog/products")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "merchantId": %d,
+                                  "categoryId": %d,
+                                  "sku": "sku-open-price-001",
+                                  "name": "Custom Service",
+                                  "saleMode": "OPEN_PRICE",
+                                  "quantityUom": "UNIT",
+                                  "quantityPrecision": 0,
+                                  "openPriceMin": 5.00,
+                                  "openPriceMax": 15.00,
+                                  "openPriceRequiresReason": true,
+                                  "description": "Open price item",
+                                  "variants": [
+                                    {
+                                      "code": "unit",
+                                      "name": "Unit",
+                                      "barcodes": ["7790011111122"]
+                                    }
+                                  ]
+                                }
+                                """.formatted(merchantId, categoryId)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.saleMode").value("OPEN_PRICE"))
+                .andExpect(jsonPath("$.openPriceMin").value(5.00))
+                .andExpect(jsonPath("$.openPriceMax").value(15.00))
+                .andExpect(jsonPath("$.openPriceRequiresReason").value(true))
+                .andReturn();
+
+        long productId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+
+        mockMvc.perform(post("/api/catalog/products/{id}/open-price/validate", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "enteredPrice": 10.00
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+
+        mockMvc.perform(post("/api/catalog/products/{id}/open-price/validate", productId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header("X-Correlation-ID", "corr-open-price-1")
+                        .content("""
+                                {
+                                  "enteredPrice": 9.99,
+                                  "reason": "Manual override approved"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.productId").value(productId))
+                .andExpect(jsonPath("$.enteredPrice").value(9.99))
+                .andExpect(jsonPath("$.minAllowedPrice").value(5.00))
+                .andExpect(jsonPath("$.maxAllowedPrice").value(15.00))
+                .andExpect(jsonPath("$.reasonRequired").value(true));
+
+        Integer auditRows = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM open_price_entry_audit WHERE product_id = ?",
+                Integer.class,
+                productId);
+        org.assertj.core.api.Assertions.assertThat(auditRows).isEqualTo(1);
     }
 
     @Test

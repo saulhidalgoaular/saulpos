@@ -8,6 +8,9 @@ public record ProductLookupResponse(
         String productName,
         String variantCode,
         String variantName,
-        String barcode
+        String barcode,
+        ProductSaleMode saleMode,
+        ProductUnitOfMeasure quantityUom,
+        int quantityPrecision
 ) {
 }

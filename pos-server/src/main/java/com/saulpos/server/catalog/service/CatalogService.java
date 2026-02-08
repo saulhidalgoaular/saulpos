@@ -1,16 +1,21 @@
 package com.saulpos.server.catalog.service;
 
+import com.saulpos.api.catalog.OpenPriceEntryValidationRequest;
+import com.saulpos.api.catalog.OpenPriceEntryValidationResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductRequest;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.catalog.ProductSaleMode;
 import com.saulpos.api.catalog.ProductVariantRequest;
 import com.saulpos.api.catalog.ProductVariantResponse;
+import com.saulpos.server.catalog.model.OpenPriceEntryAuditEntity;
 import com.saulpos.server.catalog.model.CategoryEntity;
 import com.saulpos.server.catalog.model.ProductBarcodeEntity;
 import com.saulpos.server.catalog.model.ProductEntity;
 import com.saulpos.server.catalog.model.ProductVariantEntity;
 import com.saulpos.server.catalog.repository.CategoryRepository;
+import com.saulpos.server.catalog.repository.OpenPriceEntryAuditRepository;
 import com.saulpos.server.catalog.repository.ProductBarcodeRepository;
 import com.saulpos.server.catalog.repository.ProductRepository;
 import com.saulpos.server.error.BaseException;
@@ -18,8 +23,11 @@ import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +55,8 @@ public class CatalogService {
     private final CategoryRepository categoryRepository;
     private final ProductBarcodeRepository productBarcodeRepository;
     private final MerchantRepository merchantRepository;
+    private final ProductSaleModePolicyValidator saleModePolicyValidator;
+    private final OpenPriceEntryAuditRepository openPriceEntryAuditRepository;
 
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
@@ -117,6 +127,37 @@ public class CatalogService {
     }
 
     @Transactional
+    public OpenPriceEntryValidationResponse validateOpenPriceEntry(Long productId, OpenPriceEntryValidationRequest request) {
+        ProductEntity product = requireProductWithDetails(productId);
+        if (product.getSaleMode() != ProductSaleMode.OPEN_PRICE) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "product is not configured for OPEN_PRICE mode");
+        }
+
+        BigDecimal enteredPrice = saleModePolicyValidator.validateOpenPriceEntry(
+                request.enteredPrice(),
+                product.getOpenPriceMin(),
+                product.getOpenPriceMax(),
+                product.isOpenPriceRequiresReason(),
+                request.reason());
+
+        OpenPriceEntryAuditEntity auditEntity = new OpenPriceEntryAuditEntity();
+        auditEntity.setProduct(product);
+        auditEntity.setActorUsername(resolveActorUsername());
+        auditEntity.setEnteredPrice(enteredPrice);
+        auditEntity.setReason(normalizeDescription(request.reason()));
+        auditEntity.setCorrelationId(MDC.get("correlationId"));
+        openPriceEntryAuditRepository.save(auditEntity);
+
+        return new OpenPriceEntryValidationResponse(
+                product.getId(),
+                product.getSku(),
+                enteredPrice,
+                product.getOpenPriceMin(),
+                product.getOpenPriceMax(),
+                product.isOpenPriceRequiresReason());
+    }
+
+    @Transactional
     public ProductResponse setProductActive(Long id, boolean active) {
         ProductEntity product = requireProductWithDetails(id);
         product.setActive(active);
@@ -144,7 +185,10 @@ public class CatalogService {
                 product.getName(),
                 variant.getCode(),
                 variant.getName(),
-                barcodeEntity.getBarcode());
+                barcodeEntity.getBarcode(),
+                product.getSaleMode(),
+                product.getQuantityUom(),
+                product.getQuantityPrecision());
     }
 
     private void applyProductData(ProductEntity product,
@@ -152,11 +196,25 @@ public class CatalogService {
                                   MerchantEntity merchant,
                                   String sku,
                                   Long existingCategoryId) {
+        ProductSaleModePolicyValidator.NormalizedPolicy normalizedPolicy = saleModePolicyValidator.normalizePolicy(
+                request.saleMode(),
+                request.quantityUom(),
+                request.quantityPrecision(),
+                request.openPriceMin(),
+                request.openPriceMax(),
+                request.openPriceRequiresReason());
+
         product.setMerchant(merchant);
         product.setCategory(resolveCategory(request.categoryId(), merchant.getId(), existingCategoryId));
         product.setSku(sku);
         product.setName(normalizeName(request.name()));
         product.setBasePrice(normalizeMoney(request.basePrice()));
+        product.setSaleMode(normalizedPolicy.saleMode());
+        product.setQuantityUom(normalizedPolicy.quantityUom());
+        product.setQuantityPrecision(normalizedPolicy.quantityPrecision());
+        product.setOpenPriceMin(normalizedPolicy.openPriceMin());
+        product.setOpenPriceMax(normalizedPolicy.openPriceMax());
+        product.setOpenPriceRequiresReason(normalizedPolicy.openPriceRequiresReason());
         product.setDescription(normalizeDescription(request.description()));
     }
 
@@ -334,9 +392,23 @@ public class CatalogService {
                 product.getSku(),
                 product.getName(),
                 product.getBasePrice(),
+                product.getSaleMode(),
+                product.getQuantityUom(),
+                product.getQuantityPrecision(),
+                product.getOpenPriceMin(),
+                product.getOpenPriceMax(),
+                product.isOpenPriceRequiresReason(),
                 product.getDescription(),
                 product.isActive(),
                 new ArrayList<>(variants));
+    }
+
+    private String resolveActorUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            return "unknown";
+        }
+        return authentication.getName();
     }
 
     private static final class VariantAccumulator {

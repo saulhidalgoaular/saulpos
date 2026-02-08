@@ -1,5 +1,7 @@
 package com.saulpos.server.catalog.web;
 
+import com.saulpos.api.catalog.OpenPriceEntryValidationRequest;
+import com.saulpos.api.catalog.OpenPriceEntryValidationResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductRequest;
 import com.saulpos.api.catalog.ProductResponse;
@@ -87,5 +89,11 @@ public class ProductController {
     @PostMapping("/{id}/deactivate")
     public ProductResponse deactivate(@PathVariable("id") Long id) {
         return catalogService.setProductActive(id, false);
+    }
+
+    @PostMapping("/{id}/open-price/validate")
+    public OpenPriceEntryValidationResponse validateOpenPriceEntry(@PathVariable("id") Long id,
+                                                                   @Valid @RequestBody OpenPriceEntryValidationRequest request) {
+        return catalogService.validateOpenPriceEntry(id, request);
     }
 }

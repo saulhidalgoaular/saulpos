@@ -23,6 +23,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `C2` Category and department taxonomy.
 - `C3` Price books and store overrides.
 - `C4` Search and lookup performance.
+- `C5` Unit/weight/open-price item modes.
 
 ## Monorepo Architecture
 
@@ -101,6 +102,16 @@ Backend source of truth:
 - Enforced rules include merchant-scoped SKU uniqueness, cycle-safe category trees, and no new product assignment to inactive categories.
 - Search endpoint provides deterministic pagination (ordered by normalized SKU then ID) and supports query matching by SKU, name, or barcode.
 
+### Unit, Weight, and Open-Price Item Modes
+- Product configuration now supports:
+  - `saleMode`: `UNIT`, `WEIGHT`, `OPEN_PRICE`
+  - `quantityUom`: `UNIT`, `KILOGRAM`, `GRAM`, `POUND`
+  - `quantityPrecision` rules by mode
+  - open-price policy: `openPriceMin`, `openPriceMax`, `openPriceRequiresReason`
+- Open-price entry policy validation endpoint:
+  - `POST /api/catalog/products/{id}/open-price/validate`
+- Manual open-price validations are audited in `open_price_entry_audit` with actor, reason, correlation ID, and timestamp.
+
 ### Pricing (Price Books and Store Overrides)
 - Price resolution API:
   - `GET /api/catalog/prices/resolve?storeLocationId={id}&productId={id}&at={isoDateTime}`
@@ -123,6 +134,7 @@ Backend source of truth:
   - `V7__category_department_taxonomy.sql`
   - `V8__price_books_and_store_overrides.sql`
   - `V9__catalog_search_and_lookup_performance.sql`
+  - `V10__unit_weight_open_price_item_modes.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -184,7 +196,9 @@ Key settings include:
 - Integration tests for auth lifecycle, brute-force lockout, identity APIs, permission matrix, shift lifecycle, and catalog flows.
 - Integration tests for price resolution precedence and effective-date windows.
 - Integration tests for catalog search pagination, deterministic ordering, and barcode search matching.
+- Integration tests for weighted item configuration and open-price policy validation/audit flow.
 - Unit tests for pricing resolver precedence and fallback behavior.
+- Unit tests for sale-mode quantity precision and open-price policy validation.
 - Concurrency coverage for open-shift race conditions.
 - Repository and validator tests for catalog and category constraints.
 - Error-handling integration tests for stable error contracts.

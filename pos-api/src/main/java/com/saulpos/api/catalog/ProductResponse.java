@@ -10,6 +10,12 @@ public record ProductResponse(
         String sku,
         String name,
         BigDecimal basePrice,
+        ProductSaleMode saleMode,
+        ProductUnitOfMeasure quantityUom,
+        int quantityPrecision,
+        BigDecimal openPriceMin,
+        BigDecimal openPriceMax,
+        boolean openPriceRequiresReason,
         String description,
         boolean active,
         List<ProductVariantResponse> variants

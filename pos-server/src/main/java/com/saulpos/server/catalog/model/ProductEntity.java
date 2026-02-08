@@ -1,5 +1,7 @@
 package com.saulpos.server.catalog.model;
 
+import com.saulpos.api.catalog.ProductSaleMode;
+import com.saulpos.api.catalog.ProductUnitOfMeasure;
 import com.saulpos.server.identity.model.MerchantEntity;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -8,6 +10,8 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
@@ -60,6 +64,26 @@ public class ProductEntity {
 
     @Column(name = "base_price", nullable = false, precision = 14, scale = 2)
     private BigDecimal basePrice = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sale_mode", nullable = false, length = 20)
+    private ProductSaleMode saleMode = ProductSaleMode.UNIT;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "quantity_uom", nullable = false, length = 20)
+    private ProductUnitOfMeasure quantityUom = ProductUnitOfMeasure.UNIT;
+
+    @Column(name = "quantity_precision", nullable = false)
+    private int quantityPrecision = 0;
+
+    @Column(name = "open_price_min", precision = 14, scale = 2)
+    private BigDecimal openPriceMin;
+
+    @Column(name = "open_price_max", precision = 14, scale = 2)
+    private BigDecimal openPriceMax;
+
+    @Column(name = "open_price_requires_reason", nullable = false)
+    private boolean openPriceRequiresReason = false;
 
     @Column(length = 255)
     private String description;

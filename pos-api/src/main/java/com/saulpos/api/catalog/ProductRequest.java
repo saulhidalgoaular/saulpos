@@ -23,6 +23,16 @@ public record ProductRequest(
         @DecimalMin(value = "0.00", message = "basePrice must be non-negative")
         @Digits(integer = 12, fraction = 2, message = "basePrice must have up to 12 integer digits and 2 decimals")
         BigDecimal basePrice,
+        ProductSaleMode saleMode,
+        ProductUnitOfMeasure quantityUom,
+        Integer quantityPrecision,
+        @DecimalMin(value = "0.00", message = "openPriceMin must be non-negative")
+        @Digits(integer = 12, fraction = 2, message = "openPriceMin must have up to 12 integer digits and 2 decimals")
+        BigDecimal openPriceMin,
+        @DecimalMin(value = "0.00", message = "openPriceMax must be non-negative")
+        @Digits(integer = 12, fraction = 2, message = "openPriceMax must have up to 12 integer digits and 2 decimals")
+        BigDecimal openPriceMax,
+        Boolean openPriceRequiresReason,
         @Size(max = 255, message = "description must be at most 255 characters")
         String description,
         @NotNull(message = "variants are required")
