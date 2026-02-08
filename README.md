@@ -37,5 +37,8 @@ mvn javafx:run
 -   **Soft Delete**: Enabled by default (audit trail). Configurable to HARD delete via `app.deletion-strategy=hard`.
 -   **Migrations**: Managed by Flyway (`pos-server/src/main/resources/db/migration`).
 
+## 🛣️ Roadmap
+See [ROADMAP.md](ROADMAP.md) for the detailed implementation plan and checking project status.
+
 ## 📜 Legacy Code
 The original monolithic code has been moved to the `legacy-v1` branch.
