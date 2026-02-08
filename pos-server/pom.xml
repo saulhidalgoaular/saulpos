@@ -41,6 +41,11 @@
             <scope>runtime</scope>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
         <!-- Migration -->
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -56,6 +61,13 @@
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-mysql</artifactId> 
             <version>${flyway.version}</version>
+        </dependency>
+
+        <!-- Logging -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+            <version>7.4</version>
         </dependency>
 
         <!-- Utils -->

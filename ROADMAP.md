@@ -81,7 +81,7 @@ Out of Scope:
 2. Run optional PostgreSQL compatibility suite (for example `mvn -Pit-postgres verify`) against a pre-provisioned external PostgreSQL instance.
 3. Verify Flyway history table creation and version tracking.
 
-#### Card A2: Error Contract + Observability
+#### Card A2: Error Contract + Observability [SOLVED]
 - Goal: Standardize runtime diagnostics and API errors.
 - Dependencies: A1.
 - Impacted Modules: `pos-server`, `pos-api`.
