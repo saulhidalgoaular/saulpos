@@ -1,4 +1,4 @@
-package com.saulpos.server.security.model;
+package com.saulpos.server.identity.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,6 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -20,37 +21,41 @@ import java.time.Instant;
 @Setter
 @NoArgsConstructor
 @Entity
-@Table(name = "auth_session")
-public class AuthSessionEntity {
+@Table(name = "terminal_device")
+public class TerminalDeviceEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id", nullable = false)
-    private UserAccountEntity user;
+    @JoinColumn(name = "store_location_id", nullable = false)
+    private StoreLocationEntity storeLocation;
 
-    @Column(name = "access_token_hash", nullable = false, unique = true, columnDefinition = "CHAR(64)")
-    private String accessTokenHash;
+    @Column(nullable = false, unique = true, length = 80)
+    private String code;
 
-    @Column(name = "refresh_token_hash", nullable = false, unique = true, columnDefinition = "CHAR(64)")
-    private String refreshTokenHash;
+    @Column(nullable = false, length = 120)
+    private String name;
 
-    @Column(name = "access_expires_at", nullable = false)
-    private Instant accessExpiresAt;
-
-    @Column(name = "refresh_expires_at", nullable = false)
-    private Instant refreshExpiresAt;
-
-    @Column(name = "revoked_at")
-    private Instant revokedAt;
+    @Column(name = "is_active", nullable = false)
+    private boolean active = true;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private Instant updatedAt;
+
     @PrePersist
     void prePersist() {
-        this.createdAt = Instant.now();
+        Instant now = Instant.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    @PreUpdate
+    void preUpdate() {
+        this.updatedAt = Instant.now();
     }
 }

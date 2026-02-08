@@ -117,7 +117,7 @@ Out of Scope:
 
 ### Phase B: Identity, RBAC, and Store Structure
 
-#### Card B1: Tenant and Location Model
+#### Card B1: Tenant and Location Model [SOLVED]
 - Goal: Model merchant/store/terminal identities cleanly.
 - Dependencies: A3.
 - Impacted Modules: `pos-server`, `pos-api`, `pos-core`.
@@ -1062,7 +1062,7 @@ Out of Scope:
 | A1 | TODO |  |  |  |
 | A2 | TODO |  |  |  |
 | A3 | TODO |  |  |  |
-| B1 | TODO |  |  |  |
+| B1 | DONE |  |  | Implemented tenant/location model with APIs, migration, and integration tests |
 | B2 | TODO |  |  |  |
 | B3 | TODO |  |  |  |
 | C1 | TODO |  |  |  |

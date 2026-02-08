@@ -51,6 +51,7 @@ class AuthBruteForceIntegrationTest {
     void setUp() {
         jdbcTemplate.execute("DELETE FROM auth_audit_event");
         jdbcTemplate.execute("DELETE FROM auth_session");
+        jdbcTemplate.execute("DELETE FROM store_user_assignment");
         jdbcTemplate.execute("DELETE FROM role_permission");
         jdbcTemplate.execute("DELETE FROM user_role");
         jdbcTemplate.execute("DELETE FROM app_permission");

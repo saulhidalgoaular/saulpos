@@ -29,7 +29,7 @@ public class AuthService {
     private final SecurityProperties securityProperties;
     private final Clock clock;
 
-    @Transactional
+    @Transactional(noRollbackFor = BaseException.class)
     public AuthTokenResponse login(LoginRequest loginRequest) {
         String username = loginRequest.username().trim();
         UserAccountEntity user = userAccountRepository.findByUsernameIgnoreCase(username).orElse(null);
