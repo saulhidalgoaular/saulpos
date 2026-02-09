@@ -54,6 +54,16 @@ class AuthLifecycleIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM payment_allocation");
+        jdbcTemplate.execute("DELETE FROM payment");
+        jdbcTemplate.execute("DELETE FROM inventory_movement");
+        jdbcTemplate.execute("DELETE FROM sale_line");
+        jdbcTemplate.execute("DELETE FROM sale");
+        jdbcTemplate.execute("DELETE FROM sale_override_event");
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM auth_audit_event");
         jdbcTemplate.execute("DELETE FROM auth_session");
         jdbcTemplate.execute("DELETE FROM store_user_assignment");

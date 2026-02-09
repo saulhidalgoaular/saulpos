@@ -426,7 +426,7 @@ Out of Scope:
 1. Unit tests for calculation pipeline.
 2. Integration tests for cart mutation flows.
 
-#### Card G2: Atomic Checkout
+#### Card G2: Atomic Checkout [SOLVED]
 - Goal: Commit sale, payment, receipt, and stock movement in one transaction.
 - Dependencies: G1, D3, J1.
 - Data Model:
@@ -1082,7 +1082,7 @@ Out of Scope:
 | F2 | DONE |  |  | Implemented `customer_group` + `customer_group_assignment` with migration `V18`, customer group create/list + assignment APIs, and customer-context pricing precedence `store override > customer-group price book > standard price book > base price` via `GET /api/catalog/prices/resolve` |
 | F3 | TODO |  |  |  |
 | G1 | DONE |  |  | Implemented cart lifecycle APIs (`POST /api/sales/carts`, line add/update/remove, recalculate, get), migration `V19` (`sale_cart`, `sale_cart_line`), deterministic totals recomputation (pricing+tax+rounding), idempotent add-line `lineKey` handling, and unit/integration coverage for quantity policy, invalid product/quantity errors, and cart mutation flow |
-| G2 | TODO |  |  |  |
+| G2 | DONE |  |  | Implemented atomic checkout with migration `V24` (`sale`, `sale_line`, `inventory_movement`), in-transaction receipt allocation + sale persistence on `POST /api/sales/checkout`, cart transition to `CHECKED_OUT`, checkout response `saleId`/`receiptNumber`, and integration/concurrency coverage for single-commit behavior under parallel attempts |
 | G3 | TODO |  |  |  |
 | G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
 | G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `G2` Atomic checkout.
-2. `J2` Payment state machine.
-3. `H1` Inventory movement ledger.
+1. `J2` Payment state machine.
+2. `H1` Inventory movement ledger.
+3. `G3` Returns and refunds.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

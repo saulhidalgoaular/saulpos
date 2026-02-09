@@ -323,6 +323,8 @@ class SaleCartIntegrationTest {
                                 """.formatted(cartId, cashierUserId, terminalDeviceId)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.cartId").value(cartId))
+                .andExpect(jsonPath("$.saleId").isNumber())
+                .andExpect(jsonPath("$.receiptNumber").isString())
                 .andExpect(jsonPath("$.totalPayable").value(11.00))
                 .andExpect(jsonPath("$.totalAllocated").value(11.00))
                 .andExpect(jsonPath("$.totalTendered").value(16.00))
@@ -342,6 +344,34 @@ class SaleCartIntegrationTest {
                 Integer.class,
                 cartId);
         assertThat(paymentCount).isEqualTo(1);
+
+        Integer saleCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sale WHERE cart_id = ?",
+                Integer.class,
+                cartId);
+        assertThat(saleCount).isEqualTo(1);
+
+        Integer saleLineCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sale_line sl "
+                        + "JOIN sale s ON s.id = sl.sale_id "
+                        + "WHERE s.cart_id = ?",
+                Integer.class,
+                cartId);
+        assertThat(saleLineCount).isEqualTo(1);
+
+        Integer movementCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM inventory_movement im "
+                        + "JOIN sale s ON s.id = im.sale_id "
+                        + "WHERE s.cart_id = ? AND im.movement_type = 'SALE'",
+                Integer.class,
+                cartId);
+        assertThat(movementCount).isEqualTo(1);
+
+        String cartStatus = jdbcTemplate.queryForObject(
+                "SELECT status FROM sale_cart WHERE id = ?",
+                String.class,
+                cartId);
+        assertThat(cartStatus).isEqualTo("CHECKED_OUT");
 
         List<String> tenderTypes = jdbcTemplate.queryForList(
                 "SELECT tender_type FROM payment_allocation pa "

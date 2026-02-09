@@ -35,6 +35,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `I1` Supplier master.
 - `J1` Tender and split payments.
 - `G1` Cart lifecycle service.
+- `G2` Atomic checkout.
 - `G4` Suspended/parked sales.
 - `G5` Void and price override controls.
 
@@ -198,6 +199,20 @@ Backend source of truth:
   - non-cash allocations must not over/under tender relative to the allocated amount.
 - Checkout payment captures are persisted as deterministic allocation snapshots per active cart.
 
+### Atomic Checkout
+- Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.
+- Checkout persistence model:
+  - `sale`
+  - `sale_line`
+  - `inventory_movement`
+- `POST /api/sales/checkout` response now includes:
+  - `saleId`
+  - `receiptNumber`
+- Enforced rules:
+  - checkout requires an active cart with at least one line,
+  - successful checkout transitions the cart status to `CHECKED_OUT`,
+  - each checkout line writes a negative `SALE` inventory movement for traceability.
+
 ### Catalog and Category Hierarchy
 - Product APIs:
   - `POST /api/catalog/products`
@@ -333,6 +348,7 @@ Backend source of truth:
   - `V21__void_and_price_override_controls.sql`
   - `V22__supplier_master.sql`
   - `V23__tender_and_split_payments.sql`
+  - `V24__atomic_checkout.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -420,7 +436,8 @@ Key settings include:
 - Concurrency integration tests for simultaneous parked-cart resume attempts.
 - Integration tests for line/cart void and line price-override flows including override-event auditing.
 - Integration tests for manager-threshold override enforcement and sales authorization checks on new override endpoints.
-- Integration tests for checkout split-payment allocation validation and persisted payment snapshots.
+- Integration tests for checkout split-payment allocation validation, persisted payment snapshots, and atomic sale/line/inventory movement persistence.
+- Concurrency integration test for parallel checkout attempts on the same cart (single success + conflict for competing request).
 - Unit tests for cart quantity policy validation by sale mode and precision.
 - Unit tests for tender allocation validation and cash-change calculation.
 

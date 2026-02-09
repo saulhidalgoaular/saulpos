@@ -1,5 +1,7 @@
 package com.saulpos.server.sale.service;
 
+import com.saulpos.api.receipt.ReceiptAllocationRequest;
+import com.saulpos.api.receipt.ReceiptAllocationResponse;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.api.sale.SaleCheckoutRequest;
@@ -9,11 +11,19 @@ import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.receipt.service.ReceiptService;
+import com.saulpos.server.sale.model.InventoryMovementEntity;
+import com.saulpos.server.sale.model.InventoryMovementType;
 import com.saulpos.server.sale.model.PaymentAllocationEntity;
 import com.saulpos.server.sale.model.PaymentEntity;
 import com.saulpos.server.sale.model.SaleCartEntity;
+import com.saulpos.server.sale.model.SaleCartLineEntity;
+import com.saulpos.server.sale.model.SaleEntity;
+import com.saulpos.server.sale.model.SaleLineEntity;
+import com.saulpos.server.sale.repository.InventoryMovementRepository;
 import com.saulpos.server.sale.repository.PaymentRepository;
 import com.saulpos.server.sale.repository.SaleCartRepository;
+import com.saulpos.server.sale.repository.SaleRepository;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,18 +40,93 @@ public class SaleCheckoutService {
     private final SaleCartRepository saleCartRepository;
     private final UserAccountRepository userAccountRepository;
     private final TerminalDeviceRepository terminalDeviceRepository;
+    private final SaleRepository saleRepository;
+    private final InventoryMovementRepository inventoryMovementRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentAllocationValidator paymentAllocationValidator;
+    private final ReceiptService receiptService;
 
     @Transactional
     public SaleCheckoutResponse checkout(SaleCheckoutRequest request) {
         SaleCartEntity cart = requireActiveCartForUpdate(request.cartId());
         requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+        requireCartHasLines(cart);
+        requireNoExistingSaleForCart(cart);
 
         PaymentAllocationValidator.ValidationResult validationResult = paymentAllocationValidator.validate(
                 cart.getTotalPayable(),
                 request.payments());
 
+        ReceiptAllocationResponse receipt = receiptService.allocate(new ReceiptAllocationRequest(cart.getTerminalDevice().getId()));
+
+        SaleEntity sale = createSale(cart, receipt);
+        SaleEntity savedSale = saleRepository.save(sale);
+        inventoryMovementRepository.saveAll(createInventoryMovements(savedSale));
+
+        PaymentEntity savedPayment = upsertPayment(cart, validationResult);
+
+        cart.setStatus(SaleCartStatus.CHECKED_OUT);
+        saleCartRepository.save(cart);
+
+        return new SaleCheckoutResponse(
+                cart.getId(),
+                savedSale.getId(),
+                savedSale.getReceiptNumber(),
+                savedPayment.getId(),
+                savedPayment.getTotalPayable(),
+                savedPayment.getTotalAllocated(),
+                savedPayment.getTotalTendered(),
+                savedPayment.getChangeAmount(),
+                toPaymentResponses(savedPayment),
+                savedPayment.getUpdatedAt());
+    }
+
+    private SaleEntity createSale(SaleCartEntity cart, ReceiptAllocationResponse receipt) {
+        SaleEntity sale = new SaleEntity();
+        sale.setCart(cart);
+        sale.setCashierUser(cart.getCashierUser());
+        sale.setStoreLocation(cart.getStoreLocation());
+        sale.setTerminalDevice(cart.getTerminalDevice());
+        sale.setReceiptHeaderId(receipt.receiptHeaderId());
+        sale.setReceiptNumber(receipt.receiptNumber());
+        sale.setSubtotalNet(cart.getSubtotalNet());
+        sale.setTotalTax(cart.getTotalTax());
+        sale.setTotalGross(cart.getTotalGross());
+        sale.setRoundingAdjustment(cart.getRoundingAdjustment());
+        sale.setTotalPayable(cart.getTotalPayable());
+
+        for (SaleCartLineEntity cartLine : orderedCartLines(cart)) {
+            SaleLineEntity line = new SaleLineEntity();
+            line.setLineNumber(cartLine.getLineNumber());
+            line.setProduct(cartLine.getProduct());
+            line.setQuantity(cartLine.getQuantity());
+            line.setUnitPrice(cartLine.getUnitPrice());
+            line.setNetAmount(cartLine.getNetAmount());
+            line.setTaxAmount(cartLine.getTaxAmount());
+            line.setGrossAmount(cartLine.getGrossAmount());
+            line.setOpenPriceReason(cartLine.getOpenPriceReason());
+            sale.addLine(line);
+        }
+        return sale;
+    }
+
+    private List<InventoryMovementEntity> createInventoryMovements(SaleEntity sale) {
+        return sale.getLines().stream()
+                .map(line -> {
+                    InventoryMovementEntity movement = new InventoryMovementEntity();
+                    movement.setStoreLocation(sale.getStoreLocation());
+                    movement.setProduct(line.getProduct());
+                    movement.setSale(sale);
+                    movement.setSaleLine(line);
+                    movement.setMovementType(InventoryMovementType.SALE);
+                    movement.setQuantityDelta(line.getQuantity().negate());
+                    movement.setReferenceNumber(sale.getReceiptNumber());
+                    return movement;
+                })
+                .toList();
+    }
+
+    private PaymentEntity upsertPayment(SaleCartEntity cart, PaymentAllocationValidator.ValidationResult validationResult) {
         PaymentEntity payment = paymentRepository.findByCartIdWithAllocations(cart.getId())
                 .orElseGet(PaymentEntity::new);
         payment.setCart(cart);
@@ -62,8 +147,11 @@ public class SaleCheckoutService {
             payment.addAllocation(allocation);
         }
 
-        PaymentEntity savedPayment = paymentRepository.save(payment);
-        List<SaleCheckoutPaymentResponse> paymentResponses = savedPayment.getAllocations().stream()
+        return paymentRepository.save(payment);
+    }
+
+    private List<SaleCheckoutPaymentResponse> toPaymentResponses(PaymentEntity payment) {
+        return payment.getAllocations().stream()
                 .sorted(Comparator.comparingInt(PaymentAllocationEntity::getSequenceNumber)
                         .thenComparing(PaymentAllocationEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
                 .map(allocation -> new SaleCheckoutPaymentResponse(
@@ -74,16 +162,13 @@ public class SaleCheckoutService {
                         allocation.getChangeAmount(),
                         allocation.getReference()))
                 .toList();
+    }
 
-        return new SaleCheckoutResponse(
-                cart.getId(),
-                savedPayment.getId(),
-                savedPayment.getTotalPayable(),
-                savedPayment.getTotalAllocated(),
-                savedPayment.getTotalTendered(),
-                savedPayment.getChangeAmount(),
-                paymentResponses,
-                savedPayment.getUpdatedAt());
+    private List<SaleCartLineEntity> orderedCartLines(SaleCartEntity cart) {
+        return cart.getLines().stream()
+                .sorted(Comparator.comparingInt(SaleCartLineEntity::getLineNumber)
+                        .thenComparing(SaleCartLineEntity::getId, Comparator.nullsLast(Comparator.naturalOrder())))
+                .toList();
     }
 
     private SaleCartEntity requireActiveCartForUpdate(Long cartId) {
@@ -125,6 +210,20 @@ public class SaleCheckoutService {
         if (!terminalDevice.getStoreLocation().getId().equals(cart.getStoreLocation().getId())) {
             throw new BaseException(ErrorCode.CONFLICT,
                     "terminal does not belong to cart store location");
+        }
+    }
+
+    private void requireCartHasLines(SaleCartEntity cart) {
+        if (cart.getLines() == null || cart.getLines().isEmpty()) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "sale cart must contain at least one line before checkout");
+        }
+    }
+
+    private void requireNoExistingSaleForCart(SaleCartEntity cart) {
+        if (saleRepository.findByCartId(cart.getId()).isPresent()) {
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "sale already exists for cart: " + cart.getId());
         }
     }
 

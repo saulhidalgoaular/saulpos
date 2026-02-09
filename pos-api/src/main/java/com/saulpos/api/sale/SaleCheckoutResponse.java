@@ -6,6 +6,8 @@ import java.util.List;
 
 public record SaleCheckoutResponse(
         Long cartId,
+        Long saleId,
+        String receiptNumber,
         Long paymentId,
         BigDecimal totalPayable,
         BigDecimal totalAllocated,
