@@ -465,7 +465,7 @@ Out of Scope:
 1. Integration tests for partial and full returns.
 2. Permission tests for approval workflow.
 
-#### Card G4: Suspended/Parked Sales
+#### Card G4: Suspended/Parked Sales [SOLVED]
 - Goal: Let operators park and resume carts during busy checkout operations.
 - Dependencies: G1, B3.
 - Data Model:
@@ -1084,7 +1084,7 @@ Out of Scope:
 | G1 | DONE |  |  | Implemented cart lifecycle APIs (`POST /api/sales/carts`, line add/update/remove, recalculate, get), migration `V19` (`sale_cart`, `sale_cart_line`), deterministic totals recomputation (pricing+tax+rounding), idempotent add-line `lineKey` handling, and unit/integration coverage for quantity policy, invalid product/quantity errors, and cart mutation flow |
 | G2 | TODO |  |  |  |
 | G3 | TODO |  |  |  |
-| G4 | TODO |  |  |  |
+| G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
 | G5 | TODO |  |  |  |
 | H1 | TODO |  |  |  |
 | H2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `I1` Supplier master.
-2. `J1` Tender and split payments.
-3. `G2` Atomic checkout.
+1. `G5` Void and price override controls.
+2. `I1` Supplier master.
+3. `J1` Tender and split payments.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

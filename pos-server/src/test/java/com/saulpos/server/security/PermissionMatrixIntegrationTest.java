@@ -71,6 +71,10 @@ class PermissionMatrixIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM cash_movement");
         jdbcTemplate.execute("DELETE FROM cash_shift");
         jdbcTemplate.execute("DELETE FROM product_barcode");
@@ -182,6 +186,29 @@ class PermissionMatrixIntegrationTest {
 
         mockMvc.perform(post("/api/sales/checkout")
                         .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/sales/carts/1/park")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/1/park")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1
+                                }
+                                """))
                 .andExpect(status().isNotFound());
 
         mockMvc.perform(post("/api/shifts/open")

@@ -1,11 +1,15 @@
 package com.saulpos.server.sale.service;
 
 import com.saulpos.api.catalog.ProductSaleMode;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartCancelRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartLineResponse;
+import com.saulpos.api.sale.SaleCartParkRequest;
 import com.saulpos.api.sale.SaleCartRecalculateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.tax.RoundingSummary;
@@ -23,28 +27,37 @@ import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.StoreLocationRepository;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.sale.model.ParkedCartReferenceEntity;
 import com.saulpos.server.sale.model.SaleCartEntity;
+import com.saulpos.server.sale.model.SaleCartEventEntity;
+import com.saulpos.server.sale.model.SaleCartEventType;
 import com.saulpos.server.sale.model.SaleCartLineEntity;
+import com.saulpos.server.sale.repository.SaleCartEventRepository;
 import com.saulpos.server.sale.repository.SaleCartRepository;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import com.saulpos.server.tax.service.RoundingService;
 import com.saulpos.server.tax.service.TaxService;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class SaleCartService {
 
     private final SaleCartRepository saleCartRepository;
+    private final SaleCartEventRepository saleCartEventRepository;
     private final UserAccountRepository userAccountRepository;
     private final StoreLocationRepository storeLocationRepository;
     private final TerminalDeviceRepository terminalDeviceRepository;
@@ -54,6 +67,10 @@ public class SaleCartService {
     private final RoundingService roundingService;
     private final ProductSaleModePolicyValidator productSaleModePolicyValidator;
     private final CartLinePolicyValidator cartLinePolicyValidator;
+    private final Clock clock;
+
+    @Value("${app.sales.parked-cart-expiry-minutes:30}")
+    private long parkedCartExpiryMinutes;
 
     @Transactional
     public SaleCartResponse createCart(SaleCartCreateRequest request) {
@@ -79,11 +96,7 @@ public class SaleCartService {
     @Transactional(readOnly = true)
     public SaleCartResponse getCart(Long cartId) {
         SaleCartEntity cart = requireCartWithDetails(cartId);
-        RoundingSummary rounding = roundingService.apply(
-                cart.getStoreLocation().getId(),
-                null,
-                cart.getTotalGross());
-        return toResponse(cart, rounding);
+        return toResponse(cart, calculateRounding(cart));
     }
 
     @Transactional
@@ -143,6 +156,126 @@ public class SaleCartService {
         RoundingSummary rounding = recalculate(cart, request == null ? null : request.tenderType());
         SaleCartEntity savedCart = saleCartRepository.save(cart);
         return toResponse(savedCart, rounding);
+    }
+
+    @Transactional
+    public SaleCartResponse parkCart(Long cartId, SaleCartParkRequest request) {
+        SaleCartEntity cart = requireCartForUpdate(cartId);
+        if (cart.getStatus() != SaleCartStatus.ACTIVE) {
+            throw new BaseException(ErrorCode.CONFLICT, "sale cart must be ACTIVE to park: " + cartId);
+        }
+
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+        Instant now = Instant.now(clock);
+
+        ParkedCartReferenceEntity reference = cart.getParkedReference();
+        if (reference == null) {
+            reference = new ParkedCartReferenceEntity();
+            cart.setParkedReference(reference);
+        }
+
+        reference.setReferenceCode(generateReferenceCode(cart.getId()));
+        reference.setParkedAt(now);
+        reference.setExpiresAt(now.plusSeconds(effectiveExpiryMinutes() * 60));
+        reference.setParkedByUser(actor.cashierUser());
+        reference.setResumedAt(null);
+        reference.setResumedByUser(null);
+        reference.setCancelledAt(null);
+        reference.setCancelledByUser(null);
+
+        cart.setStatus(SaleCartStatus.PARKED);
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordEvent(savedCart, SaleCartEventType.PARKED, actor.cashierUser(), actor.terminalDevice(), request.note());
+
+        return toResponse(savedCart, calculateRounding(savedCart));
+    }
+
+    @Transactional(noRollbackFor = BaseException.class)
+    public SaleCartResponse resumeCart(Long cartId, SaleCartResumeRequest request) {
+        SaleCartEntity cart = requireCartForUpdate(cartId);
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+
+        Instant now = Instant.now(clock);
+        if (cart.getStatus() == SaleCartStatus.PARKED && isExpired(cart, now)) {
+            cart.setStatus(SaleCartStatus.EXPIRED);
+            SaleCartEntity expiredCart = saleCartRepository.save(cart);
+            recordEvent(expiredCart, SaleCartEventType.EXPIRED, null, actor.terminalDevice(), "parked cart expired by policy");
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "sale cart parking window expired and cannot be resumed: " + cartId);
+        }
+
+        if (cart.getStatus() != SaleCartStatus.PARKED) {
+            throw new BaseException(ErrorCode.CONFLICT, "sale cart is not parked: " + cartId);
+        }
+
+        ParkedCartReferenceEntity reference = requireParkedReference(cart);
+        reference.setResumedAt(now);
+        reference.setResumedByUser(actor.cashierUser());
+
+        cart.setStatus(SaleCartStatus.ACTIVE);
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordEvent(savedCart, SaleCartEventType.RESUMED, actor.cashierUser(), actor.terminalDevice(), null);
+
+        return toResponse(savedCart, calculateRounding(savedCart));
+    }
+
+    @Transactional(noRollbackFor = BaseException.class)
+    public SaleCartResponse cancelCart(Long cartId, SaleCartCancelRequest request) {
+        SaleCartEntity cart = requireCartForUpdate(cartId);
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+
+        Instant now = Instant.now(clock);
+        if (cart.getStatus() == SaleCartStatus.PARKED && isExpired(cart, now)) {
+            cart.setStatus(SaleCartStatus.EXPIRED);
+            SaleCartEntity expiredCart = saleCartRepository.save(cart);
+            recordEvent(expiredCart, SaleCartEventType.EXPIRED, null, actor.terminalDevice(), "parked cart expired by policy");
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "sale cart parking window expired and cannot be cancelled: " + cartId);
+        }
+
+        if (cart.getStatus() == SaleCartStatus.CANCELLED
+                || cart.getStatus() == SaleCartStatus.CHECKED_OUT
+                || cart.getStatus() == SaleCartStatus.EXPIRED) {
+            throw new BaseException(ErrorCode.CONFLICT, "sale cart cannot be cancelled in status: " + cart.getStatus());
+        }
+
+        cart.setStatus(SaleCartStatus.CANCELLED);
+        ParkedCartReferenceEntity reference = cart.getParkedReference();
+        if (reference != null) {
+            reference.setCancelledAt(now);
+            reference.setCancelledByUser(actor.cashierUser());
+        }
+
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordEvent(savedCart, SaleCartEventType.CANCELLED, actor.cashierUser(), actor.terminalDevice(), request.reason());
+
+        return toResponse(savedCart, calculateRounding(savedCart));
+    }
+
+    @Transactional
+    public List<ParkedSaleCartSummaryResponse> listParkedCarts(Long storeLocationId, Long terminalDeviceId) {
+        StoreLocationEntity storeLocation = requireStoreLocation(storeLocationId);
+        TerminalDeviceEntity terminalDevice = null;
+        if (terminalDeviceId != null) {
+            terminalDevice = requireTerminalDevice(terminalDeviceId);
+            validateStoreAndTerminalConsistency(storeLocation, terminalDevice);
+        }
+        TerminalDeviceEntity requestTerminal = terminalDevice;
+
+        Instant now = Instant.now(clock);
+        return saleCartRepository.findParkedByStoreAndTerminal(storeLocationId, terminalDeviceId).stream()
+                .filter(cart -> {
+                    if (!isExpired(cart, now)) {
+                        return true;
+                    }
+                    cart.setStatus(SaleCartStatus.EXPIRED);
+                    SaleCartEntity expiredCart = saleCartRepository.save(cart);
+                    TerminalDeviceEntity eventTerminal = requestTerminal != null ? requestTerminal : cart.getTerminalDevice();
+                    recordEvent(expiredCart, SaleCartEventType.EXPIRED, null, eventTerminal, "parked cart expired by policy");
+                    return false;
+                })
+                .map(this::toParkedSummary)
+                .toList();
     }
 
     private SaleCartLineEntity createLine(String lineKey, ProductEntity product, int lineNumber) {
@@ -298,14 +431,40 @@ public class SaleCartService {
                 cart.getUpdatedAt());
     }
 
+    private ParkedSaleCartSummaryResponse toParkedSummary(SaleCartEntity cart) {
+        ParkedCartReferenceEntity reference = requireParkedReference(cart);
+        return new ParkedSaleCartSummaryResponse(
+                cart.getId(),
+                reference.getReferenceCode(),
+                cart.getCashierUser().getId(),
+                cart.getStoreLocation().getId(),
+                cart.getTerminalDevice().getId(),
+                cart.getPricingAt(),
+                cart.getTotalPayable(),
+                reference.getParkedAt(),
+                reference.getExpiresAt(),
+                cart.getUpdatedAt());
+    }
+
+    private RoundingSummary calculateRounding(SaleCartEntity cart) {
+        return roundingService.apply(
+                cart.getStoreLocation().getId(),
+                null,
+                cart.getTotalGross());
+    }
+
     private SaleCartEntity requireCartWithDetails(Long cartId) {
         return saleCartRepository.findByIdWithDetails(cartId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "sale cart not found: " + cartId));
     }
 
-    private SaleCartEntity requireActiveCartForUpdate(Long cartId) {
-        SaleCartEntity cart = saleCartRepository.findByIdForUpdate(cartId)
+    private SaleCartEntity requireCartForUpdate(Long cartId) {
+        return saleCartRepository.findByIdForUpdate(cartId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "sale cart not found: " + cartId));
+    }
+
+    private SaleCartEntity requireActiveCartForUpdate(Long cartId) {
+        SaleCartEntity cart = requireCartForUpdate(cartId);
         if (cart.getStatus() != SaleCartStatus.ACTIVE) {
             throw new BaseException(ErrorCode.CONFLICT, "sale cart is not active: " + cartId);
         }
@@ -332,6 +491,12 @@ public class SaleCartService {
                         "store location not found: " + storeLocationId));
     }
 
+    private TerminalDeviceEntity requireTerminalDevice(Long terminalDeviceId) {
+        return terminalDeviceRepository.findById(terminalDeviceId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "terminal device not found: " + terminalDeviceId));
+    }
+
     private TerminalDeviceEntity requireTerminalDeviceForUpdate(Long terminalDeviceId) {
         return terminalDeviceRepository.findByIdForUpdate(terminalDeviceId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
@@ -342,6 +507,37 @@ public class SaleCartService {
         return productRepository.findById(productId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
                         "product not found: " + productId));
+    }
+
+    private ParkedCartReferenceEntity requireParkedReference(SaleCartEntity cart) {
+        ParkedCartReferenceEntity reference = cart.getParkedReference();
+        if (reference == null) {
+            throw new BaseException(ErrorCode.CONFLICT, "parked cart metadata missing for cart: " + cart.getId());
+        }
+        return reference;
+    }
+
+    private OperatorContext requireOperatorContext(SaleCartEntity cart, Long cashierUserId, Long terminalDeviceId) {
+        UserAccountEntity cashierUser = requireCashierUser(cashierUserId);
+        TerminalDeviceEntity terminalDevice = requireTerminalDeviceForUpdate(terminalDeviceId);
+        validateActiveHierarchy(cashierUser, terminalDevice);
+
+        if (!cashierUser.getId().equals(cart.getCashierUser().getId())) {
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "cart can only be handled by the assigned cashier user: " + cart.getCashierUser().getId());
+        }
+
+        if (!terminalDevice.getId().equals(cart.getTerminalDevice().getId())) {
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "cart can only be handled by the assigned terminal device: " + cart.getTerminalDevice().getId());
+        }
+
+        if (!terminalDevice.getStoreLocation().getId().equals(cart.getStoreLocation().getId())) {
+            throw new BaseException(ErrorCode.CONFLICT,
+                    "terminal does not belong to cart store location");
+        }
+
+        return new OperatorContext(cashierUser, terminalDevice);
     }
 
     private void validateStoreAndTerminalConsistency(StoreLocationEntity storeLocation, TerminalDeviceEntity terminalDevice) {
@@ -379,5 +575,51 @@ public class SaleCartService {
             throw new BaseException(ErrorCode.VALIDATION_ERROR,
                     "product does not belong to cart merchant context");
         }
+    }
+
+    private void recordEvent(SaleCartEntity cart,
+                             SaleCartEventType eventType,
+                             UserAccountEntity actorUser,
+                             TerminalDeviceEntity terminalDevice,
+                             String detail) {
+        SaleCartEventEntity event = new SaleCartEventEntity();
+        event.setCart(cart);
+        event.setEventType(eventType);
+        event.setActorUser(actorUser);
+        event.setActorUsername(actorUser != null ? actorUser.getUsername() : null);
+        event.setTerminalDevice(terminalDevice);
+        event.setCorrelationId(MDC.get("correlationId"));
+        event.setDetail(normalizeDetail(detail));
+        saleCartEventRepository.save(event);
+    }
+
+    private boolean isExpired(SaleCartEntity cart, Instant at) {
+        if (cart.getStatus() != SaleCartStatus.PARKED) {
+            return false;
+        }
+        ParkedCartReferenceEntity reference = cart.getParkedReference();
+        return reference != null
+                && reference.getExpiresAt() != null
+                && at.isAfter(reference.getExpiresAt());
+    }
+
+    private String generateReferenceCode(Long cartId) {
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+        return "PK-" + cartId + "-" + suffix;
+    }
+
+    private long effectiveExpiryMinutes() {
+        return Math.max(parkedCartExpiryMinutes, 1L);
+    }
+
+    private String normalizeDetail(String detail) {
+        if (detail == null) {
+            return null;
+        }
+        String normalized = detail.trim();
+        return normalized.isEmpty() ? null : normalized;
+    }
+
+    private record OperatorContext(UserAccountEntity cashierUser, TerminalDeviceEntity terminalDevice) {
     }
 }

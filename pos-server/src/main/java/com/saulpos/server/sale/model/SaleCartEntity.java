@@ -16,6 +16,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -78,6 +79,9 @@ public class SaleCartEntity {
     @OrderBy("lineNumber ASC, id ASC")
     private List<SaleCartLineEntity> lines = new ArrayList<>();
 
+    @OneToOne(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private ParkedCartReferenceEntity parkedReference;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -92,6 +96,13 @@ public class SaleCartEntity {
     public void removeLine(SaleCartLineEntity line) {
         lines.remove(line);
         line.setCart(null);
+    }
+
+    public void setParkedReference(ParkedCartReferenceEntity parkedReference) {
+        this.parkedReference = parkedReference;
+        if (parkedReference != null) {
+            parkedReference.setCart(this);
+        }
     }
 
     @PrePersist

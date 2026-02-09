@@ -34,7 +34,9 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -91,6 +93,8 @@ class SaleCartIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
         jdbcTemplate.execute("DELETE FROM sale_cart_line");
         jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM customer_group_assignment");
@@ -309,7 +313,198 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4004"));
     }
 
+    @Test
+    void parkedCartLifecycleSupportsParkResumeCancelAndAuditEvents() throws Exception {
+        long cartId = createCart();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lineKey": "scan-park-1",
+                                  "productId": %d,
+                                  "quantity": 2
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines.length()").value(1));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/park", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "note": "customer requested hold"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PARKED"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/resume", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.lines.length()").value(1))
+                .andExpect(jsonPath("$.totalPayable").value(11.00));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/cancel", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "reason": "customer abandoned checkout"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        List<String> events = jdbcTemplate.queryForList(
+                "SELECT event_type FROM sale_cart_event WHERE cart_id = ? ORDER BY id",
+                String.class,
+                cartId);
+
+        assertThat(events).containsExactly("PARKED", "RESUMED", "CANCELLED");
+    }
+
+    @Test
+    void listParkedCartsSupportsStoreAndTerminalFilters() throws Exception {
+        long firstCartId = createCart();
+        mockMvc.perform(post("/api/sales/carts/{id}/park", firstCartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk());
+
+        TerminalDeviceEntity secondTerminal = new TerminalDeviceEntity();
+        secondTerminal.setStoreLocation(storeLocationRepository.findById(storeLocationId).orElseThrow());
+        secondTerminal.setCode("TERM-G1-B");
+        secondTerminal.setName("Terminal G1 B");
+        secondTerminal.setActive(true);
+        secondTerminal = terminalDeviceRepository.save(secondTerminal);
+
+        long secondCartId = createCart(secondTerminal.getId());
+        mockMvc.perform(post("/api/sales/carts/{id}/park", secondCartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d
+                                }
+                                """.formatted(cashierUserId, secondTerminal.getId())))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/sales/carts/parked")
+                        .param("storeLocationId", String.valueOf(storeLocationId))
+                        .param("terminalDeviceId", String.valueOf(terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].cartId").value(firstCartId))
+                .andExpect(jsonPath("$[0].terminalDeviceId").value(terminalDeviceId));
+
+        mockMvc.perform(get("/api/sales/carts/parked")
+                        .param("storeLocationId", String.valueOf(storeLocationId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    void resumeRejectsExpiredParkedCart() throws Exception {
+        long cartId = createCart();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/park", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PARKED"));
+
+        jdbcTemplate.update(
+                "UPDATE parked_cart_reference "
+                        + "SET parked_at = DATEADD('MINUTE', -10, CURRENT_TIMESTAMP), "
+                        + "expires_at = DATEADD('MINUTE', -5, CURRENT_TIMESTAMP) "
+                        + "WHERE cart_id = ?",
+                cartId);
+
+        mockMvc.perform(post("/api/sales/carts/{id}/resume", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("POS-4009"));
+
+        mockMvc.perform(get("/api/sales/carts/{id}", cartId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("EXPIRED"));
+    }
+
+    @Test
+    @WithMockUser(username = "reporter", authorities = {"PERM_REPORT_VIEW"})
+    void parkResumeListAndCancelEndpointsRequireSalesPermission() throws Exception {
+        mockMvc.perform(post("/api/sales/carts/{id}/park", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/resume", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/cancel", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "reason": "void"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/sales/carts/parked")
+                        .param("storeLocationId", "1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+    }
+
     private long createCart() throws Exception {
+        return createCart(terminalDeviceId);
+    }
+
+    private long createCart(Long terminalId) throws Exception {
         MvcResult createResult = mockMvc.perform(post("/api/sales/carts")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -319,7 +514,7 @@ class SaleCartIntegrationTest {
                                   "terminalDeviceId": %d,
                                   "pricingAt": "2026-02-03T10:00:00Z"
                                 }
-                                """.formatted(cashierUserId, storeLocationId, terminalDeviceId)))
+                                """.formatted(cashierUserId, storeLocationId, terminalId)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.lines.length()").value(0))

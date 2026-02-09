@@ -33,6 +33,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F1` Customer master.
 - `F2` Customer groups and pricing hooks.
 - `G1` Cart lifecycle service.
+- `G4` Suspended/parked sales.
 
 ## Monorepo Architecture
 
@@ -139,6 +140,21 @@ Backend source of truth:
   - invalid product IDs return stable not-found errors,
   - invalid quantity by sale mode (for example decimal quantity on `UNIT`) returns stable validation errors,
   - idempotent add-line behavior is supported via `lineKey` per cart.
+
+### Suspended/Parked Sales
+- Park/resume/cancel APIs:
+  - `POST /api/sales/carts/{id}/park`
+  - `POST /api/sales/carts/{id}/resume`
+  - `POST /api/sales/carts/{id}/cancel`
+  - `GET /api/sales/carts/parked?storeLocationId={id}&terminalDeviceId={id?}`
+- Extended cart model and audit support:
+  - cart statuses include `PARKED` and `EXPIRED` in addition to active lifecycle states,
+  - `parked_cart_reference` stores park reference, parked timestamp, and expiry window,
+  - `sale_cart_event` captures `PARKED`, `RESUMED`, `CANCELLED`, and policy-driven `EXPIRED` transitions.
+- Enforced rules:
+  - resume/cancel requires matching cashier+terminal assignment for the cart,
+  - parked carts expire by policy (`app.sales.parked-cart-expiry-minutes`),
+  - park/resume/cancel transitions are auditable with actor and correlation context.
 
 ### Catalog and Category Hierarchy
 - Product APIs:
@@ -271,6 +287,7 @@ Backend source of truth:
   - `V17__loyalty_hooks.sql`
   - `V18__customer_groups_and_pricing_hooks.sql`
   - `V19__cart_lifecycle_service.sql`
+  - `V20__suspended_parked_sales.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -324,6 +341,7 @@ Key settings include:
 - `app.security.lock-duration-minutes`
 - `app.security.access-token-ttl-minutes`
 - `app.security.refresh-token-ttl-minutes`
+- `app.sales.parked-cart-expiry-minutes`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -351,6 +369,8 @@ Key settings include:
 - Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
 - Unit tests for pricing resolution with customer-group contexts.
 - Integration tests for cart lifecycle create/add/update/remove/recalculate flows and idempotent line-key behavior.
+- Integration tests for parked cart lifecycle (park/resume/cancel), parked list filtering, and expiry-policy behavior.
+- Concurrency integration tests for simultaneous parked-cart resume attempts.
 - Unit tests for cart quantity policy validation by sale mode and precision.
 
 ## Project Planning and Status
