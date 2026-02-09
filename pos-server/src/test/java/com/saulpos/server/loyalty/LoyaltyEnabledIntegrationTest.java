@@ -59,6 +59,13 @@ class LoyaltyEnabledIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
+        jdbcTemplate.execute("DELETE FROM cash_movement");
+        jdbcTemplate.execute("DELETE FROM cash_shift");
+        jdbcTemplate.execute("DELETE FROM store_user_assignment");
         jdbcTemplate.execute("DELETE FROM loyalty_event");
         jdbcTemplate.execute("DELETE FROM customer_contact");
         jdbcTemplate.execute("DELETE FROM customer_tax_identity");

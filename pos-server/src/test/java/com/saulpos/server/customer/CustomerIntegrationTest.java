@@ -45,6 +45,10 @@ class CustomerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM customer_contact");
         jdbcTemplate.execute("DELETE FROM customer_tax_identity");
         jdbcTemplate.execute("DELETE FROM customer");

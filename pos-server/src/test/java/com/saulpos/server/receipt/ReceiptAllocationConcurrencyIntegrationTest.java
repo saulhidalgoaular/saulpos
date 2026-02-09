@@ -56,6 +56,10 @@ class ReceiptAllocationConcurrencyIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         executorService = Executors.newFixedThreadPool(CONCURRENT_REQUESTS);
 
         jdbcTemplate.execute("DELETE FROM receipt_header");

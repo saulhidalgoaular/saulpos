@@ -45,6 +45,10 @@ class CustomerGroupIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM customer_group_assignment");
         jdbcTemplate.execute("DELETE FROM customer_group");
         jdbcTemplate.execute("DELETE FROM customer_contact");

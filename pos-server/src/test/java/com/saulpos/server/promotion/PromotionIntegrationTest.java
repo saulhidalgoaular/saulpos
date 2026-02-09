@@ -66,6 +66,10 @@ class PromotionIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_cart_event");
+        jdbcTemplate.execute("DELETE FROM parked_cart_reference");
+        jdbcTemplate.execute("DELETE FROM sale_cart_line");
+        jdbcTemplate.execute("DELETE FROM sale_cart");
         jdbcTemplate.execute("DELETE FROM promotion_window");
         jdbcTemplate.execute("DELETE FROM promotion_rule");
         jdbcTemplate.execute("DELETE FROM promotion");
