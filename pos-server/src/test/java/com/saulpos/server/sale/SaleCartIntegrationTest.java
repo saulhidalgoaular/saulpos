@@ -93,6 +93,8 @@ class SaleCartIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM payment_allocation");
+        jdbcTemplate.execute("DELETE FROM payment");
         jdbcTemplate.execute("DELETE FROM sale_override_event");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
@@ -280,6 +282,112 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.totalTax").value(0.00))
                 .andExpect(jsonPath("$.totalGross").value(0.00))
                 .andExpect(jsonPath("$.totalPayable").value(0.00));
+    }
+
+    @Test
+    void checkoutAcceptsSplitPaymentsAndPersistsPaymentAllocations() throws Exception {
+        long cartId = createCart();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lineKey": "scan-checkout-1",
+                                  "productId": %d,
+                                  "quantity": 2
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPayable").value(11.00));
+
+        mockMvc.perform(post("/api/sales/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cartId": %d,
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "payments": [
+                                    {
+                                      "tenderType": "CARD",
+                                      "amount": 6.00,
+                                      "reference": "AUTH-123"
+                                    },
+                                    {
+                                      "tenderType": "CASH",
+                                      "amount": 5.00,
+                                      "tenderedAmount": 10.00
+                                    }
+                                  ]
+                                }
+                                """.formatted(cartId, cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.cartId").value(cartId))
+                .andExpect(jsonPath("$.totalPayable").value(11.00))
+                .andExpect(jsonPath("$.totalAllocated").value(11.00))
+                .andExpect(jsonPath("$.totalTendered").value(16.00))
+                .andExpect(jsonPath("$.changeAmount").value(5.00))
+                .andExpect(jsonPath("$.payments.length()").value(2))
+                .andExpect(jsonPath("$.payments[0].tenderType").value("CARD"))
+                .andExpect(jsonPath("$.payments[0].amount").value(6.00))
+                .andExpect(jsonPath("$.payments[0].tenderedAmount").value(6.00))
+                .andExpect(jsonPath("$.payments[0].changeAmount").value(0.00))
+                .andExpect(jsonPath("$.payments[1].tenderType").value("CASH"))
+                .andExpect(jsonPath("$.payments[1].amount").value(5.00))
+                .andExpect(jsonPath("$.payments[1].tenderedAmount").value(10.00))
+                .andExpect(jsonPath("$.payments[1].changeAmount").value(5.00));
+
+        Integer paymentCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM payment WHERE cart_id = ?",
+                Integer.class,
+                cartId);
+        assertThat(paymentCount).isEqualTo(1);
+
+        List<String> tenderTypes = jdbcTemplate.queryForList(
+                "SELECT tender_type FROM payment_allocation pa "
+                        + "JOIN payment p ON p.id = pa.payment_id "
+                        + "WHERE p.cart_id = ? ORDER BY pa.sequence_number",
+                String.class,
+                cartId);
+        assertThat(tenderTypes).containsExactly("CARD", "CASH");
+    }
+
+    @Test
+    void checkoutRejectsAllocationWhenTotalDoesNotMatchPayable() throws Exception {
+        long cartId = createCart();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "quantity": 2
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalPayable").value(11.00));
+
+        mockMvc.perform(post("/api/sales/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cartId": %d,
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "payments": [
+                                    {
+                                      "tenderType": "CARD",
+                                      "amount": 4.00
+                                    },
+                                    {
+                                      "tenderType": "CASH",
+                                      "amount": 5.00
+                                    }
+                                  ]
+                                }
+                                """.formatted(cartId, cashierUserId, terminalDeviceId)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
     }
 
     @Test
@@ -693,6 +801,24 @@ class SaleCartIntegrationTest {
                                   "terminalDeviceId": 1,
                                   "unitPrice": 1.00,
                                   "reasonCode": "PRICE_MATCH"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/checkout")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cartId": 1,
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "payments": [
+                                    {
+                                      "tenderType": "CASH",
+                                      "amount": 1.00
+                                    }
+                                  ]
                                 }
                                 """))
                 .andExpect(status().isForbidden())

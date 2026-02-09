@@ -33,6 +33,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F1` Customer master.
 - `F2` Customer groups and pricing hooks.
 - `I1` Supplier master.
+- `J1` Tender and split payments.
 - `G1` Cart lifecycle service.
 - `G4` Suspended/parked sales.
 - `G5` Void and price override controls.
@@ -185,6 +186,18 @@ Backend source of truth:
   - price overrides above configured threshold require explicit `DISCOUNT_OVERRIDE` permission,
   - line void and price override actions always trigger deterministic tax/totals recomputation.
 
+### Tender and Split Payments
+- Checkout payment API:
+  - `POST /api/sales/checkout`
+- Payment model:
+  - `payment`
+  - `payment_allocation`
+- Enforced rules:
+  - sum of allocated tenders must equal cart payable total,
+  - cash allocations support explicit tendered amount and deterministic change calculation,
+  - non-cash allocations must not over/under tender relative to the allocated amount.
+- Checkout payment captures are persisted as deterministic allocation snapshots per active cart.
+
 ### Catalog and Category Hierarchy
 - Product APIs:
   - `POST /api/catalog/products`
@@ -319,6 +332,7 @@ Backend source of truth:
   - `V20__suspended_parked_sales.sql`
   - `V21__void_and_price_override_controls.sql`
   - `V22__supplier_master.sql`
+  - `V23__tender_and_split_payments.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -406,7 +420,9 @@ Key settings include:
 - Concurrency integration tests for simultaneous parked-cart resume attempts.
 - Integration tests for line/cart void and line price-override flows including override-event auditing.
 - Integration tests for manager-threshold override enforcement and sales authorization checks on new override endpoints.
+- Integration tests for checkout split-payment allocation validation and persisted payment snapshots.
 - Unit tests for cart quantity policy validation by sale mode and precision.
+- Unit tests for tender allocation validation and cash-change calculation.
 
 ## Project Planning and Status
 

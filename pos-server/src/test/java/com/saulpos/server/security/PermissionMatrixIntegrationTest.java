@@ -187,7 +187,7 @@ class PermissionMatrixIntegrationTest {
 
         mockMvc.perform(post("/api/sales/checkout")
                         .header("Authorization", "Bearer " + salesToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/sales/carts/1/park")
                         .header("Authorization", "Bearer " + limitedToken)

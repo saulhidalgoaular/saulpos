@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- Implemented Card J1 Tender and Split Payments in `pos-server` and `pos-api`.
+- Added migration `V23__tender_and_split_payments.sql` with `payment` and `payment_allocation` tables plus tender consistency checks.
+- Added checkout payment API contract and endpoint: `POST /api/sales/checkout`.
+- Added deterministic tender-allocation validation with cash change calculation and persisted payment allocation snapshots per cart.
+- Added unit coverage for payment allocation validator and integration coverage for split-payment checkout plus permission matrix updates.
 - Implemented Card D3 Receipt Sequence Allocation in `pos-server` and `pos-api`.
 - Added migration `V13__receipt_sequence_allocation.sql` with `receipt_series`, `receipt_sequence`, and `receipt_header` including uniqueness on `(series_id, number)` and `receipt_number`.
 - Added receipt allocation API contract and endpoint: `POST /api/receipts/allocate`.

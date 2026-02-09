@@ -642,7 +642,7 @@ Out of Scope:
 
 ### Phase J: Payments, Gift Cards, Store Credit
 
-#### Card J1: Tender and Split Payments
+#### Card J1: Tender and Split Payments [SOLVED]
 - Goal: Support common payment combinations.
 - Dependencies: D2, G1.
 - Data Model: `payment`, `payment_allocation`.
@@ -1095,7 +1095,7 @@ Out of Scope:
 | I2 | TODO |  |  |  |
 | I3 | TODO |  |  |  |
 | I4 | TODO |  |  |  |
-| J1 | TODO |  |  |  |
+| J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
 | J2 | TODO |  |  |  |
 | J3 | TODO |  |  |  |
 | J4 | TODO |  |  |  |
@@ -1133,8 +1133,8 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `J1` Tender and split payments.
-2. `G2` Atomic checkout.
+1. `G2` Atomic checkout.
+2. `J2` Payment state machine.
 3. `H1` Inventory movement ledger.
 
 ## 13. Final Product Readiness Checklist
