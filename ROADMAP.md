@@ -588,7 +588,7 @@ Out of Scope:
 
 ### Phase I: Purchasing and Suppliers
 
-#### Card I1: Supplier Master
+#### Card I1: Supplier Master [SOLVED]
 - Goal: Define vendor records and commercial terms.
 - Dependencies: B1.
 - Data Model: `supplier`, `supplier_contact`, `supplier_terms`.
@@ -1091,7 +1091,7 @@ Out of Scope:
 | H3 | TODO |  |  |  |
 | H4 | TODO |  |  |  |
 | H5 | TODO |  |  |  |
-| I1 | TODO |  |  |  |
+| I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
 | I2 | TODO |  |  |  |
 | I3 | TODO |  |  |  |
 | I4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `I1` Supplier master.
-2. `J1` Tender and split payments.
-3. `G2` Atomic checkout.
+1. `J1` Tender and split payments.
+2. `G2` Atomic checkout.
+3. `H1` Inventory movement ledger.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

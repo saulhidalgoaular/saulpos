@@ -32,6 +32,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `E3` Loyalty hooks.
 - `F1` Customer master.
 - `F2` Customer groups and pricing hooks.
+- `I1` Supplier master.
 - `G1` Cart lifecycle service.
 - `G4` Suspended/parked sales.
 - `G5` Void and price override controls.
@@ -114,6 +115,20 @@ Backend source of truth:
   - `customer_group`
   - `customer_group_assignment`
 - Customer responses now include assigned groups, and assignment validation enforces merchant consistency between customer and group.
+
+### Supplier Master
+- Supplier APIs:
+  - `POST /api/suppliers`
+  - `GET /api/suppliers?merchantId={id?}&active={bool?}&q={query?}`
+  - `GET /api/suppliers/{id}`
+  - `PUT /api/suppliers/{id}`
+  - `POST /api/suppliers/{id}/activate`
+  - `POST /api/suppliers/{id}/deactivate`
+- Supplier model:
+  - `supplier`
+  - `supplier_contact`
+  - `supplier_terms`
+- Enforced rules include merchant-scoped uniqueness for supplier code and normalized tax identifier, plus explicit active/inactive lifecycle control.
 
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`
@@ -303,6 +318,7 @@ Backend source of truth:
   - `V19__cart_lifecycle_service.sql`
   - `V20__suspended_parked_sales.sql`
   - `V21__void_and_price_override_controls.sql`
+  - `V22__supplier_master.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -383,6 +399,7 @@ Key settings include:
 - Integration tests for discount apply/remove/preview flows, reason-code validation, and high-threshold permission enforcement.
 - Integration tests for customer-group create/list/assignment flows and cross-merchant assignment rejection.
 - Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
+- Integration tests for supplier CRUD/search flows, merchant-scoped unique identifier conflicts, and status lifecycle endpoints.
 - Unit tests for pricing resolution with customer-group contexts.
 - Integration tests for cart lifecycle create/add/update/remove/recalculate flows and idempotent line-key behavior.
 - Integration tests for parked cart lifecycle (park/resume/cancel), parked list filtering, and expiry-policy behavior.

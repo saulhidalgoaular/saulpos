@@ -87,6 +87,8 @@ public class SecurityConfiguration {
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
                                 SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers("/api/suppliers/**")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers(HttpMethod.POST, "/api/catalog/products/*/open-price/validate")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.OPEN_PRICE_ENTRY))
                         .requestMatchers("/api/catalog/**")
