@@ -5,12 +5,17 @@ import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.customer.CustomerGroupAssignmentRequest;
 import com.saulpos.api.customer.CustomerGroupRequest;
 import com.saulpos.api.customer.CustomerGroupResponse;
+import com.saulpos.api.customer.CustomerReturnsHistoryResponse;
+import com.saulpos.api.customer.CustomerSalesHistoryResponse;
 import com.saulpos.server.customer.service.CustomerService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,6 +28,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.time.Instant;
 
 @RestController
 @RequestMapping("/api/customers")
@@ -87,6 +93,32 @@ public class CustomerController {
     @GetMapping("/{id}/groups")
     public List<CustomerGroupResponse> listCustomerGroups(@PathVariable("id") Long id) {
         return customerService.listCustomerGroupsForCustomer(id);
+    }
+
+    @GetMapping("/{id}/sales")
+    public CustomerSalesHistoryResponse listCustomerSalesHistory(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "page", defaultValue = "0")
+            @Min(value = 0, message = "page must be >= 0") int page,
+            @RequestParam(value = "size", defaultValue = "20")
+            @Min(value = 1, message = "size must be >= 1")
+            @Max(value = 100, message = "size must be <= 100") int size) {
+        return customerService.listCustomerSalesHistory(id, from, to, page, size);
+    }
+
+    @GetMapping("/{id}/returns")
+    public CustomerReturnsHistoryResponse listCustomerReturnsHistory(
+            @PathVariable("id") Long id,
+            @RequestParam(value = "from", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "page", defaultValue = "0")
+            @Min(value = 0, message = "page must be >= 0") int page,
+            @RequestParam(value = "size", defaultValue = "20")
+            @Min(value = 1, message = "size must be >= 1")
+            @Max(value = 100, message = "size must be <= 100") int size) {
+        return customerService.listCustomerReturnsHistory(id, from, to, page, size);
     }
 
     @GetMapping("/lookup")

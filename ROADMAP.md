@@ -391,7 +391,7 @@ Out of Scope:
 - Test Plan:
 1. Unit tests for price resolution with group contexts.
 
-#### Card F3: Customer History
+#### Card F3: Customer History [SOLVED]
 - Goal: Expose customer-centric sales/return history.
 - Dependencies: G2, G3.
 - API Contract:
@@ -1080,7 +1080,7 @@ Out of Scope:
 | E3 | DONE |  |  | Implemented loyalty hook extension points with migration `V17` (`loyalty_event`), config toggle (`app.loyalty.enabled`), earn/redeem APIs (`/api/loyalty/earn`, `/api/loyalty/redeem`), stub provider SPI, and resilient `DISABLED`/`UNAVAILABLE` fallback behavior validated by integration tests |
 | F1 | DONE |  |  | Implemented customer master with migration `V16`, customer/tax-identity/contact models, CRUD + lookup APIs (`document`/`email`/`phone`), merchant-scoped document uniqueness, and integration coverage for optional-field validation and lookup flows |
 | F2 | DONE |  |  | Implemented `customer_group` + `customer_group_assignment` with migration `V18`, customer group create/list + assignment APIs, and customer-context pricing precedence `store override > customer-group price book > standard price book > base price` via `GET /api/catalog/prices/resolve` |
-| F3 | TODO |  |  |  |
+| F3 | DONE |  |  | Implemented customer sales/returns history APIs (`GET /api/customers/{id}/sales`, `GET /api/customers/{id}/returns`) with pagination + `from`/`to` filters, migration `V28` (`sale.customer_id`), checkout customer-link support (`SaleCheckoutRequest.customerId`), and integration/security coverage for filters and authorization |
 | G1 | DONE |  |  | Implemented cart lifecycle APIs (`POST /api/sales/carts`, line add/update/remove, recalculate, get), migration `V19` (`sale_cart`, `sale_cart_line`), deterministic totals recomputation (pricing+tax+rounding), idempotent add-line `lineKey` handling, and unit/integration coverage for quantity policy, invalid product/quantity errors, and cart mutation flow |
 | G2 | DONE |  |  | Implemented atomic checkout with migration `V24` (`sale`, `sale_line`, `inventory_movement`), in-transaction receipt allocation + sale persistence on `POST /api/sales/checkout`, cart transition to `CHECKED_OUT`, checkout response `saleId`/`receiptNumber`, and integration/concurrency coverage for single-commit behavior under parallel attempts |
 | G3 | DONE |  |  | Implemented returns and refunds with migration `V27` (`sale_return`, `sale_return_line`, `sale_return_refund`), receipt-based lookup (`GET /api/refunds/lookup`), return submission (`POST /api/refunds/submit`) with quantity-eligibility and restricted-window manager-override checks, plus inventory `RETURN` postings and integration/unit permission coverage |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `F3` Customer history.
-2. `H2` Stock adjustments.
-3. `H3` Stocktake.
+1. `H2` Stock adjustments.
+2. `H3` Stocktake.
+3. `H4` Transfer orders.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

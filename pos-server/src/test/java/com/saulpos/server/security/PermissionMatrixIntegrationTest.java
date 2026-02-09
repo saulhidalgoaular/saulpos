@@ -418,6 +418,26 @@ class PermissionMatrixIntegrationTest {
                         .param("merchantId", "1"))
                 .andExpect(status().isNotFound());
 
+        mockMvc.perform(get("/api/customers/1/sales")
+                        .header("Authorization", "Bearer " + limitedToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/customers/1/sales")
+                        .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
+        mockMvc.perform(get("/api/customers/1/returns")
+                        .header("Authorization", "Bearer " + limitedToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/customers/1/returns")
+                        .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
         mockMvc.perform(get("/api/suppliers")
                         .header("Authorization", "Bearer " + limitedToken))
                 .andExpect(status().isForbidden())

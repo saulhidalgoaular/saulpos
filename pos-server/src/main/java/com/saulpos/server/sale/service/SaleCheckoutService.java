@@ -7,6 +7,8 @@ import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
@@ -45,6 +47,7 @@ public class SaleCheckoutService {
     private final SaleRepository saleRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
     private final PaymentRepository paymentRepository;
+    private final CustomerRepository customerRepository;
     private final PaymentAllocationValidator paymentAllocationValidator;
     private final PaymentService paymentService;
     private final ReceiptService receiptService;
@@ -59,10 +62,13 @@ public class SaleCheckoutService {
         PaymentAllocationValidator.ValidationResult validationResult = paymentAllocationValidator.validate(
                 cart.getTotalPayable(),
                 request.payments());
+        CustomerEntity customer = resolveCustomerForCheckout(
+                request.customerId(),
+                cart.getStoreLocation().getMerchant().getId());
 
         ReceiptAllocationResponse receipt = receiptService.allocate(new ReceiptAllocationRequest(cart.getTerminalDevice().getId()));
 
-        SaleEntity sale = createSale(cart, receipt);
+        SaleEntity sale = createSale(cart, receipt, customer);
         SaleEntity savedSale = saleRepository.save(sale);
         inventoryMovementRepository.saveAll(createInventoryMovements(savedSale));
 
@@ -85,12 +91,13 @@ public class SaleCheckoutService {
                 savedPayment.getUpdatedAt());
     }
 
-    private SaleEntity createSale(SaleCartEntity cart, ReceiptAllocationResponse receipt) {
+    private SaleEntity createSale(SaleCartEntity cart, ReceiptAllocationResponse receipt, CustomerEntity customer) {
         SaleEntity sale = new SaleEntity();
         sale.setCart(cart);
         sale.setCashierUser(cart.getCashierUser());
         sale.setStoreLocation(cart.getStoreLocation());
         sale.setTerminalDevice(cart.getTerminalDevice());
+        sale.setCustomer(customer);
         sale.setReceiptHeaderId(receipt.receiptHeaderId());
         sale.setReceiptNumber(receipt.receiptNumber());
         sale.setSubtotalNet(cart.getSubtotalNet());
@@ -249,5 +256,24 @@ public class SaleCheckoutService {
         if (!storeLocation.getMerchant().isActive()) {
             throw new BaseException(ErrorCode.CONFLICT, "merchant is inactive: " + storeLocation.getMerchant().getId());
         }
+    }
+
+    private CustomerEntity resolveCustomerForCheckout(Long customerId, Long merchantId) {
+        if (customerId == null) {
+            return null;
+        }
+
+        CustomerEntity customer = customerRepository.findById(customerId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "customer not found: " + customerId));
+        if (!customer.getMerchant().getId().equals(merchantId)) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "customer merchant mismatch for checkout: customerId=%d merchantId=%d"
+                            .formatted(customerId, merchantId));
+        }
+        if (!customer.isActive()) {
+            throw new BaseException(ErrorCode.CONFLICT, "customer is inactive: " + customerId);
+        }
+        return customer;
     }
 }

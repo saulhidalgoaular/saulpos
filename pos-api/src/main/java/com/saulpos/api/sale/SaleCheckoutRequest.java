@@ -14,6 +14,14 @@ public record SaleCheckoutRequest(
         @NotNull(message = "terminalDeviceId is required")
         Long terminalDeviceId,
         @NotEmpty(message = "payments is required")
-        List<@Valid SaleCheckoutPaymentRequest> payments
+        List<@Valid SaleCheckoutPaymentRequest> payments,
+        Long customerId
 ) {
+
+    public SaleCheckoutRequest(Long cartId,
+                               Long cashierUserId,
+                               Long terminalDeviceId,
+                               List<@Valid SaleCheckoutPaymentRequest> payments) {
+        this(cartId, cashierUserId, terminalDeviceId, payments, null);
+    }
 }

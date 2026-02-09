@@ -1,5 +1,6 @@
 package com.saulpos.server.sale.model;
 
+import com.saulpos.server.customer.model.CustomerEntity;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.security.model.UserAccountEntity;
@@ -57,6 +58,10 @@ public class SaleEntity {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "terminal_device_id", nullable = false)
     private TerminalDeviceEntity terminalDevice;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "customer_id")
+    private CustomerEntity customer;
 
     @Column(name = "receipt_header_id", nullable = false)
     private Long receiptHeaderId;

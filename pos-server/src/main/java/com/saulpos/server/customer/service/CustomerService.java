@@ -6,8 +6,12 @@ import com.saulpos.api.customer.CustomerContactType;
 import com.saulpos.api.customer.CustomerGroupAssignmentRequest;
 import com.saulpos.api.customer.CustomerGroupRequest;
 import com.saulpos.api.customer.CustomerGroupResponse;
+import com.saulpos.api.customer.CustomerReturnsHistoryItemResponse;
+import com.saulpos.api.customer.CustomerReturnsHistoryResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.customer.CustomerSalesHistoryItemResponse;
+import com.saulpos.api.customer.CustomerSalesHistoryResponse;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityResponse;
 import com.saulpos.server.customer.model.CustomerContactEntity;
@@ -22,11 +26,16 @@ import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.MerchantEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
+import com.saulpos.server.sale.repository.SaleRepository;
+import com.saulpos.server.sale.repository.SaleReturnRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -45,6 +54,8 @@ public class CustomerService {
     private final CustomerGroupRepository customerGroupRepository;
     private final CustomerTaxIdentityRepository customerTaxIdentityRepository;
     private final MerchantRepository merchantRepository;
+    private final SaleRepository saleRepository;
+    private final SaleReturnRepository saleReturnRepository;
 
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request) {
@@ -211,6 +222,81 @@ public class CustomerService {
         return toCustomerGroupResponses(customer);
     }
 
+    @Transactional(readOnly = true)
+    public CustomerSalesHistoryResponse listCustomerSalesHistory(Long customerId,
+                                                                 Instant from,
+                                                                 Instant to,
+                                                                 int page,
+                                                                 int size) {
+        requireCustomer(customerId);
+        validateHistoryDateRange(from, to);
+
+        Page<SaleRepository.CustomerSaleHistoryProjection> resultPage = saleRepository.findCustomerSalesHistory(
+                customerId,
+                from,
+                to,
+                PageRequest.of(page, size));
+
+        List<CustomerSalesHistoryItemResponse> items = resultPage.getContent().stream()
+                .map(item -> new CustomerSalesHistoryItemResponse(
+                        item.getSaleId(),
+                        item.getReceiptNumber(),
+                        item.getStoreLocationId(),
+                        item.getTerminalDeviceId(),
+                        item.getSubtotalNet(),
+                        item.getTotalTax(),
+                        item.getTotalGross(),
+                        item.getTotalPayable(),
+                        item.getSoldAt()))
+                .toList();
+
+        return new CustomerSalesHistoryResponse(
+                items,
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.hasNext(),
+                resultPage.hasPrevious());
+    }
+
+    @Transactional(readOnly = true)
+    public CustomerReturnsHistoryResponse listCustomerReturnsHistory(Long customerId,
+                                                                     Instant from,
+                                                                     Instant to,
+                                                                     int page,
+                                                                     int size) {
+        requireCustomer(customerId);
+        validateHistoryDateRange(from, to);
+
+        Page<SaleReturnRepository.CustomerReturnHistoryProjection> resultPage = saleReturnRepository.findCustomerReturnsHistory(
+                customerId,
+                from,
+                to,
+                PageRequest.of(page, size));
+
+        List<CustomerReturnsHistoryItemResponse> items = resultPage.getContent().stream()
+                .map(item -> new CustomerReturnsHistoryItemResponse(
+                        item.getSaleReturnId(),
+                        item.getSaleId(),
+                        item.getReceiptNumber(),
+                        item.getReturnReference(),
+                        item.getReasonCode(),
+                        item.getRefundTenderType(),
+                        item.getTotalGross(),
+                        item.getReturnedAt()))
+                .toList();
+
+        return new CustomerReturnsHistoryResponse(
+                items,
+                resultPage.getNumber(),
+                resultPage.getSize(),
+                resultPage.getTotalElements(),
+                resultPage.getTotalPages(),
+                resultPage.hasNext(),
+                resultPage.hasPrevious());
+    }
+
     private void applyCustomerData(CustomerEntity customer, CustomerRequest request, MerchantEntity merchant) {
         customer.setDisplayName(normalizeOptionalText(request.displayName()));
         customer.setInvoiceRequired(Boolean.TRUE.equals(request.invoiceRequired()));
@@ -373,10 +459,21 @@ public class CustomerService {
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "customer not found: " + id));
     }
 
+    private CustomerEntity requireCustomer(Long id) {
+        return customerRepository.findById(id)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "customer not found: " + id));
+    }
+
     private MerchantEntity requireMerchant(Long merchantId) {
         return merchantRepository.findById(merchantId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
                         "merchant not found: " + merchantId));
+    }
+
+    private void validateHistoryDateRange(Instant from, Instant to) {
+        if (from != null && to != null && from.isAfter(to)) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "from must be before or equal to to");
+        }
     }
 
     private CustomerContactType requireContactType(CustomerContactType contactType) {

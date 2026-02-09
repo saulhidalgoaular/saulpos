@@ -32,6 +32,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `E3` Loyalty hooks.
 - `F1` Customer master.
 - `F2` Customer groups and pricing hooks.
+- `F3` Customer history.
 - `I1` Supplier master.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
@@ -120,6 +121,17 @@ Backend source of truth:
   - `customer_group`
   - `customer_group_assignment`
 - Customer responses now include assigned groups, and assignment validation enforces merchant consistency between customer and group.
+
+### Customer History
+- Customer history APIs:
+  - `GET /api/customers/{id}/sales?from={isoDateTime?}&to={isoDateTime?}&page={n}&size={n}`
+  - `GET /api/customers/{id}/returns?from={isoDateTime?}&to={isoDateTime?}&page={n}&size={n}`
+- History model linkage:
+  - `sale.customer_id` (nullable) links checkout sales to customer profiles.
+- Enforced rules:
+  - history results are paginated with deterministic ordering by newest timestamp then id,
+  - date filters (`from`/`to`) are optional and validated,
+  - endpoints are restricted to authorized customer-domain roles.
 
 ### Supplier Master
 - Supplier APIs:
@@ -217,6 +229,7 @@ Backend source of truth:
 
 ### Atomic Checkout
 - Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.
+- Checkout request supports optional `customerId` linkage to persist customer-centric sale history.
 - Checkout persistence model:
   - `sale`
   - `sale_line`
@@ -395,6 +408,8 @@ Backend source of truth:
   - `V24__atomic_checkout.sql`
   - `V25__payment_state_machine.sql`
   - `V26__inventory_movement_ledger.sql`
+  - `V27__returns_and_refunds.sql`
+  - `V28__customer_history.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -476,6 +491,7 @@ Key settings include:
 - Integration tests for customer-group create/list/assignment flows and cross-merchant assignment rejection.
 - Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
 - Integration tests for supplier CRUD/search flows, merchant-scoped unique identifier conflicts, and status lifecycle endpoints.
+- Integration tests for customer sales/returns history pagination and date filters.
 - Unit tests for pricing resolution with customer-group contexts.
 - Integration tests for cart lifecycle create/add/update/remove/recalculate flows and idempotent line-key behavior.
 - Integration tests for parked cart lifecycle (park/resume/cancel), parked list filtering, and expiry-policy behavior.
