@@ -63,6 +63,7 @@ class LoyaltyEnabledIntegrationTest {
         jdbcTemplate.execute("DELETE FROM customer_contact");
         jdbcTemplate.execute("DELETE FROM customer_tax_identity");
         jdbcTemplate.execute("DELETE FROM customer");
+        jdbcTemplate.execute("DELETE FROM terminal_device");
         jdbcTemplate.execute("DELETE FROM store_location");
         jdbcTemplate.execute("DELETE FROM merchant");
 
