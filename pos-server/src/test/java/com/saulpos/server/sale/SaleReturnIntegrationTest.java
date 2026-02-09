@@ -328,6 +328,33 @@ class SaleReturnIntegrationTest {
     }
 
     @Test
+    void submitReturnRejectsDuplicateSaleLineIds() throws Exception {
+        CheckoutResult checkout = checkoutWithTwoUnits();
+
+        mockMvc.perform(post("/api/refunds/submit")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "saleId": %d,
+                                  "reasonCode": "DUP_LINE",
+                                  "refundTenderType": "CASH",
+                                  "lines": [
+                                    {
+                                      "saleLineId": %d,
+                                      "quantity": 1.000
+                                    },
+                                    {
+                                      "saleLineId": %d,
+                                      "quantity": 1.000
+                                    }
+                                  ]
+                                }
+                                """.formatted(checkout.saleId(), checkout.saleLineId(), checkout.saleLineId())))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
+    @Test
     @WithMockUser(username = "manager", authorities = {"PERM_CONFIGURATION_MANAGE"})
     void managerCanSubmitReturnOutsideWindow() throws Exception {
         CheckoutResult checkout = checkoutWithTwoUnits();

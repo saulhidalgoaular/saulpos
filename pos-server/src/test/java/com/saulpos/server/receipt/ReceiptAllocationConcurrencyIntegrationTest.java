@@ -73,6 +73,7 @@ class ReceiptAllocationConcurrencyIntegrationTest {
         jdbcTemplate.execute("DELETE FROM price_book");
         jdbcTemplate.execute("DELETE FROM product_barcode");
         jdbcTemplate.execute("DELETE FROM product_variant");
+        jdbcTemplate.execute("DELETE FROM inventory_movement");
         jdbcTemplate.execute("DELETE FROM product");
         jdbcTemplate.execute("DELETE FROM tax_group");
         jdbcTemplate.execute("DELETE FROM category");

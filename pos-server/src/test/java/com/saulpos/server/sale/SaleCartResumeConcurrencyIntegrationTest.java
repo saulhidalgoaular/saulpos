@@ -89,6 +89,7 @@ class SaleCartResumeConcurrencyIntegrationTest {
         jdbcTemplate.execute("DELETE FROM price_book");
         jdbcTemplate.execute("DELETE FROM product_barcode");
         jdbcTemplate.execute("DELETE FROM product_variant");
+        jdbcTemplate.execute("DELETE FROM inventory_movement");
         jdbcTemplate.execute("DELETE FROM product");
         jdbcTemplate.execute("DELETE FROM category");
         jdbcTemplate.execute("DELETE FROM cash_movement");

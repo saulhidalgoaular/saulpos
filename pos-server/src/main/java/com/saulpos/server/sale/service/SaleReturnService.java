@@ -38,9 +38,11 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -85,6 +87,7 @@ public class SaleReturnService {
     public SaleReturnResponse submit(SaleReturnSubmitRequest request) {
         SaleEntity sale = requireSale(request.saleId(), request.receiptNumber());
         enforceRestrictedWindowApproval(sale);
+        validateDistinctSaleLineIds(request.lines());
 
         PaymentEntity payment = paymentRepository.findByCartIdWithAllocations(sale.getCart().getId())
                 .orElseThrow(() -> new BaseException(ErrorCode.CONFLICT,
@@ -160,6 +163,16 @@ public class SaleReturnService {
         inventoryMovementRepository.saveAll(createReturnMovements(savedReturn));
 
         return toResponse(savedReturn);
+    }
+
+    private void validateDistinctSaleLineIds(List<SaleReturnSubmitLineRequest> lines) {
+        Set<Long> seenSaleLineIds = new HashSet<>();
+        for (SaleReturnSubmitLineRequest line : lines) {
+            if (!seenSaleLineIds.add(line.saleLineId())) {
+                throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                        "duplicate saleLineId in request: " + line.saleLineId());
+            }
+        }
     }
 
     private SaleReturnLookupLineResponse toLookupLineResponse(SaleLineEntity line, ReturnedTotals returnedTotals) {
