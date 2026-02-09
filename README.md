@@ -32,6 +32,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `E3` Loyalty hooks.
 - `F1` Customer master.
 - `F2` Customer groups and pricing hooks.
+- `G1` Cart lifecycle service.
 
 ## Monorepo Architecture
 
@@ -121,6 +122,23 @@ Backend source of truth:
   - one open shift per cashier + terminal,
   - finite-state transition checks,
   - counted-vs-expected reconciliation with variance capture.
+
+### Sales Cart Lifecycle
+- Cart APIs:
+  - `POST /api/sales/carts`
+  - `GET /api/sales/carts/{id}`
+  - `POST /api/sales/carts/{id}/lines`
+  - `PUT /api/sales/carts/{id}/lines/{lineId}`
+  - `DELETE /api/sales/carts/{id}/lines/{lineId}`
+  - `POST /api/sales/carts/{id}/recalculate`
+- Cart model:
+  - `sale_cart`
+  - `sale_cart_line`
+- Enforced rules:
+  - cart mutation and totals recomputation are deterministic for the same line inputs,
+  - invalid product IDs return stable not-found errors,
+  - invalid quantity by sale mode (for example decimal quantity on `UNIT`) returns stable validation errors,
+  - idempotent add-line behavior is supported via `lineKey` per cart.
 
 ### Catalog and Category Hierarchy
 - Product APIs:
@@ -252,6 +270,7 @@ Backend source of truth:
   - `V16__customer_master.sql`
   - `V17__loyalty_hooks.sql`
   - `V18__customer_groups_and_pricing_hooks.sql`
+  - `V19__cart_lifecycle_service.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -331,6 +350,8 @@ Key settings include:
 - Integration tests for customer-group create/list/assignment flows and cross-merchant assignment rejection.
 - Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
 - Unit tests for pricing resolution with customer-group contexts.
+- Integration tests for cart lifecycle create/add/update/remove/recalculate flows and idempotent line-key behavior.
+- Unit tests for cart quantity policy validation by sale mode and precision.
 
 ## Project Planning and Status
 

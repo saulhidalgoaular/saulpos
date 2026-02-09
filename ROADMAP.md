@@ -405,7 +405,7 @@ Out of Scope:
 
 ### Phase G: Sales Core
 
-#### Card G1: Cart Lifecycle Service
+#### Card G1: Cart Lifecycle Service [SOLVED]
 - Goal: Make server authoritative for cart state.
 - Dependencies: C1, C3, D1, E1.
 - Data Model:
@@ -1081,7 +1081,7 @@ Out of Scope:
 | F1 | DONE |  |  | Implemented customer master with migration `V16`, customer/tax-identity/contact models, CRUD + lookup APIs (`document`/`email`/`phone`), merchant-scoped document uniqueness, and integration coverage for optional-field validation and lookup flows |
 | F2 | DONE |  |  | Implemented `customer_group` + `customer_group_assignment` with migration `V18`, customer group create/list + assignment APIs, and customer-context pricing precedence `store override > customer-group price book > standard price book > base price` via `GET /api/catalog/prices/resolve` |
 | F3 | TODO |  |  |  |
-| G1 | TODO |  |  |  |
+| G1 | DONE |  |  | Implemented cart lifecycle APIs (`POST /api/sales/carts`, line add/update/remove, recalculate, get), migration `V19` (`sale_cart`, `sale_cart_line`), deterministic totals recomputation (pricing+tax+rounding), idempotent add-line `lineKey` handling, and unit/integration coverage for quantity policy, invalid product/quantity errors, and cart mutation flow |
 | G2 | TODO |  |  |  |
 | G3 | TODO |  |  |  |
 | G4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `G1` Cart lifecycle service.
-2. `I1` Supplier master.
-3. `J1` Tender and split payments (after `G1` baseline).
+1. `I1` Supplier master.
+2. `J1` Tender and split payments.
+3. `G2` Atomic checkout.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
