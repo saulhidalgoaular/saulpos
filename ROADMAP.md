@@ -536,7 +536,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for approval path and postings.
 
-#### Card H3: Stocktake
+#### Card H3: Stocktake [SOLVED]
 - Goal: Support periodic cycle counts.
 - Dependencies: H1.
 - Data Model:
@@ -1088,7 +1088,7 @@ Out of Scope:
 | G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
 | H1 | DONE |  |  | Implemented inventory ledger APIs (`POST /api/inventory/movements`, `GET /api/inventory/movements`, `GET /api/inventory/balances`) with migration `V26` extending typed movement/reference enforcement (`SALE`, `RETURN`, `ADJUSTMENT`) and computed stock-balance projection from immutable movement history, covered by unit/integration permission-matrix tests |
 | H2 | DONE |  |  | Implemented stock adjustment workflow with migration `V29` (`stock_adjustment`), create/approve/post APIs (`POST /api/inventory/adjustments`, `/api/inventory/adjustments/{id}/approve`, `/api/inventory/adjustments/{id}/post`), manager-threshold approval enforcement, and integration coverage ensuring posted adjustments write immutable `ADJUSTMENT` ledger movements |
-| H3 | TODO |  |  |  |
+| H3 | DONE |  |  | Implemented stocktake workflow with migration `V30` (`stocktake_session`, `stocktake_line`), create/start/finalize + variance-report APIs (`/api/inventory/stocktakes`), fixed snapshot-at-start behavior, and finalize variance postings as immutable `ADJUSTMENT` movements (`reference_type=STOCKTAKE`) with integration coverage by product/category |
 | H4 | TODO |  |  |  |
 | H5 | TODO |  |  |  |
 | I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `H2` Stock adjustments.
-2. `H3` Stocktake.
-3. `H4` Transfer orders.
+1. `H4` Transfer orders.
+2. `I2` Purchase orders and receiving.
+3. `H5` Lot and expiry tracking (after `I2` dependency).
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

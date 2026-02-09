@@ -7,8 +7,13 @@ import com.saulpos.api.inventory.StockAdjustmentApproveRequest;
 import com.saulpos.api.inventory.StockAdjustmentCreateRequest;
 import com.saulpos.api.inventory.StockAdjustmentPostRequest;
 import com.saulpos.api.inventory.StockAdjustmentResponse;
+import com.saulpos.api.inventory.StocktakeCreateRequest;
+import com.saulpos.api.inventory.StocktakeFinalizeRequest;
+import com.saulpos.api.inventory.StocktakeSessionResponse;
+import com.saulpos.api.inventory.StocktakeVarianceReportResponse;
 import com.saulpos.server.inventory.service.InventoryLedgerService;
 import com.saulpos.server.inventory.service.StockAdjustmentService;
+import com.saulpos.server.inventory.service.StocktakeService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +38,7 @@ public class InventoryController {
 
     private final InventoryLedgerService inventoryLedgerService;
     private final StockAdjustmentService stockAdjustmentService;
+    private final StocktakeService stocktakeService;
 
     @PostMapping("/adjustments")
     @ResponseStatus(HttpStatus.CREATED)
@@ -50,6 +56,28 @@ public class InventoryController {
     public StockAdjustmentResponse postAdjustment(@PathVariable("adjustmentId") Long adjustmentId,
                                                   @Valid @RequestBody(required = false) StockAdjustmentPostRequest request) {
         return stockAdjustmentService.postAdjustment(adjustmentId, request);
+    }
+
+    @PostMapping("/stocktakes")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StocktakeSessionResponse createStocktake(@Valid @RequestBody StocktakeCreateRequest request) {
+        return stocktakeService.createStocktake(request);
+    }
+
+    @PostMapping("/stocktakes/{stocktakeId}/start")
+    public StocktakeSessionResponse startStocktake(@PathVariable("stocktakeId") Long stocktakeId) {
+        return stocktakeService.startStocktake(stocktakeId);
+    }
+
+    @PostMapping("/stocktakes/{stocktakeId}/finalize")
+    public StocktakeSessionResponse finalizeStocktake(@PathVariable("stocktakeId") Long stocktakeId,
+                                                      @Valid @RequestBody StocktakeFinalizeRequest request) {
+        return stocktakeService.finalizeStocktake(stocktakeId, request);
+    }
+
+    @GetMapping("/stocktakes/{stocktakeId}/variance")
+    public StocktakeVarianceReportResponse getStocktakeVarianceReport(@PathVariable("stocktakeId") Long stocktakeId) {
+        return stocktakeService.getVarianceReport(stocktakeId);
     }
 
     @PostMapping("/movements")
