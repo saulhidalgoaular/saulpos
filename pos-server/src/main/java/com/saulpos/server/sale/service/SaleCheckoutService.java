@@ -14,6 +14,7 @@ import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
 import com.saulpos.server.receipt.service.ReceiptService;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
+import com.saulpos.server.sale.model.InventoryReferenceType;
 import com.saulpos.server.sale.model.InventoryMovementType;
 import com.saulpos.server.sale.model.PaymentAllocationEntity;
 import com.saulpos.server.sale.model.PaymentEntity;
@@ -123,6 +124,7 @@ public class SaleCheckoutService {
                     movement.setSaleLine(line);
                     movement.setMovementType(InventoryMovementType.SALE);
                     movement.setQuantityDelta(line.getQuantity().negate());
+                    movement.setReferenceType(InventoryReferenceType.SALE_RECEIPT);
                     movement.setReferenceNumber(sale.getReceiptNumber());
                     return movement;
                 })

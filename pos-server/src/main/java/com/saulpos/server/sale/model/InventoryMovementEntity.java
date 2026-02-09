@@ -40,12 +40,12 @@ public class InventoryMovementEntity {
     @JoinColumn(name = "product_id", nullable = false)
     private ProductEntity product;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sale_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sale_id")
     private SaleEntity sale;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "sale_line_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "sale_line_id")
     private SaleLineEntity saleLine;
 
     @Enumerated(EnumType.STRING)
@@ -54,6 +54,10 @@ public class InventoryMovementEntity {
 
     @Column(name = "quantity_delta", nullable = false, precision = 13, scale = 3)
     private BigDecimal quantityDelta = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "reference_type", nullable = false, length = 40)
+    private InventoryReferenceType referenceType;
 
     @Column(name = "reference_number", nullable = false, length = 80)
     private String referenceNumber;

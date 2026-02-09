@@ -1,4 +1,4 @@
-package com.saulpos.server.sale.model;
+package com.saulpos.api.inventory;
 
 public enum InventoryMovementType {
     SALE,

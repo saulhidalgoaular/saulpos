@@ -326,6 +326,34 @@ class PermissionMatrixIntegrationTest {
                         .header("Authorization", "Bearer " + inventoryToken))
                 .andExpect(status().isNotFound());
 
+        mockMvc.perform(get("/api/inventory/balances")
+                        .header("Authorization", "Bearer " + refundToken)
+                        .param("storeLocationId", "1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/inventory/balances")
+                        .header("Authorization", "Bearer " + inventoryToken)
+                        .param("storeLocationId", "1"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
+        mockMvc.perform(post("/api/inventory/movements")
+                        .header("Authorization", "Bearer " + inventoryToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "storeLocationId": 1,
+                                  "productId": 1,
+                                  "movementType": "ADJUSTMENT",
+                                  "quantityDelta": 1.000,
+                                  "referenceType": "STOCK_ADJUSTMENT",
+                                  "referenceNumber": "SEC-H1-1"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
         mockMvc.perform(get("/api/reports/sales")
                         .header("Authorization", "Bearer " + inventoryToken))
                 .andExpect(status().isForbidden())

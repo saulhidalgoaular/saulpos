@@ -507,7 +507,7 @@ Out of Scope:
 
 ### Phase H: Inventory Ledger
 
-#### Card H1: Inventory Movement Ledger
+#### Card H1: Inventory Movement Ledger [SOLVED]
 - Goal: Move from direct quantity edits to event ledger.
 - Dependencies: G2, C1.
 - Data Model:
@@ -1086,7 +1086,7 @@ Out of Scope:
 | G3 | TODO |  |  |  |
 | G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
 | G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
-| H1 | TODO |  |  |  |
+| H1 | DONE |  |  | Implemented inventory ledger APIs (`POST /api/inventory/movements`, `GET /api/inventory/movements`, `GET /api/inventory/balances`) with migration `V26` extending typed movement/reference enforcement (`SALE`, `RETURN`, `ADJUSTMENT`) and computed stock-balance projection from immutable movement history, covered by unit/integration permission-matrix tests |
 | H2 | TODO |  |  |  |
 | H3 | TODO |  |  |  |
 | H4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `H1` Inventory movement ledger.
-2. `G3` Returns and refunds.
-3. `F3` Customer history.
+1. `G3` Returns and refunds.
+2. `F3` Customer history.
+3. `H2` Stock adjustments.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
