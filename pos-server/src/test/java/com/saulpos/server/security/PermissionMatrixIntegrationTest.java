@@ -337,7 +337,28 @@ class PermissionMatrixIntegrationTest {
 
         mockMvc.perform(post("/api/inventory/adjustments")
                         .header("Authorization", "Bearer " + inventoryToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/inventory/adjustments")
+                        .header("Authorization", "Bearer " + inventoryToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+
+        mockMvc.perform(post("/api/inventory/adjustments/1/approve")
+                        .header("Authorization", "Bearer " + inventoryToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/inventory/adjustments/1/approve")
+                        .header("Authorization", "Bearer " + configToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
 
         mockMvc.perform(get("/api/inventory/balances")
                         .header("Authorization", "Bearer " + refundToken)

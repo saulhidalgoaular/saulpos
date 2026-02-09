@@ -3,7 +3,12 @@ package com.saulpos.server.inventory.web;
 import com.saulpos.api.inventory.InventoryMovementCreateRequest;
 import com.saulpos.api.inventory.InventoryMovementResponse;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.StockAdjustmentApproveRequest;
+import com.saulpos.api.inventory.StockAdjustmentCreateRequest;
+import com.saulpos.api.inventory.StockAdjustmentPostRequest;
+import com.saulpos.api.inventory.StockAdjustmentResponse;
 import com.saulpos.server.inventory.service.InventoryLedgerService;
+import com.saulpos.server.inventory.service.StockAdjustmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -26,6 +32,25 @@ import java.util.List;
 public class InventoryController {
 
     private final InventoryLedgerService inventoryLedgerService;
+    private final StockAdjustmentService stockAdjustmentService;
+
+    @PostMapping("/adjustments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StockAdjustmentResponse createAdjustment(@Valid @RequestBody StockAdjustmentCreateRequest request) {
+        return stockAdjustmentService.createAdjustment(request);
+    }
+
+    @PostMapping("/adjustments/{adjustmentId}/approve")
+    public StockAdjustmentResponse approveAdjustment(@PathVariable("adjustmentId") Long adjustmentId,
+                                                     @Valid @RequestBody(required = false) StockAdjustmentApproveRequest request) {
+        return stockAdjustmentService.approveAdjustment(adjustmentId, request);
+    }
+
+    @PostMapping("/adjustments/{adjustmentId}/post")
+    public StockAdjustmentResponse postAdjustment(@PathVariable("adjustmentId") Long adjustmentId,
+                                                  @Valid @RequestBody(required = false) StockAdjustmentPostRequest request) {
+        return stockAdjustmentService.postAdjustment(adjustmentId, request);
+    }
 
     @PostMapping("/movements")
     @ResponseStatus(HttpStatus.CREATED)

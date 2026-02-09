@@ -523,7 +523,7 @@ Out of Scope:
 1. Unit tests for balance calculation.
 2. Integration tests for sale/return/adjustment effects.
 
-#### Card H2: Stock Adjustments
+#### Card H2: Stock Adjustments [SOLVED]
 - Goal: Controlled manual correction flow.
 - Dependencies: H1, B2.
 - Data Model: `stock_adjustment` + reason code.
@@ -1087,7 +1087,7 @@ Out of Scope:
 | G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
 | G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
 | H1 | DONE |  |  | Implemented inventory ledger APIs (`POST /api/inventory/movements`, `GET /api/inventory/movements`, `GET /api/inventory/balances`) with migration `V26` extending typed movement/reference enforcement (`SALE`, `RETURN`, `ADJUSTMENT`) and computed stock-balance projection from immutable movement history, covered by unit/integration permission-matrix tests |
-| H2 | TODO |  |  |  |
+| H2 | DONE |  |  | Implemented stock adjustment workflow with migration `V29` (`stock_adjustment`), create/approve/post APIs (`POST /api/inventory/adjustments`, `/api/inventory/adjustments/{id}/approve`, `/api/inventory/adjustments/{id}/post`), manager-threshold approval enforcement, and integration coverage ensuring posted adjustments write immutable `ADJUSTMENT` ledger movements |
 | H3 | TODO |  |  |  |
 | H4 | TODO |  |  |  |
 | H5 | TODO |  |  |  |

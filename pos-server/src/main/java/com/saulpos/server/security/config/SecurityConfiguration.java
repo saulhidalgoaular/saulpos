@@ -106,6 +106,8 @@ public class SecurityConfiguration {
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS),
                                 SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers(HttpMethod.POST, "/api/inventory/adjustments/*/approve")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/inventory/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.INVENTORY_ADJUST))
                         .requestMatchers("/api/reports/**")

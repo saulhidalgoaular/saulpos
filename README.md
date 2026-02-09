@@ -42,6 +42,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `G4` Suspended/parked sales.
 - `G5` Void and price override controls.
 - `H1` Inventory movement ledger.
+- `H2` Stock adjustments.
 
 ## Monorepo Architecture
 
@@ -270,6 +271,18 @@ Backend source of truth:
   - adjustment movements require `STOCK_ADJUSTMENT` reference type and non-zero quantity.
 - Ledger query responses include deterministic per-product running balance, and stock-on-hand is reproducible from movement aggregation.
 
+### Stock Adjustments
+- Stock adjustment APIs:
+  - `POST /api/inventory/adjustments`
+  - `POST /api/inventory/adjustments/{id}/approve`
+  - `POST /api/inventory/adjustments/{id}/post`
+- Stock adjustment model:
+  - `stock_adjustment`
+- Enforced rules:
+  - reason code is mandatory for all manual adjustments,
+  - adjustments at or above `app.inventory.adjustment-manager-approval-threshold` require manager approval (`CONFIGURATION_MANAGE`) before posting,
+  - posting an adjustment always writes an immutable `ADJUSTMENT` inventory movement with `STOCK_ADJUSTMENT` reference metadata.
+
 ### Catalog and Category Hierarchy
 - Product APIs:
   - `POST /api/catalog/products`
@@ -410,6 +423,7 @@ Backend source of truth:
   - `V26__inventory_movement_ledger.sql`
   - `V27__returns_and_refunds.sql`
   - `V28__customer_history.sql`
+  - `V29__stock_adjustments.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -465,6 +479,7 @@ Key settings include:
 - `app.security.refresh-token-ttl-minutes`
 - `app.sales.parked-cart-expiry-minutes`
 - `app.sales.price-override-approval-threshold-percent`
+- `app.inventory.adjustment-manager-approval-threshold`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -506,7 +521,9 @@ Key settings include:
 - Unit tests for payment state transition rules.
 - Unit tests for inventory balance calculation and deterministic 3-decimal quantity normalization.
 - Integration tests for inventory ledger sale/return/adjustment effects, running-balance output, and stock-balance aggregation.
+- Integration tests for stock adjustment create/approve/post flow, manager-approval threshold enforcement, and movement posting guarantees.
 - Permission-matrix integration coverage for inventory ledger endpoints.
+- Permission-matrix integration coverage for stock adjustment endpoint authorization (`INVENTORY_ADJUST` vs `CONFIGURATION_MANAGE` approval path).
 
 ## Project Planning and Status
 
