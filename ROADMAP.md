@@ -445,7 +445,7 @@ Out of Scope:
 1. Integration tests with forced failure mid-transaction.
 2. Concurrency tests for parallel checkouts.
 
-#### Card G3: Returns and Refunds
+#### Card G3: Returns and Refunds [SOLVED]
 - Goal: Handle partial/full returns with policy enforcement.
 - Dependencies: G2, J2.
 - Data Model:
@@ -1083,7 +1083,7 @@ Out of Scope:
 | F3 | TODO |  |  |  |
 | G1 | DONE |  |  | Implemented cart lifecycle APIs (`POST /api/sales/carts`, line add/update/remove, recalculate, get), migration `V19` (`sale_cart`, `sale_cart_line`), deterministic totals recomputation (pricing+tax+rounding), idempotent add-line `lineKey` handling, and unit/integration coverage for quantity policy, invalid product/quantity errors, and cart mutation flow |
 | G2 | DONE |  |  | Implemented atomic checkout with migration `V24` (`sale`, `sale_line`, `inventory_movement`), in-transaction receipt allocation + sale persistence on `POST /api/sales/checkout`, cart transition to `CHECKED_OUT`, checkout response `saleId`/`receiptNumber`, and integration/concurrency coverage for single-commit behavior under parallel attempts |
-| G3 | TODO |  |  |  |
+| G3 | DONE |  |  | Implemented returns and refunds with migration `V27` (`sale_return`, `sale_return_line`, `sale_return_refund`), receipt-based lookup (`GET /api/refunds/lookup`), return submission (`POST /api/refunds/submit`) with quantity-eligibility and restricted-window manager-override checks, plus inventory `RETURN` postings and integration/unit permission coverage |
 | G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
 | G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
 | H1 | DONE |  |  | Implemented inventory ledger APIs (`POST /api/inventory/movements`, `GET /api/inventory/movements`, `GET /api/inventory/balances`) with migration `V26` extending typed movement/reference enforcement (`SALE`, `RETURN`, `ADJUSTMENT`) and computed stock-balance projection from immutable movement history, covered by unit/integration permission-matrix tests |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `G3` Returns and refunds.
-2. `F3` Customer history.
-3. `H2` Stock adjustments.
+1. `F3` Customer history.
+2. `H2` Stock adjustments.
+3. `H3` Stocktake.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -103,7 +103,9 @@ public class SecurityConfiguration {
                         .requestMatchers("/api/catalog/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/refunds/**")
-                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS))
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/inventory/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.INVENTORY_ADJUST))
                         .requestMatchers("/api/reports/**")

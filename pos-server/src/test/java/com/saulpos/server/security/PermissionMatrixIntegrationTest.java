@@ -71,6 +71,15 @@ class PermissionMatrixIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_return_refund");
+        jdbcTemplate.execute("DELETE FROM sale_return_line");
+        jdbcTemplate.execute("DELETE FROM sale_return");
+        jdbcTemplate.execute("DELETE FROM payment_transition");
+        jdbcTemplate.execute("DELETE FROM payment_allocation");
+        jdbcTemplate.execute("DELETE FROM payment");
+        jdbcTemplate.execute("DELETE FROM inventory_movement");
+        jdbcTemplate.execute("DELETE FROM sale_line");
+        jdbcTemplate.execute("DELETE FROM sale");
         jdbcTemplate.execute("DELETE FROM sale_override_event");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
@@ -315,7 +324,11 @@ class PermissionMatrixIntegrationTest {
 
         mockMvc.perform(post("/api/refunds/submit")
                         .header("Authorization", "Bearer " + refundToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(post("/api/refunds/submit")
+                        .header("Authorization", "Bearer " + configToken))
+                .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/inventory/adjustments")
                         .header("Authorization", "Bearer " + refundToken))

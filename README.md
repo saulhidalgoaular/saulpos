@@ -37,6 +37,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `J2` Payment state machine.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
+- `G3` Returns and refunds.
 - `G4` Suspended/parked sales.
 - `G5` Void and price override controls.
 - `H1` Inventory movement ledger.
@@ -227,6 +228,20 @@ Backend source of truth:
   - checkout requires an active cart with at least one line,
   - successful checkout transitions the cart status to `CHECKED_OUT`,
   - each checkout line writes a negative `SALE` inventory movement for traceability.
+
+### Returns and Refunds
+- Return APIs:
+  - `GET /api/refunds/lookup?receiptNumber={receiptNumber}`
+  - `POST /api/refunds/submit`
+- Return/refund model:
+  - `sale_return`
+  - `sale_return_line`
+  - `sale_return_refund`
+- Enforced rules:
+  - partial and full returns are supported by sale line,
+  - return quantity eligibility is enforced across cumulative prior returns,
+  - restricted return windows require manager-level override permission,
+  - each submitted return creates positive `RETURN` inventory movements linked by immutable return reference.
 
 ### Inventory Movement Ledger
 - Inventory ledger APIs:
