@@ -189,6 +189,36 @@ class PermissionMatrixIntegrationTest {
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isBadRequest());
 
+        mockMvc.perform(post("/api/payments/1/capture")
+                        .header("Authorization", "Bearer " + limitedToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/payments/1/capture")
+                        .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
+        mockMvc.perform(post("/api/payments/1/refund")
+                        .header("Authorization", "Bearer " + salesToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/payments/1/refund")
+                        .header("Authorization", "Bearer " + refundToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
+        mockMvc.perform(get("/api/payments/1")
+                        .header("Authorization", "Bearer " + limitedToken))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/payments/1")
+                        .header("Authorization", "Bearer " + refundToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+
         mockMvc.perform(post("/api/sales/carts/1/park")
                         .header("Authorization", "Bearer " + limitedToken)
                         .contentType(MediaType.APPLICATION_JSON)

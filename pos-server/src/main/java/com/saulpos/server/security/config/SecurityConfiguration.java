@@ -55,6 +55,15 @@ public class SecurityConfiguration {
                         .permitAll()
                         .requestMatchers("/api/sales/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.POST, "/api/payments/*/capture")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.POST, "/api/payments/*/void", "/api/payments/*/refund")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS))
+                        .requestMatchers(HttpMethod.GET, "/api/payments/**")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/shifts/**")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers(HttpMethod.GET, "/api/catalog/products/lookup")

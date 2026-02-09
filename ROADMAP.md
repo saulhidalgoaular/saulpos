@@ -656,7 +656,7 @@ Out of Scope:
 1. Unit tests for allocation validation.
 2. Integration tests on checkout.
 
-#### Card J2: Payment State Machine
+#### Card J2: Payment State Machine [SOLVED]
 - Goal: Model payment lifecycle cleanly.
 - Dependencies: J1.
 - Data Model: payment status enum + transition log.
@@ -1096,7 +1096,7 @@ Out of Scope:
 | I3 | TODO |  |  |  |
 | I4 | TODO |  |  |  |
 | J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
-| J2 | TODO |  |  |  |
+| J2 | DONE |  |  | Implemented payment lifecycle state machine with migration `V25` (`payment.status`, `payment_transition`), new lifecycle APIs (`GET /api/payments/{id}`, `POST /api/payments/{id}/capture|void|refund`), explicit transition validation with stable conflict errors, and unit/integration + permission-matrix coverage for transition history/auditability |
 | J3 | TODO |  |  |  |
 | J4 | TODO |  |  |  |
 | K1 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `J2` Payment state machine.
-2. `H1` Inventory movement ledger.
-3. `G3` Returns and refunds.
+1. `H1` Inventory movement ledger.
+2. `G3` Returns and refunds.
+3. `F3` Customer history.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

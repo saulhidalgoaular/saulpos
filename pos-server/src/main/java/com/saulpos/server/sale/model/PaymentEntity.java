@@ -1,8 +1,11 @@
 package com.saulpos.server.sale.model;
 
+import com.saulpos.api.sale.PaymentStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -53,6 +56,10 @@ public class PaymentEntity {
 
     @Column(name = "change_amount", nullable = false, precision = 14, scale = 2)
     private BigDecimal changeAmount = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false, length = 20)
+    private PaymentStatus status = PaymentStatus.AUTHORIZED;
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("sequenceNumber ASC, id ASC")

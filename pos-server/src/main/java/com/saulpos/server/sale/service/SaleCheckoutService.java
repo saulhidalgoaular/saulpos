@@ -2,6 +2,7 @@ package com.saulpos.server.sale.service;
 
 import com.saulpos.api.receipt.ReceiptAllocationRequest;
 import com.saulpos.api.receipt.ReceiptAllocationResponse;
+import com.saulpos.api.sale.PaymentStatus;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.api.sale.SaleCheckoutRequest;
@@ -44,6 +45,7 @@ public class SaleCheckoutService {
     private final InventoryMovementRepository inventoryMovementRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentAllocationValidator paymentAllocationValidator;
+    private final PaymentService paymentService;
     private final ReceiptService receiptService;
 
     @Transactional
@@ -73,6 +75,7 @@ public class SaleCheckoutService {
                 savedSale.getId(),
                 savedSale.getReceiptNumber(),
                 savedPayment.getId(),
+                savedPayment.getStatus(),
                 savedPayment.getTotalPayable(),
                 savedPayment.getTotalAllocated(),
                 savedPayment.getTotalTendered(),
@@ -134,6 +137,7 @@ public class SaleCheckoutService {
         payment.setTotalAllocated(validationResult.totalAllocated());
         payment.setTotalTendered(validationResult.totalTendered());
         payment.setChangeAmount(validationResult.changeAmount());
+        payment.setStatus(PaymentStatus.AUTHORIZED);
         payment.getAllocations().clear();
 
         for (PaymentAllocationValidator.ValidatedPayment validatedPayment : validationResult.payments()) {
@@ -147,7 +151,9 @@ public class SaleCheckoutService {
             payment.addAllocation(allocation);
         }
 
-        return paymentRepository.save(payment);
+        PaymentEntity savedPayment = paymentRepository.save(payment);
+        paymentService.recordInitialAuthorization(savedPayment);
+        return savedPayment;
     }
 
     private List<SaleCheckoutPaymentResponse> toPaymentResponses(PaymentEntity payment) {

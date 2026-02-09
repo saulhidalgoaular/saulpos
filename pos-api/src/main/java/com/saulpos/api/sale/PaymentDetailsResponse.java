@@ -4,17 +4,18 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 
-public record SaleCheckoutResponse(
+public record PaymentDetailsResponse(
+        Long paymentId,
         Long cartId,
         Long saleId,
-        String receiptNumber,
-        Long paymentId,
-        PaymentStatus paymentStatus,
+        PaymentStatus status,
         BigDecimal totalPayable,
         BigDecimal totalAllocated,
         BigDecimal totalTendered,
         BigDecimal changeAmount,
-        List<SaleCheckoutPaymentResponse> payments,
-        Instant capturedAt
+        List<SaleCheckoutPaymentResponse> allocations,
+        List<PaymentTransitionResponse> transitions,
+        Instant createdAt,
+        Instant updatedAt
 ) {
 }

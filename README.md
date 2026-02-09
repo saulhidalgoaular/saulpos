@@ -34,6 +34,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F2` Customer groups and pricing hooks.
 - `I1` Supplier master.
 - `J1` Tender and split payments.
+- `J2` Payment state machine.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G4` Suspended/parked sales.
@@ -197,7 +198,20 @@ Backend source of truth:
   - sum of allocated tenders must equal cart payable total,
   - cash allocations support explicit tendered amount and deterministic change calculation,
   - non-cash allocations must not over/under tender relative to the allocated amount.
-- Checkout payment captures are persisted as deterministic allocation snapshots per active cart.
+- Checkout payment allocations are persisted as deterministic snapshots per active cart.
+
+### Payment State Machine
+- Payment lifecycle APIs:
+  - `GET /api/payments/{id}`
+  - `POST /api/payments/{id}/capture`
+  - `POST /api/payments/{id}/void`
+  - `POST /api/payments/{id}/refund`
+- Payment lifecycle model:
+  - `payment.status` (`AUTHORIZED`, `CAPTURED`, `VOIDED`, `REFUNDED`)
+  - `payment_transition`
+- Enforced rules:
+  - invalid payment state transitions are rejected with stable conflict errors,
+  - every payment transition stores actor, correlation context, and timestamp for auditability.
 
 ### Atomic Checkout
 - Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.
@@ -349,6 +363,7 @@ Backend source of truth:
   - `V22__supplier_master.sql`
   - `V23__tender_and_split_payments.sql`
   - `V24__atomic_checkout.sql`
+  - `V25__payment_state_machine.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -437,9 +452,11 @@ Key settings include:
 - Integration tests for line/cart void and line price-override flows including override-event auditing.
 - Integration tests for manager-threshold override enforcement and sales authorization checks on new override endpoints.
 - Integration tests for checkout split-payment allocation validation, persisted payment snapshots, and atomic sale/line/inventory movement persistence.
+- Integration tests for payment lifecycle transitions (`authorize -> capture -> refund`) and invalid transition rejection with persisted transition history audit.
 - Concurrency integration test for parallel checkout attempts on the same cart (single success + conflict for competing request).
 - Unit tests for cart quantity policy validation by sale mode and precision.
 - Unit tests for tender allocation validation and cash-change calculation.
+- Unit tests for payment state transition rules.
 
 ## Project Planning and Status
 
