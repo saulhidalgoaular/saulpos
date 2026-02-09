@@ -71,6 +71,7 @@ class PermissionMatrixIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_override_event");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
         jdbcTemplate.execute("DELETE FROM sale_cart_line");
@@ -207,6 +208,58 @@ class PermissionMatrixIntegrationTest {
                                 {
                                   "cashierUserId": 1,
                                   "terminalDeviceId": 1
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/sales/carts/1/void")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "reasonCode": "SCAN_ERROR"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/1/void")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "reasonCode": "SCAN_ERROR"
+                                }
+                                """))
+                .andExpect(status().isNotFound());
+
+        mockMvc.perform(post("/api/sales/carts/1/lines/1/price-override")
+                        .header("Authorization", "Bearer " + limitedToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "unitPrice": 1.00,
+                                  "reasonCode": "PRICE_MATCH"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/1/lines/1/price-override")
+                        .header("Authorization", "Bearer " + salesToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "unitPrice": 1.00,
+                                  "reasonCode": "PRICE_MATCH"
                                 }
                                 """))
                 .andExpect(status().isNotFound());

@@ -93,6 +93,7 @@ class SaleCartIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM sale_override_event");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
         jdbcTemplate.execute("DELETE FROM sale_cart_line");
@@ -279,6 +280,167 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.totalTax").value(0.00))
                 .andExpect(jsonPath("$.totalGross").value(0.00))
                 .andExpect(jsonPath("$.totalPayable").value(0.00));
+    }
+
+    @Test
+    void lineVoidAndPriceOverrideRecomputeTotalsAndPersistAuditTrail() throws Exception {
+        long cartId = createCart();
+
+        MvcResult addResult = mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lineKey": "scan-override-1",
+                                  "productId": %d,
+                                  "quantity": 2
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.subtotalNet").value(10.00))
+                .andReturn();
+        long lineId = objectMapper.readTree(addResult.getResponse().getContentAsString())
+                .path("lines")
+                .get(0)
+                .path("lineId")
+                .asLong();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/price-override", cartId, lineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "unitPrice": 4.50,
+                                  "reasonCode": "PRICE_MATCH",
+                                  "note": "local competitor match"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.subtotalNet").value(9.00))
+                .andExpect(jsonPath("$.totalTax").value(0.90))
+                .andExpect(jsonPath("$.totalGross").value(9.90));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/void", cartId, lineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "reasonCode": "SCAN_ERROR",
+                                  "note": "duplicate scan"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines.length()").value(0))
+                .andExpect(jsonPath("$.subtotalNet").value(0.00))
+                .andExpect(jsonPath("$.totalTax").value(0.00))
+                .andExpect(jsonPath("$.totalGross").value(0.00));
+
+        List<String> overrideEvents = jdbcTemplate.queryForList(
+                "SELECT event_type FROM sale_override_event WHERE cart_id = ? ORDER BY id",
+                String.class,
+                cartId);
+        assertThat(overrideEvents).containsExactly("PRICE_OVERRIDE", "LINE_VOID");
+    }
+
+    @Test
+    void priceOverrideAboveThresholdRequiresManagerApprovalPermission() throws Exception {
+        long cartId = createCart();
+
+        MvcResult addResult = mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "quantity": 1
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        long lineId = objectMapper.readTree(addResult.getResponse().getContentAsString())
+                .path("lines")
+                .get(0)
+                .path("lineId")
+                .asLong();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/price-override", cartId, lineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "unitPrice": 1.00,
+                                  "reasonCode": "PRICE_MATCH",
+                                  "note": "aggressive markdown"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+    }
+
+    @Test
+    @WithMockUser(username = "manager", authorities = {"PERM_SALES_PROCESS", "PERM_DISCOUNT_OVERRIDE"})
+    void managerPermissionAllowsHighThresholdPriceOverride() throws Exception {
+        long cartId = createCart();
+
+        MvcResult addResult = mockMvc.perform(post("/api/sales/carts/{id}/lines", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "productId": %d,
+                                  "quantity": 1
+                                }
+                                """.formatted(unitProductId)))
+                .andExpect(status().isOk())
+                .andReturn();
+        long lineId = objectMapper.readTree(addResult.getResponse().getContentAsString())
+                .path("lines")
+                .get(0)
+                .path("lineId")
+                .asLong();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/price-override", cartId, lineId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "unitPrice": 1.00,
+                                  "reasonCode": "PRICE_MATCH"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.lines[0].unitPrice").value(1.00));
+
+        Integer approvalRequiredCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sale_override_event WHERE cart_id = ? AND approval_required = TRUE",
+                Integer.class,
+                cartId);
+        assertThat(approvalRequiredCount).isEqualTo(1);
+    }
+
+    @Test
+    void cartVoidEndpointCancelsCartAndWritesOverrideAuditEvent() throws Exception {
+        long cartId = createCart();
+
+        mockMvc.perform(post("/api/sales/carts/{id}/void", cartId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "reasonCode": "CUSTOMER_REQUEST",
+                                  "note": "customer changed mind"
+                                }
+                                """.formatted(cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        List<String> overrideEvents = jdbcTemplate.queryForList(
+                "SELECT event_type FROM sale_override_event WHERE cart_id = ? ORDER BY id",
+                String.class,
+                cartId);
+        assertThat(overrideEvents).containsExactly("CART_VOID");
     }
 
     @Test
@@ -496,6 +658,43 @@ class SaleCartIntegrationTest {
 
         mockMvc.perform(get("/api/sales/carts/parked")
                         .param("storeLocationId", "1"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/void", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "reasonCode": "SCAN_ERROR"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/void", 1L, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "reasonCode": "SCAN_ERROR"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(post("/api/sales/carts/{id}/lines/{lineId}/price-override", 1L, 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cashierUserId": 1,
+                                  "terminalDeviceId": 1,
+                                  "unitPrice": 1.00,
+                                  "reasonCode": "PRICE_MATCH"
+                                }
+                                """))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
     }

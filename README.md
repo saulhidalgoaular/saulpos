@@ -34,6 +34,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F2` Customer groups and pricing hooks.
 - `G1` Cart lifecycle service.
 - `G4` Suspended/parked sales.
+- `G5` Void and price override controls.
 
 ## Monorepo Architecture
 
@@ -155,6 +156,19 @@ Backend source of truth:
   - resume/cancel requires matching cashier+terminal assignment for the cart,
   - parked carts expire by policy (`app.sales.parked-cart-expiry-minutes`),
   - park/resume/cancel transitions are auditable with actor and correlation context.
+
+### Void and Price Override Controls
+- Controlled cart override APIs:
+  - `POST /api/sales/carts/{id}/lines/{lineId}/void`
+  - `POST /api/sales/carts/{id}/lines/{lineId}/price-override`
+  - `POST /api/sales/carts/{id}/void`
+- Override/void audit model:
+  - `void_reason_code`
+  - `sale_override_event`
+- Enforced rules:
+  - reason code is mandatory for line void, line override, and cart void actions,
+  - price overrides above configured threshold require explicit `DISCOUNT_OVERRIDE` permission,
+  - line void and price override actions always trigger deterministic tax/totals recomputation.
 
 ### Catalog and Category Hierarchy
 - Product APIs:
@@ -288,6 +302,7 @@ Backend source of truth:
   - `V18__customer_groups_and_pricing_hooks.sql`
   - `V19__cart_lifecycle_service.sql`
   - `V20__suspended_parked_sales.sql`
+  - `V21__void_and_price_override_controls.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -342,6 +357,7 @@ Key settings include:
 - `app.security.access-token-ttl-minutes`
 - `app.security.refresh-token-ttl-minutes`
 - `app.sales.parked-cart-expiry-minutes`
+- `app.sales.price-override-approval-threshold-percent`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -371,6 +387,8 @@ Key settings include:
 - Integration tests for cart lifecycle create/add/update/remove/recalculate flows and idempotent line-key behavior.
 - Integration tests for parked cart lifecycle (park/resume/cancel), parked list filtering, and expiry-policy behavior.
 - Concurrency integration tests for simultaneous parked-cart resume attempts.
+- Integration tests for line/cart void and line price-override flows including override-event auditing.
+- Integration tests for manager-threshold override enforcement and sales authorization checks on new override endpoints.
 - Unit tests for cart quantity policy validation by sale mode and precision.
 
 ## Project Planning and Status

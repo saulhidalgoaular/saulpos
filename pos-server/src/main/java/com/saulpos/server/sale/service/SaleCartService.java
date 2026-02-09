@@ -7,11 +7,14 @@ import com.saulpos.api.sale.SaleCartCancelRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartRecalculateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
+import com.saulpos.api.sale.SaleCartVoidRequest;
 import com.saulpos.api.tax.RoundingSummary;
 import com.saulpos.api.tax.TaxPreviewLineRequest;
 import com.saulpos.api.tax.TaxPreviewLineResponse;
@@ -32,8 +35,15 @@ import com.saulpos.server.sale.model.SaleCartEntity;
 import com.saulpos.server.sale.model.SaleCartEventEntity;
 import com.saulpos.server.sale.model.SaleCartEventType;
 import com.saulpos.server.sale.model.SaleCartLineEntity;
+import com.saulpos.server.sale.model.SaleOverrideEventEntity;
+import com.saulpos.server.sale.model.SaleOverrideEventType;
+import com.saulpos.server.sale.model.VoidReasonCodeEntity;
 import com.saulpos.server.sale.repository.SaleCartEventRepository;
+import com.saulpos.server.sale.repository.SaleOverrideEventRepository;
 import com.saulpos.server.sale.repository.SaleCartRepository;
+import com.saulpos.server.sale.repository.VoidReasonCodeRepository;
+import com.saulpos.server.security.authorization.PermissionCodes;
+import com.saulpos.server.security.authorization.SecurityAuthority;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import com.saulpos.server.tax.service.RoundingService;
@@ -41,14 +51,18 @@ import com.saulpos.server.tax.service.TaxService;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -56,8 +70,12 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SaleCartService {
 
+    private static final BigDecimal HUNDRED = new BigDecimal("100");
+
     private final SaleCartRepository saleCartRepository;
     private final SaleCartEventRepository saleCartEventRepository;
+    private final SaleOverrideEventRepository saleOverrideEventRepository;
+    private final VoidReasonCodeRepository voidReasonCodeRepository;
     private final UserAccountRepository userAccountRepository;
     private final StoreLocationRepository storeLocationRepository;
     private final TerminalDeviceRepository terminalDeviceRepository;
@@ -71,6 +89,9 @@ public class SaleCartService {
 
     @Value("${app.sales.parked-cart-expiry-minutes:30}")
     private long parkedCartExpiryMinutes;
+
+    @Value("${app.sales.price-override-approval-threshold-percent:15.00}")
+    private BigDecimal priceOverrideApprovalThresholdPercent;
 
     @Transactional
     public SaleCartResponse createCart(SaleCartCreateRequest request) {
@@ -148,6 +169,99 @@ public class SaleCartService {
         RoundingSummary rounding = recalculate(cart, null);
         SaleCartEntity savedCart = saleCartRepository.save(cart);
         return toResponse(savedCart, rounding);
+    }
+
+    @Transactional
+    public SaleCartResponse voidLine(Long cartId, Long lineId, SaleCartVoidLineRequest request) {
+        SaleCartEntity cart = requireActiveCartForUpdate(cartId);
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+        SaleCartLineEntity line = requireLine(cart, lineId);
+        VoidReasonCodeEntity reasonCode = requireVoidReasonCode(
+                cart.getStoreLocation().getMerchant().getId(),
+                request.reasonCode());
+
+        Long lineIdValue = line.getId();
+        cart.removeLine(line);
+
+        RoundingSummary rounding = recalculate(cart, null);
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordOverrideEvent(
+                savedCart,
+                lineIdValue,
+                SaleOverrideEventType.LINE_VOID,
+                reasonCode,
+                null,
+                null,
+                false,
+                null,
+                null,
+                actor.cashierUser(),
+                actor.terminalDevice(),
+                request.note());
+        return toResponse(savedCart, rounding);
+    }
+
+    @Transactional
+    public SaleCartResponse overrideLinePrice(Long cartId, Long lineId, SaleCartPriceOverrideRequest request) {
+        SaleCartEntity cart = requireActiveCartForUpdate(cartId);
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+        SaleCartLineEntity line = requireLine(cart, lineId);
+        VoidReasonCodeEntity reasonCode = requireVoidReasonCode(
+                cart.getStoreLocation().getMerchant().getId(),
+                request.reasonCode());
+
+        BigDecimal previousUnitPrice = cartLinePolicyValidator.normalizeMoney(line.getUnitPrice());
+        BigDecimal overrideUnitPrice = cartLinePolicyValidator.normalizeUnitPrice(request.unitPrice());
+        boolean managerApprovalRequired = requiresManagerApproval(previousUnitPrice, overrideUnitPrice);
+        if (managerApprovalRequired && !currentUserHasPermission(PermissionCodes.DISCOUNT_OVERRIDE)) {
+            throw new BaseException(ErrorCode.AUTH_FORBIDDEN,
+                    "price override exceeds configured threshold and requires manager override permission");
+        }
+
+        line.setUnitPrice(overrideUnitPrice);
+        RoundingSummary rounding = recalculate(cart, null);
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordOverrideEvent(
+                savedCart,
+                line.getId(),
+                SaleOverrideEventType.PRICE_OVERRIDE,
+                reasonCode,
+                previousUnitPrice,
+                overrideUnitPrice,
+                managerApprovalRequired,
+                managerApprovalRequired ? resolveActorUsername() : null,
+                managerApprovalRequired ? Instant.now(clock) : null,
+                actor.cashierUser(),
+                actor.terminalDevice(),
+                request.note());
+        return toResponse(savedCart, rounding);
+    }
+
+    @Transactional
+    public SaleCartResponse voidCart(Long cartId, SaleCartVoidRequest request) {
+        SaleCartEntity cart = requireActiveCartForUpdate(cartId);
+        OperatorContext actor = requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
+        VoidReasonCodeEntity reasonCode = requireVoidReasonCode(
+                cart.getStoreLocation().getMerchant().getId(),
+                request.reasonCode());
+
+        cart.setStatus(SaleCartStatus.CANCELLED);
+        SaleCartEntity savedCart = saleCartRepository.save(cart);
+        recordEvent(savedCart, SaleCartEventType.CANCELLED, actor.cashierUser(), actor.terminalDevice(), reasonCode.getCode());
+        recordOverrideEvent(
+                savedCart,
+                null,
+                SaleOverrideEventType.CART_VOID,
+                reasonCode,
+                null,
+                null,
+                false,
+                null,
+                null,
+                actor.cashierUser(),
+                actor.terminalDevice(),
+                request.note());
+        return toResponse(savedCart, calculateRounding(savedCart));
     }
 
     @Transactional
@@ -509,6 +623,14 @@ public class SaleCartService {
                         "product not found: " + productId));
     }
 
+    private VoidReasonCodeEntity requireVoidReasonCode(Long merchantId, String reasonCode) {
+        String normalizedCode = normalizeReasonCode(reasonCode);
+        return voidReasonCodeRepository.findByMerchantIdAndCodeIgnoreCaseAndActiveTrue(merchantId, normalizedCode)
+                .or(() -> voidReasonCodeRepository.findByMerchantIsNullAndCodeIgnoreCaseAndActiveTrue(normalizedCode))
+                .orElseThrow(() -> new BaseException(ErrorCode.VALIDATION_ERROR,
+                        "void reason code not found or inactive: " + normalizedCode));
+    }
+
     private ParkedCartReferenceEntity requireParkedReference(SaleCartEntity cart) {
         ParkedCartReferenceEntity reference = cart.getParkedReference();
         if (reference == null) {
@@ -577,6 +699,47 @@ public class SaleCartService {
         }
     }
 
+    private boolean requiresManagerApproval(BigDecimal previousUnitPrice, BigDecimal overrideUnitPrice) {
+        if (previousUnitPrice == null || previousUnitPrice.compareTo(BigDecimal.ZERO) <= 0) {
+            return false;
+        }
+        if (overrideUnitPrice == null || overrideUnitPrice.compareTo(previousUnitPrice) >= 0) {
+            return false;
+        }
+
+        BigDecimal reductionPercent = previousUnitPrice.subtract(overrideUnitPrice)
+                .multiply(HUNDRED)
+                .divide(previousUnitPrice, 4, RoundingMode.HALF_UP);
+        return reductionPercent.compareTo(normalizeApprovalThreshold()) > 0;
+    }
+
+    private BigDecimal normalizeApprovalThreshold() {
+        if (priceOverrideApprovalThresholdPercent == null) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        return priceOverrideApprovalThresholdPercent.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private boolean currentUserHasPermission(String permissionCode) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+
+        String requiredAuthority = SecurityAuthority.permission(permissionCode);
+        return authentication.getAuthorities().stream()
+                .map(granted -> granted.getAuthority())
+                .anyMatch(requiredAuthority::equalsIgnoreCase);
+    }
+
+    private String resolveActorUsername() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getName() == null || authentication.getName().isBlank()) {
+            return "unknown";
+        }
+        return authentication.getName();
+    }
+
     private void recordEvent(SaleCartEntity cart,
                              SaleCartEventType eventType,
                              UserAccountEntity actorUser,
@@ -591,6 +754,38 @@ public class SaleCartService {
         event.setCorrelationId(MDC.get("correlationId"));
         event.setDetail(normalizeDetail(detail));
         saleCartEventRepository.save(event);
+    }
+
+    private void recordOverrideEvent(SaleCartEntity cart,
+                                     Long lineId,
+                                     SaleOverrideEventType eventType,
+                                     VoidReasonCodeEntity reasonCode,
+                                     BigDecimal beforeUnitPrice,
+                                     BigDecimal afterUnitPrice,
+                                     boolean approvalRequired,
+                                     String approvedByUsername,
+                                     Instant approvedAt,
+                                     UserAccountEntity actorUser,
+                                     TerminalDeviceEntity terminalDevice,
+                                     String note) {
+        SaleOverrideEventEntity event = new SaleOverrideEventEntity();
+        event.setCart(cart);
+        event.setLineId(lineId);
+        event.setEventType(eventType);
+        event.setReasonCode(reasonCode);
+        event.setReasonCodeValue(reasonCode.getCode());
+        event.setNote(normalizeDetail(note));
+        event.setBeforeUnitPrice(beforeUnitPrice != null ? cartLinePolicyValidator.normalizeMoney(beforeUnitPrice) : null);
+        event.setAfterUnitPrice(afterUnitPrice != null ? cartLinePolicyValidator.normalizeMoney(afterUnitPrice) : null);
+        event.setApprovalRequired(approvalRequired);
+        event.setApprovedByUser(approvalRequired ? actorUser : null);
+        event.setApprovedByUsername(approvedByUsername);
+        event.setApprovedAt(approvedAt);
+        event.setActorUser(actorUser);
+        event.setActorUsername(actorUser != null ? actorUser.getUsername() : null);
+        event.setTerminalDevice(terminalDevice);
+        event.setCorrelationId(MDC.get("correlationId"));
+        saleOverrideEventRepository.save(event);
     }
 
     private boolean isExpired(SaleCartEntity cart, Instant at) {
@@ -618,6 +813,13 @@ public class SaleCartService {
         }
         String normalized = detail.trim();
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String normalizeReasonCode(String reasonCode) {
+        if (reasonCode == null || reasonCode.isBlank()) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "reasonCode is required");
+        }
+        return reasonCode.trim().toUpperCase(Locale.ROOT);
     }
 
     private record OperatorContext(UserAccountEntity cashierUser, TerminalDeviceEntity terminalDevice) {

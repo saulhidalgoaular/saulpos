@@ -485,7 +485,7 @@ Out of Scope:
 1. Integration tests for park/resume/expiry lifecycle.
 2. Concurrency tests for simultaneous resume attempts.
 
-#### Card G5: Void and Price Override Controls
+#### Card G5: Void and Price Override Controls [SOLVED]
 - Goal: Standardize controlled line void, transaction cancel, and price override flows.
 - Dependencies: G1, B2, E1.
 - Data Model:
@@ -1085,7 +1085,7 @@ Out of Scope:
 | G2 | TODO |  |  |  |
 | G3 | TODO |  |  |  |
 | G4 | DONE |  |  | Implemented suspended cart lifecycle with migration `V20` (`parked_cart_reference`, `sale_cart_event`), park/resume/cancel/list APIs (`/api/sales/carts/{id}/park|resume|cancel`, `/api/sales/carts/parked`), expiry policy (`app.sales.parked-cart-expiry-minutes`), cashier+terminal resume constraints, and integration/concurrency/auth coverage |
-| G5 | TODO |  |  |  |
+| G5 | DONE |  |  | Implemented controlled line/cart void and line price-override flows with migration `V21` (`void_reason_code`, `sale_override_event`), mandatory reason-code validation, manager-threshold permission enforcement (`DISCOUNT_OVERRIDE`) for restricted overrides, and integration coverage for totals/tax recomputation plus authorization/audit traces |
 | H1 | TODO |  |  |  |
 | H2 | TODO |  |  |  |
 | H3 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `G5` Void and price override controls.
-2. `I1` Supplier master.
-3. `J1` Tender and split payments.
+1. `I1` Supplier master.
+2. `J1` Tender and split payments.
+3. `G2` Atomic checkout.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

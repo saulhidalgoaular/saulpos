@@ -4,10 +4,13 @@ import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCancelRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartRecalculateRequest;
 import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
+import com.saulpos.api.sale.SaleCartVoidRequest;
 import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.server.sale.service.SaleCartService;
 import jakarta.validation.Valid;
@@ -66,6 +69,20 @@ public class SaleCartController {
         return saleCartService.removeLine(id, lineId);
     }
 
+    @PostMapping("/{id}/lines/{lineId}/void")
+    public SaleCartResponse voidLine(@PathVariable("id") Long id,
+                                     @PathVariable("lineId") Long lineId,
+                                     @Valid @RequestBody SaleCartVoidLineRequest request) {
+        return saleCartService.voidLine(id, lineId, request);
+    }
+
+    @PostMapping("/{id}/lines/{lineId}/price-override")
+    public SaleCartResponse overrideLinePrice(@PathVariable("id") Long id,
+                                              @PathVariable("lineId") Long lineId,
+                                              @Valid @RequestBody SaleCartPriceOverrideRequest request) {
+        return saleCartService.overrideLinePrice(id, lineId, request);
+    }
+
     @PostMapping("/{id}/recalculate")
     public SaleCartResponse recalculate(@PathVariable("id") Long id,
                                         @RequestBody(required = false) SaleCartRecalculateRequest request) {
@@ -88,6 +105,12 @@ public class SaleCartController {
     public SaleCartResponse cancel(@PathVariable("id") Long id,
                                    @Valid @RequestBody SaleCartCancelRequest request) {
         return saleCartService.cancelCart(id, request);
+    }
+
+    @PostMapping("/{id}/void")
+    public SaleCartResponse voidCart(@PathVariable("id") Long id,
+                                     @Valid @RequestBody SaleCartVoidRequest request) {
+        return saleCartService.voidCart(id, request);
     }
 
     @GetMapping("/parked")
