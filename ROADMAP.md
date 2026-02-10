@@ -1015,7 +1015,7 @@ Out of Scope:
 1. Fresh environment can be deployed from docs only.
 2. Backup/restore tested and validated.
 
-#### Card P5: Documentation and Handover
+#### Card P5: Documentation and Handover [SOLVED]
 - Goal: Complete product and technical documentation for sustained operation.
 - Dependencies: P4.
 - Deliverables:
@@ -1136,12 +1136,11 @@ Out of Scope:
 | P2 | DONE |  |  | Implemented executable reliability/performance suite (`P2PerformanceReliabilityIntegrationTest`) with defined lookup/checkout p95 targets and failure-recovery no-corruption assertions, plus k6 load scripts for checkout/lookup and reporting patterns (`docs/perf/k6/P2-peak-checkout-lookup.js`, `docs/perf/k6/P2-peak-reporting.js`) and evidence notes in `docs/uat/P2-performance-and-reliability-hardening.md` |
 | P3 | DONE |  |  | Implemented executable security/compliance verification suite (`P3SecurityComplianceIntegrationTest`) covering RBAC regression and queryable sensitive-action audits, plus `P3` evidence docs (`docs/uat/P3-security-and-compliance-verification.md`) and secret/config hardening checklist (`docs/security/P3-secret-configuration-hardening-checklist.md`) |
 | P4 | DONE |  |  | Implemented packaging/deployment/operations baseline with environment profiles (`application-dev|staging|prod.properties`), executable ops scripts (`ops/scripts/package-release.sh`, `deploy-server.sh`, `backup-postgres.sh`, `restore-postgres.sh`), runbooks/evidence docs (`docs/ops/P4-packaging-deployment-and-operations.md`, `docs/ops/P4-backup-restore-validation.md`), and readiness coverage via `P4OperationsReadinessTest` |
-| P5 | TODO |  |  |  |
+| P5 | DONE |  |  | Implemented documentation and handover baseline with operator guide (`docs/handover/P5-user-guide.md`), integration/API guide (`docs/handover/P5-api-reference-and-integration-notes.md`), architecture/maintenance guide (`docs/handover/P5-architecture-and-maintenance-guide.md`), README linkage updates, and readiness coverage via `P5DocumentationHandoverReadinessTest` |
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `P5` Documentation and handover.
-2. `P6` Release candidate and go-live.
+1. `P6` Release candidate and go-live.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

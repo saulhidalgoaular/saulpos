@@ -71,6 +71,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `P2` Performance and reliability hardening.
 - `P3` Security and compliance verification.
 - `P4` Packaging, deployment, and operations.
+- `P5` Documentation and handover.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -318,6 +319,14 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `docs/ops/P4-backup-restore-validation.md`
 - Readiness test command:
   - `mvn -pl pos-server test -Dtest=P4OperationsReadinessTest`.
+
+### Documentation and Handover (`P5`)
+- Added operations-facing and engineering-facing handover documents:
+  - `docs/handover/P5-user-guide.md`
+  - `docs/handover/P5-api-reference-and-integration-notes.md`
+  - `docs/handover/P5-architecture-and-maintenance-guide.md`
+- Added readiness test coverage for document presence and required sections:
+  - `mvn -pl pos-server test -Dtest=P5DocumentationHandoverReadinessTest`.
 
 ## Implemented Domain Capabilities
 
@@ -1081,11 +1090,16 @@ Key settings include:
 - Integration tests for invoice-required checkout validation and fiscal outcome persistence when provider is disabled.
 - Permission-matrix integration coverage for store-credit endpoint authorization (`SALES_PROCESS`/`REFUND_PROCESS`/`CONFIGURATION_MANAGE`).
 - Integration tests for `P3` security/compliance verification covering RBAC regression and queryable sensitive-action audit evidence (`P3SecurityComplianceIntegrationTest`).
+- Readiness tests for `P5` documentation/handover artifacts and README linkage (`P5DocumentationHandoverReadinessTest`).
 
 ## Project Planning and Status
 
 - Detailed execution plan and card-by-card statuses: `ROADMAP.md`
 - Incremental delivery log: `CHANGELOG.md`
+- P5 handover documentation set:
+  - `docs/handover/P5-user-guide.md`
+  - `docs/handover/P5-api-reference-and-integration-notes.md`
+  - `docs/handover/P5-architecture-and-maintenance-guide.md`
 
 ## Legacy Branch
 
