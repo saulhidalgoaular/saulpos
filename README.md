@@ -46,6 +46,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `H2` Stock adjustments.
 - `H3` Stocktake.
 - `H4` Transfer orders.
+- `H5` Lot and expiry tracking.
 
 ## Monorepo Architecture
 
@@ -334,6 +335,21 @@ Backend source of truth:
   - receive operations are cumulative per line and cannot exceed shipped quantity,
   - out/in inventory postings are paired and traceable through transfer-scoped references.
 
+### Lot and Expiry Tracking
+- Lot-aware receiving and inventory APIs:
+  - `POST /api/inventory/purchase-orders/{id}/receive` now accepts lot entries per receive line (`lotCode`, `expiryDate`, `quantity`) for lot-tracked products.
+  - `GET /api/inventory/balances?storeLocationId={id}&productId={id?}&lotLevel=true` returns lot-level balances with expiry state (`ACTIVE`, `EXPIRED`, `NO_EXPIRY`).
+  - `GET /api/inventory/movements` includes lot allocations per movement for receipt/sale/return traceability.
+- Lot model:
+  - `inventory_lot`
+  - `inventory_lot_balance`
+  - `inventory_movement_lot`
+- Enforced rules:
+  - lot tracking is configurable per product (`product.lot_tracking_enabled`),
+  - FEFO consumption is enforced for lot-tracked sales (earliest expiry first),
+  - expired lots are blocked from sale unless `app.inventory.expiry-override-enabled=true` and the actor has `CONFIGURATION_MANAGE`,
+  - sale and return movements keep lot-level linkage to original receipt lots for traceability.
+
 ### Catalog and Category Hierarchy
 - Product APIs:
   - `POST /api/catalog/products`
@@ -478,6 +494,7 @@ Backend source of truth:
   - `V30__stocktake.sql`
   - `V31__transfer_orders.sql`
   - `V32__purchase_orders_and_receiving.sql`
+  - `V33__lot_and_expiry_tracking.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -534,6 +551,7 @@ Key settings include:
 - `app.sales.parked-cart-expiry-minutes`
 - `app.sales.price-override-approval-threshold-percent`
 - `app.inventory.adjustment-manager-approval-threshold`
+- `app.inventory.expiry-override-enabled`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -578,8 +596,10 @@ Key settings include:
 - Integration tests for stock adjustment create/approve/post flow, manager-approval threshold enforcement, and movement posting guarantees.
 - Integration tests for stocktake create/start/finalize lifecycle, variance movement posting, and variance reporting by product/category.
 - Integration tests for transfer draft/ship/receive lifecycle, partial receive reconciliation, and paired source/destination movement traceability.
+- Integration tests for lot-aware purchase receiving, FEFO sale allocation, expiry blocking, and manager override flow.
 - Permission-matrix integration coverage for inventory ledger endpoints.
 - Permission-matrix integration coverage for stock adjustment endpoint authorization (`INVENTORY_ADJUST` vs `CONFIGURATION_MANAGE` approval path).
+- Unit tests for FEFO lot selection ordering and expired-lot conflict behavior.
 
 ## Project Planning and Status
 

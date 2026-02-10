@@ -1,6 +1,7 @@
 package com.saulpos.server.inventory.service;
 
 import com.saulpos.api.inventory.InventoryMovementCreateRequest;
+import com.saulpos.api.inventory.InventoryMovementLotResponse;
 import com.saulpos.api.inventory.InventoryMovementResponse;
 import com.saulpos.api.inventory.InventoryReferenceType;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
@@ -10,6 +11,8 @@ import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.repository.StoreLocationRepository;
+import com.saulpos.server.inventory.model.InventoryLotBalanceEntity;
+import com.saulpos.server.inventory.model.InventoryMovementLotEntity;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
 import com.saulpos.server.sale.repository.InventoryMovementRepository;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +33,7 @@ public class InventoryLedgerService {
     private final StoreLocationRepository storeLocationRepository;
     private final ProductRepository productRepository;
     private final InventoryBalanceCalculator balanceCalculator;
+    private final InventoryLotService inventoryLotService;
 
     @Transactional
     public InventoryMovementResponse createMovement(InventoryMovementCreateRequest request) {
@@ -53,7 +57,7 @@ public class InventoryLedgerService {
 
         InventoryMovementEntity saved = inventoryMovementRepository.save(movement);
         BigDecimal runningBalance = computeCurrentProductBalance(storeLocation.getId(), product.getId());
-        return toMovementResponse(saved, runningBalance);
+        return toMovementResponse(saved, runningBalance, List.of());
     }
 
     @Transactional(readOnly = true)
@@ -64,6 +68,8 @@ public class InventoryLedgerService {
         }
 
         List<InventoryMovementEntity> entries = inventoryMovementRepository.findLedgerEntries(storeLocationId, productId);
+        Map<Long, List<InventoryMovementLotEntity>> lotsByMovementId = inventoryLotService.findMovementLotsByMovementIds(
+                entries.stream().map(InventoryMovementEntity::getId).toList());
         Map<Long, BigDecimal> runningByProduct = new LinkedHashMap<>();
         List<InventoryMovementResponse> responses = new ArrayList<>(entries.size());
 
@@ -73,17 +79,29 @@ public class InventoryLedgerService {
                     runningByProduct.getOrDefault(entryProductId, BigDecimal.ZERO),
                     entry.getQuantityDelta());
             runningByProduct.put(entryProductId, runningBalance);
-            responses.add(toMovementResponse(entry, runningBalance));
+            responses.add(toMovementResponse(
+                    entry,
+                    runningBalance,
+                    toLotResponses(lotsByMovementId.get(entry.getId()))));
         }
 
         return responses;
     }
 
     @Transactional(readOnly = true)
-    public List<InventoryStockBalanceResponse> listStockBalances(Long storeLocationId, Long productId) {
+    public List<InventoryStockBalanceResponse> listStockBalances(Long storeLocationId,
+                                                                 Long productId,
+                                                                 boolean lotLevel) {
         requireStoreLocation(storeLocationId);
         if (productId != null) {
             requireProduct(productId);
+        }
+
+        if (lotLevel) {
+            return inventoryLotService.listPositiveLotBalances(storeLocationId, productId)
+                    .stream()
+                    .map(this::toLotBalanceResponse)
+                    .toList();
         }
 
         return inventoryMovementRepository.sumByStoreLocationAndProduct(storeLocationId, productId)
@@ -91,7 +109,11 @@ public class InventoryLedgerService {
                 .map(balance -> new InventoryStockBalanceResponse(
                         storeLocationId,
                         balance.getProductId(),
-                        balanceCalculator.normalizeScale(balance.getQuantityOnHand())))
+                        balanceCalculator.normalizeScale(balance.getQuantityOnHand()),
+                        null,
+                        null,
+                        null,
+                        null))
                 .toList();
     }
 
@@ -105,19 +127,47 @@ public class InventoryLedgerService {
     }
 
     private InventoryMovementResponse toMovementResponse(InventoryMovementEntity entity,
-                                                         BigDecimal runningBalance) {
+                                                         BigDecimal runningBalance,
+                                                         List<InventoryMovementLotResponse> lots) {
         return new InventoryMovementResponse(
                 entity.getId(),
                 entity.getStoreLocation().getId(),
                 entity.getProduct().getId(),
                 com.saulpos.api.inventory.InventoryMovementType.valueOf(entity.getMovementType().name()),
                 balanceCalculator.normalizeScale(entity.getQuantityDelta()),
-                InventoryReferenceType.valueOf(entity.getReferenceType().name()),
+                entity.getReferenceType() == null ? null : InventoryReferenceType.valueOf(entity.getReferenceType().name()),
                 entity.getReferenceNumber(),
                 entity.getSale() == null ? null : entity.getSale().getId(),
                 entity.getSaleLine() == null ? null : entity.getSaleLine().getId(),
+                lots,
                 balanceCalculator.normalizeScale(runningBalance),
                 entity.getCreatedAt());
+    }
+
+    private InventoryStockBalanceResponse toLotBalanceResponse(InventoryLotBalanceEntity balance) {
+        return new InventoryStockBalanceResponse(
+                balance.getInventoryLot().getStoreLocation().getId(),
+                balance.getInventoryLot().getProduct().getId(),
+                balanceCalculator.normalizeScale(balance.getQuantityOnHand()),
+                balance.getInventoryLot().getId(),
+                balance.getInventoryLot().getLotCode(),
+                balance.getInventoryLot().getExpiryDate(),
+                inventoryLotService.resolveExpiryState(balance.getInventoryLot().getExpiryDate()));
+    }
+
+    private List<InventoryMovementLotResponse> toLotResponses(List<InventoryMovementLotEntity> movementLots) {
+        if (movementLots == null || movementLots.isEmpty()) {
+            return List.of();
+        }
+
+        return movementLots.stream()
+                .map(movementLot -> new InventoryMovementLotResponse(
+                        movementLot.getInventoryLot().getId(),
+                        movementLot.getInventoryLot().getLotCode(),
+                        movementLot.getInventoryLot().getExpiryDate(),
+                        inventoryLotService.resolveExpiryState(movementLot.getInventoryLot().getExpiryDate()),
+                        balanceCalculator.normalizeScale(movementLot.getQuantity())))
+                .toList();
     }
 
     private com.saulpos.server.sale.model.InventoryMovementType requireMovementType(InventoryMovementCreateRequest request) {

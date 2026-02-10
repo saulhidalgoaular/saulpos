@@ -14,6 +14,7 @@ import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.inventory.service.InventoryLotService;
 import com.saulpos.server.receipt.service.ReceiptService;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
 import com.saulpos.server.sale.model.InventoryReferenceType;
@@ -28,9 +29,14 @@ import com.saulpos.server.sale.repository.InventoryMovementRepository;
 import com.saulpos.server.sale.repository.PaymentRepository;
 import com.saulpos.server.sale.repository.SaleCartRepository;
 import com.saulpos.server.sale.repository.SaleRepository;
+import com.saulpos.server.security.authorization.PermissionCodes;
+import com.saulpos.server.security.authorization.SecurityAuthority;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +57,10 @@ public class SaleCheckoutService {
     private final PaymentAllocationValidator paymentAllocationValidator;
     private final PaymentService paymentService;
     private final ReceiptService receiptService;
+    private final InventoryLotService inventoryLotService;
+
+    @Value("${app.inventory.expiry-override-enabled:false}")
+    private boolean expiryOverrideEnabled;
 
     @Transactional
     public SaleCheckoutResponse checkout(SaleCheckoutRequest request) {
@@ -70,7 +80,15 @@ public class SaleCheckoutService {
 
         SaleEntity sale = createSale(cart, receipt, customer);
         SaleEntity savedSale = saleRepository.save(sale);
-        inventoryMovementRepository.saveAll(createInventoryMovements(savedSale));
+        List<InventoryMovementDraft> movementDrafts = createInventoryMovements(savedSale);
+        inventoryMovementRepository.saveAll(movementDrafts.stream()
+                .map(InventoryMovementDraft::movement)
+                .toList());
+        for (InventoryMovementDraft movementDraft : movementDrafts) {
+            inventoryLotService.persistMovementLotAllocations(
+                    movementDraft.movement(),
+                    movementDraft.lotAllocations());
+        }
 
         PaymentEntity savedPayment = upsertPayment(cart, validationResult);
 
@@ -121,7 +139,10 @@ public class SaleCheckoutService {
         return sale;
     }
 
-    private List<InventoryMovementEntity> createInventoryMovements(SaleEntity sale) {
+    private List<InventoryMovementDraft> createInventoryMovements(SaleEntity sale) {
+        boolean allowExpiredOverride = expiryOverrideEnabled
+                && currentUserHasPermission(PermissionCodes.CONFIGURATION_MANAGE);
+
         return sale.getLines().stream()
                 .map(line -> {
                     InventoryMovementEntity movement = new InventoryMovementEntity();
@@ -133,9 +154,28 @@ public class SaleCheckoutService {
                     movement.setQuantityDelta(line.getQuantity().negate());
                     movement.setReferenceType(InventoryReferenceType.SALE_RECEIPT);
                     movement.setReferenceNumber(sale.getReceiptNumber());
-                    return movement;
+
+                    List<InventoryLotService.LotAllocation> lotAllocations = inventoryLotService.allocateSaleLots(
+                            sale.getStoreLocation(),
+                            line.getProduct(),
+                            line.getQuantity(),
+                            allowExpiredOverride);
+
+                    return new InventoryMovementDraft(movement, lotAllocations);
                 })
                 .toList();
+    }
+
+    private boolean currentUserHasPermission(String permissionCode) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || authentication.getAuthorities() == null) {
+            return false;
+        }
+
+        String requiredAuthority = SecurityAuthority.permission(permissionCode);
+        return authentication.getAuthorities().stream()
+                .map(granted -> granted.getAuthority())
+                .anyMatch(requiredAuthority::equalsIgnoreCase);
     }
 
     private PaymentEntity upsertPayment(SaleCartEntity cart, PaymentAllocationValidator.ValidationResult validationResult) {
@@ -275,5 +315,9 @@ public class SaleCheckoutService {
             throw new BaseException(ErrorCode.CONFLICT, "customer is inactive: " + customerId);
         }
         return customer;
+    }
+
+    private record InventoryMovementDraft(InventoryMovementEntity movement,
+                                          List<InventoryLotService.LotAllocation> lotAllocations) {
     }
 }

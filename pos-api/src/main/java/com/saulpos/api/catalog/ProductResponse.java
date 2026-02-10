@@ -17,6 +17,7 @@ public record ProductResponse(
         BigDecimal openPriceMin,
         BigDecimal openPriceMax,
         boolean openPriceRequiresReason,
+        boolean lotTrackingEnabled,
         String description,
         boolean active,
         List<ProductVariantResponse> variants

@@ -90,6 +90,9 @@ public class ProductEntity {
     @Column(name = "open_price_requires_reason", nullable = false)
     private boolean openPriceRequiresReason = false;
 
+    @Column(name = "lot_tracking_enabled", nullable = false)
+    private boolean lotTrackingEnabled = false;
+
     @Column(length = 255)
     private String description;
 

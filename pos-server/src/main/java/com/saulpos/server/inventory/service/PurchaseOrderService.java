@@ -6,6 +6,7 @@ import com.saulpos.api.inventory.PurchaseOrderCreateLineRequest;
 import com.saulpos.api.inventory.PurchaseOrderCreateRequest;
 import com.saulpos.api.inventory.PurchaseOrderLineResponse;
 import com.saulpos.api.inventory.PurchaseOrderReceiveLineRequest;
+import com.saulpos.api.inventory.PurchaseOrderReceiveLotRequest;
 import com.saulpos.api.inventory.PurchaseOrderReceiveRequest;
 import com.saulpos.api.inventory.PurchaseOrderResponse;
 import com.saulpos.server.catalog.model.ProductEntity;
@@ -37,7 +38,6 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -55,6 +55,7 @@ public class PurchaseOrderService {
     private final ProductRepository productRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
     private final InventoryBalanceCalculator balanceCalculator;
+    private final InventoryLotService inventoryLotService;
     private final Clock clock;
 
     @Transactional
@@ -125,18 +126,19 @@ public class PurchaseOrderService {
                     "purchase order can only be received from APPROVED or PARTIALLY_RECEIVED status: " + purchaseOrderId);
         }
 
-        Map<Long, BigDecimal> receiveByProduct = normalizeReceiveLines(request.lines());
+        Map<Long, ReceiveLineInput> receiveByProduct = normalizeReceiveLines(request.lines());
         Map<Long, PurchaseOrderLineEntity> linesByProduct = order.getLines().stream()
                 .collect(Collectors.toMap(line -> line.getProduct().getId(), line -> line));
 
         Instant now = Instant.now(clock);
         String actor = resolveActorUsername();
         String receiptNumber = generateGoodsReceiptReference();
-        List<InventoryMovementEntity> movements = new ArrayList<>();
-        for (Map.Entry<Long, BigDecimal> entry : receiveByProduct.entrySet().stream()
+        List<ReceiveMovementDraft> movementDrafts = new ArrayList<>();
+        for (Map.Entry<Long, ReceiveLineInput> entry : receiveByProduct.entrySet().stream()
                 .sorted(Map.Entry.comparingByKey())
                 .toList()) {
             Long productId = entry.getKey();
+            ReceiveLineInput receiveLineInput = entry.getValue();
             PurchaseOrderLineEntity line = linesByProduct.get(productId);
             if (line == null) {
                 throw new BaseException(ErrorCode.VALIDATION_ERROR,
@@ -146,7 +148,7 @@ public class PurchaseOrderService {
             BigDecimal ordered = balanceCalculator.normalizeScale(line.getOrderedQuantity());
             BigDecimal received = balanceCalculator.normalizeScale(line.getReceivedQuantity());
             BigDecimal remaining = balanceCalculator.normalizeScale(ordered.subtract(received));
-            BigDecimal receiveNow = entry.getValue();
+            BigDecimal receiveNow = receiveLineInput.quantity();
             if (receiveNow.compareTo(remaining) > 0) {
                 throw new BaseException(ErrorCode.CONFLICT,
                         "receivedQuantity exceeds remaining ordered quantity for productId: " + productId);
@@ -164,7 +166,13 @@ public class PurchaseOrderService {
             movement.setQuantityDelta(receiveNow);
             movement.setReferenceType(InventoryReferenceType.PURCHASE_RECEIPT);
             movement.setReferenceNumber(receiptNumber + "-P" + productId);
-            movements.add(movement);
+
+            List<InventoryLotService.LotAllocation> lotAllocations = inventoryLotService.allocateReceiptLots(
+                    order.getStoreLocation(),
+                    line.getProduct(),
+                    receiveNow,
+                    receiveLineInput.lots());
+            movementDrafts.add(new ReceiveMovementDraft(movement, lotAllocations));
         }
 
         GoodsReceiptEntity receipt = new GoodsReceiptEntity();
@@ -174,7 +182,14 @@ public class PurchaseOrderService {
         receipt.setNote(normalizeOptionalNote(request.note()));
         order.addReceipt(receipt);
 
-        inventoryMovementRepository.saveAll(movements);
+        inventoryMovementRepository.saveAll(movementDrafts.stream()
+                .map(ReceiveMovementDraft::movement)
+                .toList());
+        for (ReceiveMovementDraft movementDraft : movementDrafts) {
+            inventoryLotService.persistMovementLotAllocations(
+                    movementDraft.movement(),
+                    movementDraft.lotAllocations());
+        }
 
         boolean fullyReceived = order.getLines().stream().allMatch(line -> {
             BigDecimal ordered = balanceCalculator.normalizeScale(line.getOrderedQuantity());
@@ -254,18 +269,19 @@ public class PurchaseOrderService {
         return normalized;
     }
 
-    private Map<Long, BigDecimal> normalizeReceiveLines(List<PurchaseOrderReceiveLineRequest> lines) {
+    private Map<Long, ReceiveLineInput> normalizeReceiveLines(List<PurchaseOrderReceiveLineRequest> lines) {
         if (lines == null || lines.isEmpty()) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR, "lines is required");
         }
 
-        Map<Long, BigDecimal> normalized = new LinkedHashMap<>();
+        Map<Long, ReceiveLineInput> normalized = new LinkedHashMap<>();
         for (PurchaseOrderReceiveLineRequest line : lines) {
             if (line == null || line.productId() == null) {
                 throw new BaseException(ErrorCode.VALIDATION_ERROR, "productId is required");
             }
             BigDecimal receiveNow = normalizePositiveQuantity(line.receivedQuantity(), "receivedQuantity is required");
-            if (normalized.putIfAbsent(line.productId(), receiveNow) != null) {
+            List<PurchaseOrderReceiveLotRequest> lots = line.lots() == null ? List.of() : List.copyOf(line.lots());
+            if (normalized.putIfAbsent(line.productId(), new ReceiveLineInput(receiveNow, lots)) != null) {
                 throw new BaseException(ErrorCode.VALIDATION_ERROR,
                         "duplicate productId in receive lines: " + line.productId());
             }
@@ -353,5 +369,12 @@ public class PurchaseOrderService {
 
     private String generateGoodsReceiptReference() {
         return "GR-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20).toUpperCase(Locale.ROOT);
+    }
+
+    private record ReceiveLineInput(BigDecimal quantity, List<PurchaseOrderReceiveLotRequest> lots) {
+    }
+
+    private record ReceiveMovementDraft(InventoryMovementEntity movement,
+                                        List<InventoryLotService.LotAllocation> lotAllocations) {
     }
 }

@@ -34,6 +34,7 @@ public record ProductRequest(
         @Digits(integer = 12, fraction = 2, message = "openPriceMax must have up to 12 integer digits and 2 decimals")
         BigDecimal openPriceMax,
         Boolean openPriceRequiresReason,
+        Boolean lotTrackingEnabled,
         @Size(max = 255, message = "description must be at most 255 characters")
         String description,
         @NotNull(message = "variants are required")

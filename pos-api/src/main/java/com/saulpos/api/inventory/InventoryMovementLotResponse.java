@@ -3,13 +3,11 @@ package com.saulpos.api.inventory;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public record InventoryStockBalanceResponse(
-        Long storeLocationId,
-        Long productId,
-        BigDecimal quantityOnHand,
+public record InventoryMovementLotResponse(
         Long inventoryLotId,
         String lotCode,
         LocalDate expiryDate,
-        InventoryExpiryState expiryState
+        InventoryExpiryState expiryState,
+        BigDecimal quantity
 ) {
 }

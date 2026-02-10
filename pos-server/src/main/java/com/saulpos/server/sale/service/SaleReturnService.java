@@ -8,6 +8,7 @@ import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.inventory.service.InventoryLotService;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
 import com.saulpos.server.sale.model.InventoryMovementType;
 import com.saulpos.server.sale.model.InventoryReferenceType;
@@ -57,6 +58,7 @@ public class SaleReturnService {
     private final SaleReturnRepository saleReturnRepository;
     private final SaleReturnLineRepository saleReturnLineRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
+    private final InventoryLotService inventoryLotService;
     private final SaleReturnAmountAllocator amountAllocator;
     private final Clock clock;
 
@@ -160,7 +162,15 @@ public class SaleReturnService {
         saleReturn.addRefund(refund);
 
         SaleReturnEntity savedReturn = saleReturnRepository.save(saleReturn);
-        inventoryMovementRepository.saveAll(createReturnMovements(savedReturn));
+        List<ReturnMovementDraft> movementDrafts = createReturnMovements(savedReturn);
+        inventoryMovementRepository.saveAll(movementDrafts.stream()
+                .map(ReturnMovementDraft::movement)
+                .toList());
+        for (ReturnMovementDraft movementDraft : movementDrafts) {
+            inventoryLotService.persistMovementLotAllocations(
+                    movementDraft.movement(),
+                    movementDraft.lotAllocations());
+        }
 
         return toResponse(savedReturn);
     }
@@ -192,19 +202,23 @@ public class SaleReturnService {
                 normalizeMoney(line.getGrossAmount()));
     }
 
-    private List<InventoryMovementEntity> createReturnMovements(SaleReturnEntity saleReturn) {
+    private List<ReturnMovementDraft> createReturnMovements(SaleReturnEntity saleReturn) {
         return saleReturn.getLines().stream()
                 .map(line -> {
                     InventoryMovementEntity movement = new InventoryMovementEntity();
                     movement.setStoreLocation(saleReturn.getSale().getStoreLocation());
                     movement.setProduct(line.getSaleLine().getProduct());
-                    movement.setSale(null);
-                    movement.setSaleLine(null);
+                    movement.setSale(saleReturn.getSale());
+                    movement.setSaleLine(line.getSaleLine());
                     movement.setMovementType(InventoryMovementType.RETURN);
                     movement.setQuantityDelta(normalizeQuantity(line.getQuantity()));
                     movement.setReferenceType(InventoryReferenceType.SALE_RETURN);
                     movement.setReferenceNumber(saleReturn.getReturnReference());
-                    return movement;
+
+                    List<InventoryLotService.LotAllocation> lotAllocations = inventoryLotService.allocateReturnLots(
+                            line.getSaleLine(),
+                            line.getQuantity());
+                    return new ReturnMovementDraft(movement, lotAllocations);
                 })
                 .toList();
     }
@@ -368,5 +382,9 @@ public class SaleReturnService {
         static ReturnedTotals zero() {
             return new ReturnedTotals(ZERO_QUANTITY, ZERO_MONEY, ZERO_MONEY, ZERO_MONEY);
         }
+    }
+
+    private record ReturnMovementDraft(InventoryMovementEntity movement,
+                                       List<InventoryLotService.LotAllocation> lotAllocations) {
     }
 }

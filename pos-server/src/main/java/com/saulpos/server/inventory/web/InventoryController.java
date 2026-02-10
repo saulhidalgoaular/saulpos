@@ -156,7 +156,8 @@ public class InventoryController {
     public List<InventoryStockBalanceResponse> listBalances(
             @RequestParam("storeLocationId")
             @NotNull(message = "storeLocationId is required") Long storeLocationId,
-            @RequestParam(value = "productId", required = false) Long productId) {
-        return inventoryLedgerService.listStockBalances(storeLocationId, productId);
+            @RequestParam(value = "productId", required = false) Long productId,
+            @RequestParam(value = "lotLevel", defaultValue = "false") boolean lotLevel) {
+        return inventoryLedgerService.listStockBalances(storeLocationId, productId, lotLevel);
     }
 }

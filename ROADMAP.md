@@ -566,7 +566,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for partial receive and completion.
 
-#### Card H5: Lot and Expiry Tracking
+#### Card H5: Lot and Expiry Tracking [SOLVED]
 - Goal: Add lot-level traceability and expiry controls for regulated/perishable items.
 - Dependencies: H1, C1, I2.
 - Data Model:
@@ -1090,7 +1090,7 @@ Out of Scope:
 | H2 | DONE |  |  | Implemented stock adjustment workflow with migration `V29` (`stock_adjustment`), create/approve/post APIs (`POST /api/inventory/adjustments`, `/api/inventory/adjustments/{id}/approve`, `/api/inventory/adjustments/{id}/post`), manager-threshold approval enforcement, and integration coverage ensuring posted adjustments write immutable `ADJUSTMENT` ledger movements |
 | H3 | DONE |  |  | Implemented stocktake workflow with migration `V30` (`stocktake_session`, `stocktake_line`), create/start/finalize + variance-report APIs (`/api/inventory/stocktakes`), fixed snapshot-at-start behavior, and finalize variance postings as immutable `ADJUSTMENT` movements (`reference_type=STOCKTAKE`) with integration coverage by product/category |
 | H4 | DONE |  |  | Implemented transfer workflow with migration `V31` (`stock_transfer`, `stock_transfer_line`), transfer APIs (`POST /api/inventory/transfers`, `GET /api/inventory/transfers/{id}`, `POST /api/inventory/transfers/{id}/ship`, `POST /api/inventory/transfers/{id}/receive`), and paired inventory movement traceability via `STOCK_TRANSFER_OUT`/`STOCK_TRANSFER_IN` with integration coverage for partial receive and completion |
-| H5 | TODO |  |  |  |
+| H5 | DONE |  |  | Implemented lot-aware inventory model with migration `V33` (`inventory_lot`, `inventory_lot_balance`, `inventory_movement_lot`) and product flag `lot_tracking_enabled`; purchase receiving now accepts lot/expiry inputs for lot-tracked products, checkout uses FEFO allocation with expired-lot blocking plus manager override policy, inventory movement/balance endpoints expose lot-level traceability and expiry state, and unit/integration coverage validates receiving/selling/expiry paths |
 | I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
 | I2 | DONE |  |  | Implemented purchase-order receiving flow with migration `V32` (`purchase_order`, `purchase_order_line`, `goods_receipt`), APIs (`POST /api/inventory/purchase-orders`, `GET /api/inventory/purchase-orders/{id}`, `POST /api/inventory/purchase-orders/{id}/approve`, `POST /api/inventory/purchase-orders/{id}/receive`), and inventory posting integration via `PURCHASE_RECEIPT` reference movements with integration coverage for partial/full receiving and lifecycle validation |
 | I3 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `H5` Lot and expiry tracking.
-2. `I3` Costing v1.
-3. `I4` Supplier returns.
+1. `I3` Costing v1.
+2. `I4` Supplier returns.
+3. `K1` Offline policy definition.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -219,6 +219,9 @@ public class CatalogService {
         product.setOpenPriceMin(normalizedPolicy.openPriceMin());
         product.setOpenPriceMax(normalizedPolicy.openPriceMax());
         product.setOpenPriceRequiresReason(normalizedPolicy.openPriceRequiresReason());
+        if (request.lotTrackingEnabled() != null) {
+            product.setLotTrackingEnabled(request.lotTrackingEnabled());
+        }
         product.setDescription(normalizeDescription(request.description()));
     }
 
@@ -412,6 +415,7 @@ public class CatalogService {
                 product.getOpenPriceMin(),
                 product.getOpenPriceMax(),
                 product.isOpenPriceRequiresReason(),
+                product.isLotTrackingEnabled(),
                 product.getDescription(),
                 product.isActive(),
                 new ArrayList<>(variants));
