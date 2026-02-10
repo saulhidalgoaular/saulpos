@@ -60,6 +60,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O5` Checkout and payments UI.
 - `O6` Returns and refunds UI.
 - `O7` Backoffice UI (catalog, pricing, customers).
+- `O8` Reporting and export UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -77,7 +78,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, and backoffice operations for catalog/pricing/customers (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, and reporting/export actions (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -168,6 +169,25 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP backoffice contract mapping for catalog/pricing/customer endpoints,
   - backoffice coordinator state/message handling for product load, customer validation, and price resolution flows.
+
+### Client Reporting and Export UI (`O8`)
+- Reporting screen now supports:
+  - shared filter entry (`from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`, plus category/supplier/reason/event-type where applicable),
+  - report loading actions for sales/returns, inventory movements, cash shifts, and exceptions,
+  - streaming table preview strategy capped to a deterministic maximum row window,
+  - CSV export actions for sales, inventory movements, cash shifts, and exceptions with explicit operator feedback.
+- Client reporting operations consume server contracts:
+  - `GET /api/reports/sales`
+  - `GET /api/reports/inventory/movements`
+  - `GET /api/reports/cash/shifts`
+  - `GET /api/reports/exceptions`
+  - `GET /api/reports/sales/export`
+  - `GET /api/reports/inventory/movements/export`
+  - `GET /api/reports/cash/shifts/export`
+  - `GET /api/reports/exceptions/export`
+- Tests now cover:
+  - HTTP reporting contract mapping for filter queries and CSV export endpoints,
+  - reporting coordinator filter propagation, streaming-preview state updates, and export feedback/error handling.
 
 ## Implemented Domain Capabilities
 

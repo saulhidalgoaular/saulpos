@@ -13,6 +13,7 @@ import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
 import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
+import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
@@ -503,6 +504,91 @@ class HttpPosApiClientTest {
         HttpRequest submitRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/refunds/submit")).findFirst().orElseThrow();
         assertTrue(lookupRequest.uri().getRawQuery().contains("receiptNumber=R-0000501"));
         assertEquals("Bearer access-123", submitRequest.headers().firstValue("Authorization").orElseThrow());
+    }
+
+    @Test
+    void reportingContracts_shouldUseFilterQueriesAndCsvExports() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"MANAGER\"]}"
+                        ));
+                    }
+                    if ("/api/reports/sales".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"from\":\"2026-02-01T00:00:00Z\",\"to\":\"2026-02-10T23:59:59Z\","
+                                        + "\"storeLocationId\":10,\"terminalDeviceId\":20,\"cashierUserId\":30,"
+                                        + "\"categoryId\":40,\"taxGroupId\":50,"
+                                        + "\"summary\":{\"saleCount\":4,\"returnCount\":1,\"salesQuantity\":20.00,"
+                                        + "\"returnQuantity\":1.00,\"salesNet\":100.00,\"returnNet\":2.00,"
+                                        + "\"salesTax\":18.00,\"returnTax\":0.36,\"salesGross\":118.00,"
+                                        + "\"returnGross\":2.36,\"netGross\":115.64,\"discountGross\":0.00},"
+                                        + "\"byDay\":[],\"byStore\":[],\"byTerminal\":[],\"byCashier\":[],\"byCategory\":[],\"byTaxGroup\":[]}"
+                        ));
+                    }
+                    if ("/api/reports/cash/shifts/export".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "shift_id,variance\n1,-1.00\n"
+                        ));
+                    }
+                    if ("/api/reports/exceptions/export".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "event_id,event_type\n1,NO_SALE\n"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("manager", "secret").join();
+        assertEquals(4, client.getSalesReturnsReport(
+                java.time.Instant.parse("2026-02-01T00:00:00Z"),
+                java.time.Instant.parse("2026-02-10T23:59:59Z"),
+                10L,
+                20L,
+                30L,
+                40L,
+                50L
+        ).join().summary().saleCount());
+        assertTrue(client.exportCashShiftReportCsv(null, null, 10L, 20L, 30L).join().contains("shift_id"));
+        assertTrue(client.exportExceptionReportCsv(null, null, 10L, 20L, 30L, "NO_REASON", ExceptionReportEventType.NO_SALE)
+                .join()
+                .contains("event_id"));
+
+        HttpRequest salesRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/reports/sales"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest cashExportRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/reports/cash/shifts/export"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest exceptionExportRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/reports/exceptions/export"))
+                .findFirst()
+                .orElseThrow();
+
+        assertTrue(salesRequest.uri().getRawQuery().contains("storeLocationId=10"));
+        assertTrue(salesRequest.uri().getRawQuery().contains("categoryId=40"));
+        assertTrue(cashExportRequest.uri().getRawQuery().contains("terminalDeviceId=20"));
+        assertTrue(exceptionExportRequest.uri().getRawQuery().contains("eventType=NO_SALE"));
     }
 
     private static String cartJson() {

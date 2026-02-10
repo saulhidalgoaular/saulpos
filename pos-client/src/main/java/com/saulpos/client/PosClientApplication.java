@@ -7,6 +7,7 @@ import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.BackofficeCoordinator;
+import com.saulpos.client.state.ReportingCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
@@ -31,6 +32,7 @@ public class PosClientApplication extends Application {
         SellScreenCoordinator sellScreenCoordinator = new SellScreenCoordinator(apiClient);
         ReturnsScreenCoordinator returnsScreenCoordinator = new ReturnsScreenCoordinator(apiClient);
         BackofficeCoordinator backofficeCoordinator = new BackofficeCoordinator(apiClient);
+        ReportingCoordinator reportingCoordinator = new ReportingCoordinator(apiClient);
 
         Scene scene = new Scene(
                 AppShell.createRoot(
@@ -40,7 +42,8 @@ public class PosClientApplication extends Application {
                         shiftControlCoordinator,
                         sellScreenCoordinator,
                         returnsScreenCoordinator,
-                        backofficeCoordinator
+                        backofficeCoordinator,
+                        reportingCoordinator
                 ),
                 1180,
                 760

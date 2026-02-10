@@ -902,7 +902,7 @@ Out of Scope:
 - Test Plan:
 1. UI tests for form validation and CRUD operations.
 
-#### Card O8: Reporting and Export UI
+#### Card O8: Reporting and Export UI [SOLVED]
 - Goal: Surface report filters, results, and export actions.
 - Dependencies: L1, L2, L3, L4, O1.
 - Acceptance Criteria:
@@ -1119,7 +1119,7 @@ Out of Scope:
 | O5 | DONE |  |  | Implemented checkout UI workflow in `pos-client` with tender capture (`cash`/`card`/split), allocation-vs-payable and due/change visibility, checkout commit integration (`POST /api/sales/checkout`) including `Idempotency-Key` propagation, receipt/payment summary feedback, and client API/coordinator coverage for successful and failed validation paths |
 | O6 | DONE |  |  | Implemented returns UI workflow in `pos-client` with receipt lookup (`GET /api/refunds/lookup`), eligible-line review, partial/full quantity return submission with reason/tender capture (`POST /api/refunds/submit`), and manager-approval-required guidance when policy rejects cashier-only returns; added client API/coordinator tests for lookup/submit/approval paths |
 | O7 | DONE |  |  | Implemented Backoffice workflow in `pos-client` with catalog load/search + create/update product actions, store-context price resolution (`/api/catalog/prices/resolve`), and customer load/lookup + create/update actions; added coordinator/UI wiring plus API contract and state-coordinator test coverage |
-| O8 | TODO |  |  |  |
+| O8 | DONE |  |  | Implemented reporting UI workflow in `pos-client` with shared filters (date/store/terminal/cashier + contextual category/supplier/reason/event-type), report-load actions for sales/returns, inventory movements, cash shifts, and exceptions, streaming row preview strategy (bounded client-side window), and CSV export actions with deterministic operator feedback; added API contract tests and reporting coordinator coverage for filter/export behavior |
 | O9 | TODO |  |  |  |
 | O10 | TODO |  |  |  |
 | O11 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O8` Reporting and export UI.
-2. `O9` Hardware interaction UI.
-3. `O10` Offline/degraded mode UX.
+1. `O9` Hardware interaction UI.
+2. `O10` Offline/degraded mode UX.
+3. `O11` Suspended sales and override UX.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

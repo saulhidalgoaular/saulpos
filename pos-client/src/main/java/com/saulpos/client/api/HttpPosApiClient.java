@@ -14,6 +14,14 @@ import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
+import com.saulpos.api.report.CashShiftReportResponse;
+import com.saulpos.api.report.EndOfDayCashReportResponse;
+import com.saulpos.api.report.ExceptionReportEventType;
+import com.saulpos.api.report.ExceptionReportResponse;
+import com.saulpos.api.report.InventoryLowStockReportResponse;
+import com.saulpos.api.report.InventoryMovementReportResponse;
+import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
@@ -35,7 +43,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.time.Duration;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -375,6 +385,241 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<SalesReturnsReportResponse> getSalesReturnsReport(Instant from,
+                                                                               Instant to,
+                                                                               Long storeLocationId,
+                                                                               Long terminalDeviceId,
+                                                                               Long cashierUserId,
+                                                                               Long categoryId,
+                                                                               Long taxGroupId) {
+        StringBuilder path = new StringBuilder("/api/reports/sales");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        hasParam = appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "taxGroupId", taxGroupId, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, SalesReturnsReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportSalesReturnsReportCsv(Instant from,
+                                                                 Instant to,
+                                                                 Long storeLocationId,
+                                                                 Long terminalDeviceId,
+                                                                 Long cashierUserId,
+                                                                 Long categoryId,
+                                                                 Long taxGroupId) {
+        StringBuilder path = new StringBuilder("/api/reports/sales/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        hasParam = appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "taxGroupId", taxGroupId, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<InventoryStockOnHandReportResponse> getInventoryStockOnHandReport(Long storeLocationId,
+                                                                                                 Long categoryId,
+                                                                                                 Long supplierId) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/stock-on-hand");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "supplierId", supplierId, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, InventoryStockOnHandReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportInventoryStockOnHandReportCsv(Long storeLocationId,
+                                                                          Long categoryId,
+                                                                          Long supplierId) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/stock-on-hand/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "supplierId", supplierId, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<InventoryLowStockReportResponse> getInventoryLowStockReport(Long storeLocationId,
+                                                                                          Long categoryId,
+                                                                                          Long supplierId,
+                                                                                          BigDecimal minimumQuantity) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/low-stock");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        hasParam = appendParam(path, "supplierId", supplierId, hasParam);
+        appendParam(path, "minimumQuantity", minimumQuantity, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, InventoryLowStockReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportInventoryLowStockReportCsv(Long storeLocationId,
+                                                                       Long categoryId,
+                                                                       Long supplierId,
+                                                                       BigDecimal minimumQuantity) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/low-stock/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        hasParam = appendParam(path, "supplierId", supplierId, hasParam);
+        appendParam(path, "minimumQuantity", minimumQuantity, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<InventoryMovementReportResponse> getInventoryMovementReport(Instant from,
+                                                                                          Instant to,
+                                                                                          Long storeLocationId,
+                                                                                          Long categoryId,
+                                                                                          Long supplierId) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/movements");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "supplierId", supplierId, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, InventoryMovementReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportInventoryMovementReportCsv(Instant from,
+                                                                      Instant to,
+                                                                      Long storeLocationId,
+                                                                      Long categoryId,
+                                                                      Long supplierId) {
+        StringBuilder path = new StringBuilder("/api/reports/inventory/movements/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "categoryId", categoryId, hasParam);
+        appendParam(path, "supplierId", supplierId, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<CashShiftReportResponse> getCashShiftReport(Instant from,
+                                                                          Instant to,
+                                                                          Long storeLocationId,
+                                                                          Long terminalDeviceId,
+                                                                          Long cashierUserId) {
+        StringBuilder path = new StringBuilder("/api/reports/cash/shifts");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, CashShiftReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportCashShiftReportCsv(Instant from,
+                                                               Instant to,
+                                                               Long storeLocationId,
+                                                               Long terminalDeviceId,
+                                                               Long cashierUserId) {
+        StringBuilder path = new StringBuilder("/api/reports/cash/shifts/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<EndOfDayCashReportResponse> getEndOfDayCashReport(Instant from,
+                                                                                Instant to,
+                                                                                Long storeLocationId,
+                                                                                Long terminalDeviceId,
+                                                                                Long cashierUserId) {
+        StringBuilder path = new StringBuilder("/api/reports/cash/end-of-day");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, EndOfDayCashReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportEndOfDayCashReportCsv(Instant from,
+                                                                  Instant to,
+                                                                  Long storeLocationId,
+                                                                  Long terminalDeviceId,
+                                                                  Long cashierUserId) {
+        StringBuilder path = new StringBuilder("/api/reports/cash/end-of-day/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<ExceptionReportResponse> getExceptionReport(Instant from,
+                                                                         Instant to,
+                                                                         Long storeLocationId,
+                                                                         Long terminalDeviceId,
+                                                                         Long cashierUserId,
+                                                                         String reasonCode,
+                                                                         ExceptionReportEventType eventType) {
+        StringBuilder path = new StringBuilder("/api/reports/exceptions");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        hasParam = appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        hasParam = appendParam(path, "reasonCode", reasonCode, hasParam);
+        appendParam(path, "eventType", eventType, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return send(request, ExceptionReportResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<String> exportExceptionReportCsv(Instant from,
+                                                              Instant to,
+                                                              Long storeLocationId,
+                                                              Long terminalDeviceId,
+                                                              Long cashierUserId,
+                                                              String reasonCode,
+                                                              ExceptionReportEventType eventType) {
+        StringBuilder path = new StringBuilder("/api/reports/exceptions/export");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "from", from, hasParam);
+        hasParam = appendParam(path, "to", to, hasParam);
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "terminalDeviceId", terminalDeviceId, hasParam);
+        hasParam = appendParam(path, "cashierUserId", cashierUserId, hasParam);
+        hasParam = appendParam(path, "reasonCode", reasonCode, hasParam);
+        appendParam(path, "eventType", eventType, hasParam);
+        return getCsv(path.toString());
+    }
+
+    @Override
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -403,11 +648,20 @@ public final class HttpPosApiClient implements PosApiClient {
         }
 
         HttpRequest request = baseRequest(path)
+                .setHeader("Accept", "application/json")
                 .header("Content-Type", "application/json")
                 .header("Idempotency-Key", "pos-client-" + UUID.randomUUID())
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
         return send(request, responseType);
+    }
+
+    private CompletableFuture<String> getCsv(String path) {
+        HttpRequest request = baseRequest(path)
+                .setHeader("Accept", "text/csv")
+                .GET()
+                .build();
+        return sendText(request);
     }
 
     private <T> CompletableFuture<T> send(HttpRequest request, Class<T> responseType) {
@@ -447,6 +701,16 @@ public final class HttpPosApiClient implements PosApiClient {
                 });
     }
 
+    private CompletableFuture<String> sendText(HttpRequest request) {
+        return transport.apply(request)
+                .thenApply(response -> {
+                    if (response.statusCode() / 100 != 2) {
+                        throw new CompletionException(toProblemException(response.statusCode(), response.body()));
+                    }
+                    return response.body() == null ? "" : response.body();
+                });
+    }
+
     private ApiProblemException toProblemException(int status, String responseBody) {
         try {
             JsonNode body = objectMapper.readTree(responseBody == null ? "{}" : responseBody);
@@ -477,5 +741,26 @@ public final class HttpPosApiClient implements PosApiClient {
 
     private String encodeQueryParam(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private boolean appendParam(StringBuilder path, String name, Object value, boolean hasParam) {
+        if (value == null) {
+            return hasParam;
+        }
+        path.append(hasParam ? "&" : "?")
+                .append(name)
+                .append("=")
+                .append(encodeQueryParam(toQueryValue(value)));
+        return true;
+    }
+
+    private String toQueryValue(Object value) {
+        if (value instanceof Instant instant) {
+            return instant.toString();
+        }
+        if (value instanceof BigDecimal decimal) {
+            return decimal.toPlainString();
+        }
+        return value.toString();
     }
 }

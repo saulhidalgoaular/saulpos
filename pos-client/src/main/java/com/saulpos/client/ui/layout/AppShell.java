@@ -6,6 +6,7 @@ import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
@@ -22,6 +23,7 @@ import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
 import com.saulpos.client.state.BackofficeCoordinator;
+import com.saulpos.client.state.ReportingCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
@@ -42,6 +44,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -59,7 +62,8 @@ public final class AppShell {
                                     ShiftControlCoordinator shiftControlCoordinator,
                                     SellScreenCoordinator sellScreenCoordinator,
                                     ReturnsScreenCoordinator returnsScreenCoordinator,
-                                    BackofficeCoordinator backofficeCoordinator) {
+                                    BackofficeCoordinator backofficeCoordinator,
+                                    ReportingCoordinator reportingCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -101,6 +105,7 @@ public final class AppShell {
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
                 backofficeCoordinator,
+                reportingCoordinator,
                 stateStore,
                 navigationState
         );
@@ -116,6 +121,7 @@ public final class AppShell {
                     sellScreenCoordinator,
                     returnsScreenCoordinator,
                     backofficeCoordinator,
+                    reportingCoordinator,
                     stateStore,
                     navigationState
             );
@@ -164,6 +170,7 @@ public final class AppShell {
                                       SellScreenCoordinator sellScreenCoordinator,
                                       ReturnsScreenCoordinator returnsScreenCoordinator,
                                       BackofficeCoordinator backofficeCoordinator,
+                                      ReportingCoordinator reportingCoordinator,
                                       AppStateStore appStateStore,
                                       NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
@@ -199,6 +206,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.BACKOFFICE) {
             renderBackoffice(screenBody, backofficeCoordinator);
+            return;
+        }
+
+        if (target == NavigationTarget.REPORTING) {
+            renderReporting(screenBody, reportingCoordinator);
             return;
         }
 
@@ -954,6 +966,145 @@ public final class AppShell {
         );
     }
 
+    private static void renderReporting(VBox screenBody,
+                                        ReportingCoordinator reportingCoordinator) {
+        Label feedback = new Label();
+        feedback.textProperty().bind(reportingCoordinator.reportingMessageProperty());
+
+        Label summary = new Label();
+        summary.textProperty().bind(reportingCoordinator.reportSummaryProperty());
+
+        PosTextField from = new PosTextField("From (ISO-8601, optional)");
+        PosTextField to = new PosTextField("To (ISO-8601, optional)");
+        PosTextField storeLocationId = new PosTextField("Store location ID (optional)");
+        PosTextField terminalDeviceId = new PosTextField("Terminal device ID (optional)");
+        PosTextField cashierUserId = new PosTextField("Cashier user ID (optional)");
+        PosTextField categoryId = new PosTextField("Category ID (optional)");
+        PosTextField taxGroupId = new PosTextField("Tax group ID (optional)");
+        PosTextField supplierId = new PosTextField("Supplier ID (inventory optional)");
+        PosTextField reasonCode = new PosTextField("Exception reason code (optional)");
+        PosTextField eventType = new PosTextField("Exception event type (optional)");
+
+        ListView<String> reportRows = new ListView<>();
+        reportRows.setPrefHeight(280);
+        reportingCoordinator.tableRowsProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                reportRows.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            reportRows.setItems(FXCollections.observableArrayList(newValue));
+        });
+
+        PosButton loadSales = PosButton.primary("Load Sales/Returns");
+        loadSales.disableProperty().bind(reportingCoordinator.busyProperty());
+        loadSales.setOnAction(event -> reportingCoordinator.loadSalesReturns(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText()),
+                parseLong(categoryId.getText()),
+                parseLong(taxGroupId.getText())
+        ));
+
+        PosButton loadInventoryMovements = PosButton.accent("Load Inventory Moves");
+        loadInventoryMovements.disableProperty().bind(reportingCoordinator.busyProperty());
+        loadInventoryMovements.setOnAction(event -> reportingCoordinator.loadInventoryMovements(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(categoryId.getText()),
+                parseLong(supplierId.getText())
+        ));
+
+        PosButton loadCashShifts = PosButton.accent("Load Cash Shifts");
+        loadCashShifts.disableProperty().bind(reportingCoordinator.busyProperty());
+        loadCashShifts.setOnAction(event -> reportingCoordinator.loadCashShifts(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText())
+        ));
+
+        PosButton loadExceptions = PosButton.accent("Load Exceptions");
+        loadExceptions.disableProperty().bind(reportingCoordinator.busyProperty());
+        loadExceptions.setOnAction(event -> reportingCoordinator.loadExceptions(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText()),
+                reasonCode.getText(),
+                parseExceptionEventType(eventType.getText())
+        ));
+
+        PosButton exportSales = PosButton.primary("Export Sales CSV");
+        exportSales.disableProperty().bind(reportingCoordinator.busyProperty());
+        exportSales.setOnAction(event -> reportingCoordinator.exportSalesReturns(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText()),
+                parseLong(categoryId.getText()),
+                parseLong(taxGroupId.getText())
+        ));
+
+        PosButton exportInventory = PosButton.accent("Export Inventory CSV");
+        exportInventory.disableProperty().bind(reportingCoordinator.busyProperty());
+        exportInventory.setOnAction(event -> reportingCoordinator.exportInventoryMovements(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(categoryId.getText()),
+                parseLong(supplierId.getText())
+        ));
+
+        PosButton exportCash = PosButton.accent("Export Cash CSV");
+        exportCash.disableProperty().bind(reportingCoordinator.busyProperty());
+        exportCash.setOnAction(event -> reportingCoordinator.exportCashShifts(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText())
+        ));
+
+        PosButton exportExceptions = PosButton.accent("Export Exceptions CSV");
+        exportExceptions.disableProperty().bind(reportingCoordinator.busyProperty());
+        exportExceptions.setOnAction(event -> reportingCoordinator.exportExceptions(
+                parseInstant(from.getText()),
+                parseInstant(to.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseLong(cashierUserId.getText()),
+                reasonCode.getText(),
+                parseExceptionEventType(eventType.getText())
+        ));
+
+        screenBody.getChildren().addAll(
+                new Label("Reporting workspace: filtered report loads with streaming preview and CSV export actions"),
+                feedback,
+                summary,
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                categoryId,
+                taxGroupId,
+                supplierId,
+                reasonCode,
+                eventType,
+                new HBox(8, loadSales, loadInventoryMovements),
+                new HBox(8, loadCashShifts, loadExceptions),
+                new HBox(8, exportSales, exportInventory),
+                new HBox(8, exportCash, exportExceptions),
+                reportRows
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
     }
@@ -1080,6 +1231,28 @@ public final class AppShell {
         }
         try {
             return TenderType.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
+    }
+
+    private static Instant parseInstant(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(value.trim());
+        } catch (Exception ex) {
+            return null;
+        }
+    }
+
+    private static ExceptionReportEventType parseExceptionEventType(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return ExceptionReportEventType.valueOf(value.trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
             return null;
         }
