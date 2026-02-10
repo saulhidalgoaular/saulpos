@@ -6,6 +6,8 @@ import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
@@ -911,6 +913,12 @@ public final class AppShell {
                 backofficeCoordinator.priceResolutionProperty()
         ));
 
+        Label supplierReturnSummary = new Label();
+        supplierReturnSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toSupplierReturnSummary(backofficeCoordinator.supplierReturnProperty().get()),
+                backofficeCoordinator.supplierReturnProperty()
+        ));
+
         PosTextField catalogMerchantId = new PosTextField("Catalog merchant ID");
         PosTextField productQuery = new PosTextField("Catalog search (SKU/name)");
         PosButton loadProducts = PosButton.primary("Load Products");
@@ -1063,8 +1071,81 @@ public final class AppShell {
                 parseLong(priceCustomerId.getText())
         ));
 
+        PosTextField lotStoreLocationId = new PosTextField("Lot balance store location ID");
+        PosTextField lotProductId = new PosTextField("Lot balance product ID (optional)");
+        CheckBox lotLevel = new CheckBox("Lot-level balances");
+        lotLevel.setSelected(true);
+        PosButton loadBalances = PosButton.primary("Load Lot/Expiry Balances");
+        loadBalances.disableProperty().bind(backofficeCoordinator.busyProperty());
+        loadBalances.setOnAction(event -> backofficeCoordinator.loadInventoryBalances(
+                parseLong(lotStoreLocationId.getText()),
+                parseLong(lotProductId.getText()),
+                lotLevel.isSelected()
+        ));
+
+        ListView<InventoryStockBalanceResponse> balanceList = new ListView<>();
+        balanceList.setPrefHeight(120);
+        backofficeCoordinator.inventoryBalancesProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                balanceList.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            balanceList.setItems(FXCollections.observableArrayList(newValue));
+        });
+        balanceList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(InventoryStockBalanceResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText("store=" + item.storeLocationId()
+                        + " | product=" + item.productId()
+                        + " | lot=" + defaultText(item.lotCode())
+                        + " | expiry=" + (item.expiryDate() == null ? "-" : item.expiryDate().toString())
+                        + " | state=" + (item.expiryState() == null ? "-" : item.expiryState().name())
+                        + " | qty=" + defaultMoney(item.quantityOnHand()));
+            }
+        });
+
+        PosTextField supplierReturnId = new PosTextField("Supplier return ID");
+        PosTextField supplierReturnSupplierId = new PosTextField("Supplier ID");
+        PosTextField supplierReturnStoreId = new PosTextField("Return store location ID");
+        PosTextField supplierReturnProductId = new PosTextField("Return product ID");
+        PosTextField supplierReturnQuantity = new PosTextField("Return quantity");
+        PosTextField supplierReturnUnitCost = new PosTextField("Return unit cost");
+        PosTextField supplierReturnNote = new PosTextField("Supplier return note");
+
+        PosButton createSupplierReturn = PosButton.primary("Create Supplier Return");
+        PosButton loadSupplierReturn = PosButton.accent("Load Supplier Return");
+        PosButton approveSupplierReturn = PosButton.accent("Approve Return");
+        PosButton postSupplierReturn = PosButton.accent("Post Return");
+        createSupplierReturn.disableProperty().bind(backofficeCoordinator.busyProperty());
+        loadSupplierReturn.disableProperty().bind(backofficeCoordinator.busyProperty());
+        approveSupplierReturn.disableProperty().bind(backofficeCoordinator.busyProperty());
+        postSupplierReturn.disableProperty().bind(backofficeCoordinator.busyProperty());
+
+        createSupplierReturn.setOnAction(event -> backofficeCoordinator.createSupplierReturn(
+                parseLong(supplierReturnSupplierId.getText()),
+                parseLong(supplierReturnStoreId.getText()),
+                parseLong(supplierReturnProductId.getText()),
+                parseDecimal(supplierReturnQuantity.getText()),
+                parseMoney(supplierReturnUnitCost.getText()),
+                supplierReturnNote.getText()
+        ));
+        loadSupplierReturn.setOnAction(event -> backofficeCoordinator.loadSupplierReturn(parseLong(supplierReturnId.getText())));
+        approveSupplierReturn.setOnAction(event -> backofficeCoordinator.approveSupplierReturn(
+                parseLong(supplierReturnId.getText()),
+                supplierReturnNote.getText()
+        ));
+        postSupplierReturn.setOnAction(event -> backofficeCoordinator.postSupplierReturn(
+                parseLong(supplierReturnId.getText()),
+                supplierReturnNote.getText()
+        ));
+
         screenBody.getChildren().addAll(
-                new Label("Backoffice workspace: catalog, pricing, and customer operations"),
+                new Label("Backoffice workspace: catalog, pricing, customers, lot/expiry inventory, and supplier returns"),
                 feedback,
                 new Label("Catalog"),
                 catalogMerchantId,
@@ -1100,7 +1181,23 @@ public final class AppShell {
                 priceProductId,
                 priceCustomerId,
                 new HBox(8, resolvePrice),
-                priceSummary
+                priceSummary,
+                new Label("Lot/Expiry inventory"),
+                lotStoreLocationId,
+                lotProductId,
+                lotLevel,
+                new HBox(8, loadBalances),
+                balanceList,
+                new Label("Supplier returns"),
+                supplierReturnId,
+                supplierReturnSupplierId,
+                supplierReturnStoreId,
+                supplierReturnProductId,
+                supplierReturnQuantity,
+                supplierReturnUnitCost,
+                supplierReturnNote,
+                new HBox(8, createSupplierReturn, loadSupplierReturn, approveSupplierReturn, postSupplierReturn),
+                supplierReturnSummary
         );
     }
 
@@ -1400,6 +1497,18 @@ public final class AppShell {
                 + " | resolved=" + defaultMoney(response.resolvedPrice())
                 + " | source=" + response.source()
                 + " | sourceId=" + response.sourceId();
+    }
+
+    private static String toSupplierReturnSummary(SupplierReturnResponse response) {
+        if (response == null) {
+            return "No supplier return selected.";
+        }
+        int lineCount = response.lines() == null ? 0 : response.lines().size();
+        return "SupplierReturn #" + response.id()
+                + " | ref=" + defaultText(response.referenceNumber())
+                + " | status=" + response.status()
+                + " | lines=" + lineCount
+                + " | totalCost=" + defaultMoney(response.totalCost());
     }
 
     private static String toPrintSummary(HardwareActionStatus status, ReceiptPrintResponse response) {

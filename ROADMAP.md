@@ -942,7 +942,7 @@ Out of Scope:
 1. UI integration tests for park/resume and override flows.
 2. Authorization UI tests for role-specific behavior.
 
-#### Card O12: Lot/Expiry and Supplier Return UX
+#### Card O12: Lot/Expiry and Supplier Return UX [SOLVED]
 - Goal: Expose lot-aware inventory and supplier-return workflows in backoffice.
 - Dependencies: H5, I4, O7.
 - Acceptance Criteria:
@@ -1123,7 +1123,7 @@ Out of Scope:
 | O9 | DONE |  |  | Implemented hardware UI workflow in `pos-client` with receipt print action/status visibility (`queued`/`success`/`failure`), role-gated drawer open action backed by current-permissions introspection (`/api/security/permissions/current`), and API/coordinator coverage for print/drawer contracts and authorization behavior |
 | O10 | DONE |  |  | Implemented connectivity/degraded-mode UX in `pos-client` with top-bar online/offline visibility + retry action, policy-aware operation blocking for `AUTH_LOGIN`/`CART_MUTATION`/`CHECKOUT` using `/api/system/offline-policy`, and client API/coordinator coverage for offline blocking and recovery messaging |
 | O11 | DONE |  |  | Implemented sell-screen parked-cart workflow (`park`, `list`, `resume`) and sensitive line controls (`void`, `price-override`) with mandatory reason capture, permission-aware UI gating via `GET /api/security/permissions/current`, and client API/coordinator test coverage for contract mapping plus authorized/unauthorized behavior |
-| O12 | TODO |  |  |  |
+| O12 | DONE |  |  | Implemented backoffice lot/expiry inventory UX and supplier-return lifecycle controls in `pos-client` with inventory-balance and supplier-return API contract support (`GET /api/inventory/balances`, `POST/GET/approve/post /api/inventory/supplier-returns`), plus client API/coordinator coverage for load/create/approve/post flows |
 | O13 | TODO |  |  |  |
 | P1 | TODO |  |  |  |
 | P2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O12` Lot/expiry and supplier return UX.
-2. `O13` Receipt reprint and exception monitoring UX.
-3. `P1` End-to-end UAT scenarios.
+1. `O13` Receipt reprint and exception monitoring UX.
+2. `P1` End-to-end UAT scenarios.
+3. `P2` Performance and reliability hardening.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

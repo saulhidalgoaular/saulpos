@@ -9,6 +9,11 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
+import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -258,6 +263,30 @@ public interface PosApiClient {
                                                                Long cashierUserId,
                                                                String reasonCode,
                                                                ExceptionReportEventType eventType) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<InventoryStockBalanceResponse>> getInventoryBalances(Long storeLocationId,
+                                                                                         Long productId,
+                                                                                         boolean lotLevel) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SupplierReturnResponse> createSupplierReturn(SupplierReturnCreateRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SupplierReturnResponse> getSupplierReturn(Long supplierReturnId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SupplierReturnResponse> approveSupplierReturn(Long supplierReturnId,
+                                                                            SupplierReturnApproveRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SupplierReturnResponse> postSupplierReturn(Long supplierReturnId,
+                                                                         SupplierReturnPostRequest request) {
         return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
     }
 

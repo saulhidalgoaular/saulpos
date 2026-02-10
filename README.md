@@ -64,6 +64,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O9` Hardware interaction UI.
 - `O10` Offline/degraded mode UX.
 - `O11` Suspended sales and override UX.
+- `O12` Lot/expiry and supplier return UX.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -81,7 +82,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, reporting/export actions, hardware actions, and degraded-mode connectivity guidance (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9` + `O10`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers/lot-expiry/supplier-returns, reporting/export actions, hardware actions, and degraded-mode connectivity guidance (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9` + `O10` + `O11` + `O12`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -234,6 +235,22 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP sell contract mapping for parked-cart and sensitive-line endpoints,
   - sell coordinator permission refresh plus park/list/resume/void/override success and unauthorized-blocking flows.
+
+### Client Lot/Expiry and Supplier Return UX (`O12`)
+- Backoffice screen now supports:
+  - lot/expiry-aware stock-balance loading for a store (optional product filter, lot-level toggle),
+  - supplier return draft creation with required supplier/store/product/quantity/unit-cost fields,
+  - supplier return lookup by ID,
+  - supplier return approval and posting actions with operator note capture.
+- Client backoffice operations consume server contracts:
+  - `GET /api/inventory/balances?storeLocationId={id}&productId={id?}&lotLevel={bool}`
+  - `POST /api/inventory/supplier-returns`
+  - `GET /api/inventory/supplier-returns/{id}`
+  - `POST /api/inventory/supplier-returns/{id}/approve`
+  - `POST /api/inventory/supplier-returns/{id}/post`
+- Tests now cover:
+  - HTTP contract mapping for inventory balances and supplier return lifecycle endpoints,
+  - backoffice coordinator state/message behavior for lot-balance load and supplier-return create/approve/post flows.
 
 ## Implemented Domain Capabilities
 

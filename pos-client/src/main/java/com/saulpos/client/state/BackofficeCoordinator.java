@@ -11,6 +11,12 @@ import com.saulpos.api.customer.CustomerContactType;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
+import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateLineRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
+import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import javafx.application.Platform;
@@ -36,9 +42,11 @@ public final class BackofficeCoordinator {
     private final Consumer<Runnable> uiDispatcher;
     private final ObjectProperty<List<ProductResponse>> products = new SimpleObjectProperty<>(List.of());
     private final ObjectProperty<List<CustomerResponse>> customers = new SimpleObjectProperty<>(List.of());
+    private final ObjectProperty<List<InventoryStockBalanceResponse>> inventoryBalances = new SimpleObjectProperty<>(List.of());
+    private final ObjectProperty<SupplierReturnResponse> supplierReturn = new SimpleObjectProperty<>();
     private final ObjectProperty<PriceResolutionResponse> priceResolution = new SimpleObjectProperty<>();
     private final StringProperty backofficeMessage =
-            new SimpleStringProperty("Backoffice ready: manage catalog, pricing, and customers.");
+            new SimpleStringProperty("Backoffice ready: manage catalog, pricing, customers, lots, and supplier returns.");
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
     public BackofficeCoordinator(PosApiClient apiClient) {
@@ -60,6 +68,14 @@ public final class BackofficeCoordinator {
 
     public ObjectProperty<PriceResolutionResponse> priceResolutionProperty() {
         return priceResolution;
+    }
+
+    public ObjectProperty<List<InventoryStockBalanceResponse>> inventoryBalancesProperty() {
+        return inventoryBalances;
+    }
+
+    public ObjectProperty<SupplierReturnResponse> supplierReturnProperty() {
+        return supplierReturn;
     }
 
     public StringProperty backofficeMessageProperty() {
@@ -219,6 +235,91 @@ public final class BackofficeCoordinator {
                 .thenAccept(response -> dispatch(() -> {
                     priceResolution.set(response);
                     backofficeMessage.set("Resolved price " + response.resolvedPrice() + " from " + response.source() + ".");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> loadInventoryBalances(Long storeLocationId, Long productId, boolean lotLevel) {
+        if (storeLocationId == null) {
+            dispatch(() -> backofficeMessage.set("Store location ID is required to load inventory balances."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        return apiClient.getInventoryBalances(storeLocationId, productId, lotLevel)
+                .thenAccept(result -> dispatch(() -> {
+                    inventoryBalances.set(result);
+                    backofficeMessage.set("Loaded " + result.size() + " inventory balance record(s).");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> createSupplierReturn(Long supplierId,
+                                                        Long storeLocationId,
+                                                        Long productId,
+                                                        BigDecimal quantity,
+                                                        BigDecimal unitCost,
+                                                        String note) {
+        if (supplierId == null || storeLocationId == null || productId == null || quantity == null || unitCost == null) {
+            dispatch(() -> backofficeMessage.set("Supplier, store, product, quantity, and unit cost are required."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (quantity.signum() <= 0 || unitCost.signum() < 0) {
+            dispatch(() -> backofficeMessage.set("Quantity must be positive and unit cost must be non-negative."));
+            return CompletableFuture.completedFuture(null);
+        }
+        SupplierReturnCreateRequest request = new SupplierReturnCreateRequest(
+                supplierId,
+                storeLocationId,
+                List.of(new SupplierReturnCreateLineRequest(productId, quantity, unitCost)),
+                normalizeOptional(note)
+        );
+        dispatch(() -> busy.set(true));
+        return apiClient.createSupplierReturn(request)
+                .thenAccept(response -> dispatch(() -> {
+                    supplierReturn.set(response);
+                    backofficeMessage.set("Supplier return created: " + response.referenceNumber());
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> loadSupplierReturn(Long supplierReturnId) {
+        if (supplierReturnId == null) {
+            dispatch(() -> backofficeMessage.set("Supplier return ID is required."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        return apiClient.getSupplierReturn(supplierReturnId)
+                .thenAccept(response -> dispatch(() -> {
+                    supplierReturn.set(response);
+                    backofficeMessage.set("Supplier return loaded: " + response.referenceNumber() + " (" + response.status() + ").");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> approveSupplierReturn(Long supplierReturnId, String note) {
+        if (supplierReturnId == null) {
+            dispatch(() -> backofficeMessage.set("Supplier return ID is required for approval."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        return apiClient.approveSupplierReturn(supplierReturnId, new SupplierReturnApproveRequest(normalizeOptional(note)))
+                .thenAccept(response -> dispatch(() -> {
+                    supplierReturn.set(response);
+                    backofficeMessage.set("Supplier return approved: " + response.referenceNumber() + ".");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> postSupplierReturn(Long supplierReturnId, String note) {
+        if (supplierReturnId == null) {
+            dispatch(() -> backofficeMessage.set("Supplier return ID is required for posting."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        return apiClient.postSupplierReturn(supplierReturnId, new SupplierReturnPostRequest(normalizeOptional(note)))
+                .thenAccept(response -> dispatch(() -> {
+                    supplierReturn.set(response);
+                    backofficeMessage.set("Supplier return posted: " + response.referenceNumber() + ".");
                 }))
                 .whenComplete((ignored, throwable) -> finish(throwable));
     }

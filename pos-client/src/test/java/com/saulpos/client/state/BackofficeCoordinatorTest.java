@@ -12,6 +12,13 @@ import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.catalog.ProductUnitOfMeasure;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.inventory.InventoryExpiryState;
+import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
+import com.saulpos.api.inventory.SupplierReturnResponse;
+import com.saulpos.api.inventory.SupplierReturnStatus;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -31,6 +38,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -83,6 +91,45 @@ class BackofficeCoordinatorTest {
         assertEquals("Resolved price 1.25 from STORE_OVERRIDE.", coordinator.backofficeMessageProperty().get());
     }
 
+    @Test
+    void loadInventoryBalances_shouldPopulateLotExpiryState() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.inventoryBalances = List.of(new InventoryStockBalanceResponse(
+                10L,
+                302L,
+                new BigDecimal("7.000"),
+                901L,
+                "LOT-901",
+                LocalDate.parse("2026-03-01"),
+                InventoryExpiryState.ACTIVE,
+                new BigDecimal("0.90"),
+                new BigDecimal("0.95")
+        ));
+        BackofficeCoordinator coordinator = new BackofficeCoordinator(apiClient, Runnable::run);
+
+        coordinator.loadInventoryBalances(10L, 302L, true).join();
+
+        assertEquals(1, coordinator.inventoryBalancesProperty().get().size());
+        assertEquals("Loaded 1 inventory balance record(s).", coordinator.backofficeMessageProperty().get());
+    }
+
+    @Test
+    void supplierReturnLifecycle_shouldUpdateCurrentReturnSummary() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.supplierReturn = supplierReturn(SupplierReturnStatus.DRAFT);
+        BackofficeCoordinator coordinator = new BackofficeCoordinator(apiClient, Runnable::run);
+
+        coordinator.createSupplierReturn(40L, 10L, 302L, BigDecimal.ONE, new BigDecimal("0.95"), "damaged").join();
+        assertEquals("DRAFT", coordinator.supplierReturnProperty().get().status().name());
+        assertEquals("Supplier return created: SR-0008801", coordinator.backofficeMessageProperty().get());
+
+        coordinator.approveSupplierReturn(8801L, "ok").join();
+        assertEquals("APPROVED", coordinator.supplierReturnProperty().get().status().name());
+
+        coordinator.postSupplierReturn(8801L, "posted").join();
+        assertEquals("POSTED", coordinator.supplierReturnProperty().get().status().name());
+    }
+
     private static ProductResponse product(Long id, String sku, String name) {
         return new ProductResponse(
                 id,
@@ -105,11 +152,32 @@ class BackofficeCoordinatorTest {
         );
     }
 
+    private static SupplierReturnResponse supplierReturn(SupplierReturnStatus status) {
+        return new SupplierReturnResponse(
+                8801L,
+                40L,
+                10L,
+                "SR-0008801",
+                status,
+                "damaged",
+                new BigDecimal("0.95"),
+                "manager",
+                Instant.parse("2026-02-10T12:00:00Z"),
+                status == SupplierReturnStatus.DRAFT ? null : "manager",
+                status == SupplierReturnStatus.DRAFT ? null : Instant.parse("2026-02-10T12:10:00Z"),
+                status == SupplierReturnStatus.POSTED ? "manager" : null,
+                status == SupplierReturnStatus.POSTED ? Instant.parse("2026-02-10T12:20:00Z") : null,
+                List.of()
+        );
+    }
+
     private static final class FakePosApiClient implements PosApiClient {
 
         private List<ProductResponse> products = List.of();
         private List<CustomerResponse> customers = List.of();
+        private List<InventoryStockBalanceResponse> inventoryBalances = List.of();
         private PriceResolutionResponse priceResolution;
+        private SupplierReturnResponse supplierReturn;
 
         @Override
         public CompletableFuture<Boolean> ping() {
@@ -257,6 +325,39 @@ class BackofficeCoordinatorTest {
             return CompletableFuture.completedFuture(new CustomerResponse(
                     customerId, request.merchantId(), request.displayName(), request.invoiceRequired(), request.creditEnabled(),
                     true, List.of(), List.of(), List.of()));
+        }
+
+        @Override
+        public CompletableFuture<List<InventoryStockBalanceResponse>> getInventoryBalances(Long storeLocationId,
+                                                                                            Long productId,
+                                                                                            boolean lotLevel) {
+            return CompletableFuture.completedFuture(inventoryBalances);
+        }
+
+        @Override
+        public CompletableFuture<SupplierReturnResponse> createSupplierReturn(SupplierReturnCreateRequest request) {
+            SupplierReturnStatus status = SupplierReturnStatus.DRAFT;
+            supplierReturn = supplierReturn(status);
+            return CompletableFuture.completedFuture(supplierReturn);
+        }
+
+        @Override
+        public CompletableFuture<SupplierReturnResponse> getSupplierReturn(Long supplierReturnId) {
+            return CompletableFuture.completedFuture(supplierReturn == null ? supplierReturn(SupplierReturnStatus.DRAFT) : supplierReturn);
+        }
+
+        @Override
+        public CompletableFuture<SupplierReturnResponse> approveSupplierReturn(Long supplierReturnId,
+                                                                               SupplierReturnApproveRequest request) {
+            supplierReturn = supplierReturn(SupplierReturnStatus.APPROVED);
+            return CompletableFuture.completedFuture(supplierReturn);
+        }
+
+        @Override
+        public CompletableFuture<SupplierReturnResponse> postSupplierReturn(Long supplierReturnId,
+                                                                            SupplierReturnPostRequest request) {
+            supplierReturn = supplierReturn(SupplierReturnStatus.POSTED);
+            return CompletableFuture.completedFuture(supplierReturn);
         }
 
         @Override

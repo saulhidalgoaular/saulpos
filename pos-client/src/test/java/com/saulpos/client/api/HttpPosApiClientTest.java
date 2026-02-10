@@ -11,6 +11,10 @@ import com.saulpos.api.customer.CustomerContactRequest;
 import com.saulpos.api.customer.CustomerContactType;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateLineRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
@@ -520,6 +524,84 @@ class HttpPosApiClientTest {
     }
 
     @Test
+    void lotExpiryAndSupplierReturnContracts_shouldUseInventoryEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    String query = request.uri().getRawQuery();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"MANAGER\"]}"
+                        ));
+                    }
+                    if ("/api/inventory/balances".equals(path)
+                            && query.contains("storeLocationId=10")
+                            && query.contains("productId=302")
+                            && query.contains("lotLevel=true")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"storeLocationId\":10,\"productId\":302,\"quantityOnHand\":7.000,"
+                                        + "\"inventoryLotId\":991,\"lotCode\":\"LOT-991\",\"expiryDate\":\"2026-03-01\","
+                                        + "\"expiryState\":\"ACTIVE\",\"weightedAverageCost\":0.90,\"lastCost\":0.95}]"
+                        ));
+                    }
+                    if ("/api/inventory/supplier-returns".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 201, supplierReturnJson("DRAFT")));
+                    }
+                    if ("/api/inventory/supplier-returns/8801".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, supplierReturnJson("DRAFT")));
+                    }
+                    if ("/api/inventory/supplier-returns/8801/approve".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, supplierReturnJson("APPROVED")));
+                    }
+                    if ("/api/inventory/supplier-returns/8801/post".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, supplierReturnJson("POSTED")));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("manager", "secret").join();
+        assertEquals(1, client.getInventoryBalances(10L, 302L, true).join().size());
+        assertEquals("DRAFT", client.createSupplierReturn(new SupplierReturnCreateRequest(
+                40L,
+                10L,
+                List.of(new SupplierReturnCreateLineRequest(302L, new BigDecimal("1.000"), new BigDecimal("0.95"))),
+                "damaged batch"
+        )).join().status().name());
+        assertEquals("DRAFT", client.getSupplierReturn(8801L).join().status().name());
+        assertEquals("APPROVED", client.approveSupplierReturn(8801L, new SupplierReturnApproveRequest("ok")).join().status().name());
+        assertEquals("POSTED", client.postSupplierReturn(8801L, new SupplierReturnPostRequest("posted")).join().status().name());
+
+        HttpRequest balancesRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/inventory/balances"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest supplierCreateRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/inventory/supplier-returns") && req.method().equals("POST"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest approveRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/inventory/supplier-returns/8801/approve"))
+                .findFirst()
+                .orElseThrow();
+
+        assertTrue(balancesRequest.uri().getRawQuery().contains("lotLevel=true"));
+        assertEquals("Bearer access-123", supplierCreateRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", approveRequest.headers().firstValue("Authorization").orElseThrow());
+    }
+
+    @Test
     void refundContracts_shouldUseLookupAndSubmitEndpoints() {
         List<HttpRequest> requests = new ArrayList<>();
         HttpPosApiClient client = new HttpPosApiClient(
@@ -745,6 +827,15 @@ class HttpPosApiClientTest {
                 + "\"subtotalNet\":0.00,\"totalTax\":0.00,\"totalGross\":0.00,"
                 + "\"roundingAdjustment\":0.00,\"totalPayable\":0.00,\"rounding\":null,"
                 + "\"createdAt\":\"2026-02-10T12:00:00Z\",\"updatedAt\":\"2026-02-10T12:00:00Z\"}";
+    }
+
+    private static String supplierReturnJson(String status) {
+        return "{\"id\":8801,\"supplierId\":40,\"storeLocationId\":10,\"referenceNumber\":\"SR-0008801\","
+                + "\"status\":\"" + status + "\",\"note\":\"damaged batch\",\"totalCost\":0.95,"
+                + "\"createdBy\":\"manager\",\"createdAt\":\"2026-02-10T12:00:00Z\","
+                + "\"approvedBy\":null,\"approvedAt\":null,\"postedBy\":null,\"postedAt\":null,"
+                + "\"lines\":[{\"productId\":302,\"productSku\":\"WATER-500\",\"productName\":\"Water 500ml\","
+                + "\"returnQuantity\":1.000,\"unitCost\":0.95,\"lineTotal\":0.95,\"inventoryMovementId\":null}]}";
     }
 
     private HttpResponse<String> response(HttpRequest request, int status, String body) {

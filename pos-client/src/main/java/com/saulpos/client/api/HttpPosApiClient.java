@@ -11,6 +11,11 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
+import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -688,6 +693,46 @@ public final class HttpPosApiClient implements PosApiClient {
         hasParam = appendParam(path, "reasonCode", reasonCode, hasParam);
         appendParam(path, "eventType", eventType, hasParam);
         return getCsv(path.toString());
+    }
+
+    @Override
+    public CompletableFuture<List<InventoryStockBalanceResponse>> getInventoryBalances(Long storeLocationId,
+                                                                                        Long productId,
+                                                                                        boolean lotLevel) {
+        StringBuilder path = new StringBuilder("/api/inventory/balances");
+        boolean hasParam = false;
+        hasParam = appendParam(path, "storeLocationId", storeLocationId, hasParam);
+        hasParam = appendParam(path, "productId", productId, hasParam);
+        appendParam(path, "lotLevel", lotLevel, hasParam);
+        HttpRequest request = baseRequest(path.toString()).GET().build();
+        return sendList(request, InventoryStockBalanceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SupplierReturnResponse> createSupplierReturn(SupplierReturnCreateRequest request) {
+        return postJson("/api/inventory/supplier-returns", request, SupplierReturnResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SupplierReturnResponse> getSupplierReturn(Long supplierReturnId) {
+        HttpRequest request = baseRequest("/api/inventory/supplier-returns/" + supplierReturnId)
+                .GET()
+                .build();
+        return send(request, SupplierReturnResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SupplierReturnResponse> approveSupplierReturn(Long supplierReturnId,
+                                                                           SupplierReturnApproveRequest request) {
+        SupplierReturnApproveRequest body = request == null ? new SupplierReturnApproveRequest(null) : request;
+        return postJson("/api/inventory/supplier-returns/" + supplierReturnId + "/approve", body, SupplierReturnResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SupplierReturnResponse> postSupplierReturn(Long supplierReturnId,
+                                                                        SupplierReturnPostRequest request) {
+        SupplierReturnPostRequest body = request == null ? new SupplierReturnPostRequest(null) : request;
+        return postJson("/api/inventory/supplier-returns/" + supplierReturnId + "/post", body, SupplierReturnResponse.class);
     }
 
     @Override
