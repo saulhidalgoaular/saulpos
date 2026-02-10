@@ -68,6 +68,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O12` Lot/expiry and supplier return UX.
 - `O13` Receipt reprint and exception monitoring UX.
 - `P1` End-to-end UAT scenarios.
+- `P2` Performance and reliability hardening.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -279,6 +280,17 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `docs/uat/P1-end-to-end-uat-scenarios.md`.
 - Suite execution command:
   - `mvn -pl pos-server test -Dtest=P1EndToEndUatIntegrationTest`.
+
+### Performance and Reliability Hardening (`P2`)
+- Added executable `P2` reliability/performance guard suite in `pos-server`:
+  - `P2PerformanceReliabilityIntegrationTest` validates burst p95 targets and retry/idempotency no-corruption behavior.
+- Added `P2` evidence and target documentation:
+  - `docs/uat/P2-performance-and-reliability-hardening.md`.
+- Added reusable k6 load scripts for peak checkout/lookup and reporting:
+  - `docs/perf/k6/P2-peak-checkout-lookup.js`
+  - `docs/perf/k6/P2-peak-reporting.js`
+- Suite execution command:
+  - `mvn -pl pos-server test -Dtest=P2PerformanceReliabilityIntegrationTest`.
 
 ## Implemented Domain Capabilities
 
