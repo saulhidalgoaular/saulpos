@@ -4,6 +4,8 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.refund.SaleReturnLineResponse;
+import com.saulpos.api.refund.SaleReturnLookupLineResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -15,108 +17,133 @@ import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
-import com.saulpos.api.shift.CashMovementType;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
-import com.saulpos.api.shift.CashShiftStatus;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ShiftControlCoordinatorTest {
+class ReturnsScreenCoordinatorTest {
+
+    private static final Instant NOW = Instant.parse("2026-02-10T12:00:00Z");
 
     @Test
-    void openShiftSuccess_shouldStoreShiftAndExposeReadyMessage() {
+    void lookupSuccess_shouldStoreReceiptContext() {
         FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.openShiftResponse = openShift(20L, BigDecimal.valueOf(100), BigDecimal.ZERO, BigDecimal.ZERO);
-        ShiftControlCoordinator coordinator = new ShiftControlCoordinator(apiClient, Runnable::run);
+        apiClient.lookupResponse = lookupResponse();
+        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
 
-        coordinator.openShift(1L, 11L, BigDecimal.valueOf(100)).join();
+        coordinator.lookupByReceipt("R-0000501").join();
 
-        assertEquals(20L, coordinator.shiftState().id());
-        assertEquals("Shift open and ready for cash controls.", coordinator.shiftMessageProperty().get());
+        assertEquals("R-0000501", coordinator.lookupState().receiptNumber());
+        assertEquals("Receipt loaded. 1 lines eligible for return review.", coordinator.returnsMessageProperty().get());
     }
 
     @Test
-    void paidInSuccess_shouldRefreshTotals() {
+    void submitWithoutLookup_shouldReject() {
+        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(new FakePosApiClient(), Runnable::run);
+
+        coordinator.submitReturn(1001L, BigDecimal.ONE, "DAMAGED", TenderType.CASH, null, null).join();
+
+        assertNull(coordinator.submitState());
+        assertEquals("Lookup a receipt before submitting a return.", coordinator.returnsMessageProperty().get());
+    }
+
+    @Test
+    void submitSuccess_shouldStoreReturnResponse() {
         FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.openShiftResponse = openShift(20L, BigDecimal.valueOf(100), BigDecimal.ZERO, BigDecimal.ZERO);
-        apiClient.cashMovementResponse = new CashMovementResponse(
-                77L,
+        apiClient.lookupResponse = lookupResponse();
+        apiClient.submitResponse = returnResponse();
+        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
+
+        coordinator.lookupByReceipt("R-0000501").join();
+        coordinator.submitReturn(1001L, new BigDecimal("1.000"), "damaged", TenderType.CASH, null, "can dent").join();
+
+        assertEquals("RET-SALE-501", coordinator.submitState().returnReference());
+        assertEquals("Return submitted. Reference RET-SALE-501 created.", coordinator.returnsMessageProperty().get());
+        assertEquals("DAMAGED", apiClient.submitRequest.reasonCode());
+    }
+
+    @Test
+    void submitManagerApprovalRequired_shouldExposeGuidance() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.lookupResponse = lookupResponse();
+        apiClient.submitFailure = new ApiProblemException(403, "POS-4030",
+                "return is outside allowed window and requires manager approval");
+        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
+
+        coordinator.lookupByReceipt("R-0000501").join();
+        coordinator.submitReturn(1001L, new BigDecimal("1.000"), "damaged", TenderType.CASH, null, null)
+                .handle((ok, ex) -> null)
+                .join();
+
+        assertTrue(coordinator.managerApprovalRequiredProperty().get());
+        assertTrue(coordinator.returnsMessageProperty().get().contains("Have a manager sign in and retry."));
+    }
+
+    private static SaleReturnLookupResponse lookupResponse() {
+        return new SaleReturnLookupResponse(
+                501L,
+                "R-0000501",
+                10L,
                 20L,
-                CashMovementType.PAID_IN,
-                BigDecimal.valueOf(25),
-                "Petty cash",
-                Instant.parse("2026-02-10T12:10:00Z")
+                NOW,
+                List.of(new SaleReturnLookupLineResponse(
+                        1001L,
+                        301L,
+                        1,
+                        new BigDecimal("2.000"),
+                        new BigDecimal("1.000"),
+                        new BigDecimal("1.000"),
+                        new BigDecimal("2.50"),
+                        new BigDecimal("5.00")
+                ))
         );
-        apiClient.shiftByIdResponse = openShift(20L, BigDecimal.valueOf(100), BigDecimal.valueOf(25), BigDecimal.ZERO);
-
-        ShiftControlCoordinator coordinator = new ShiftControlCoordinator(apiClient, Runnable::run);
-        coordinator.openShift(1L, 11L, BigDecimal.valueOf(100)).join();
-
-        coordinator.recordPaidIn(BigDecimal.valueOf(25), "Petty cash").join();
-
-        assertEquals(BigDecimal.valueOf(25), coordinator.shiftState().totalPaidIn());
-        assertEquals("Paid-in recorded.", coordinator.shiftMessageProperty().get());
     }
 
-    @Test
-    void closeWithoutShift_shouldReject() {
-        ShiftControlCoordinator coordinator = new ShiftControlCoordinator(new FakePosApiClient(), Runnable::run);
-
-        coordinator.closeShift(BigDecimal.TEN, "close").join();
-
-        assertNull(coordinator.shiftState());
-        assertEquals("Open or load a shift before closing.", coordinator.shiftMessageProperty().get());
-    }
-
-    @Test
-    void openShiftProblem_shouldShowApiDetail() {
-        FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.openShiftFailure = new ApiProblemException(409, "POS-4092", "cashier already has an open shift");
-        ShiftControlCoordinator coordinator = new ShiftControlCoordinator(apiClient, Runnable::run);
-
-        coordinator.openShift(1L, 11L, BigDecimal.valueOf(100)).handle((ok, ex) -> null).join();
-
-        assertEquals("cashier already has an open shift", coordinator.shiftMessageProperty().get());
-    }
-
-    private static CashShiftResponse openShift(Long shiftId,
-                                               BigDecimal opening,
-                                               BigDecimal paidIn,
-                                               BigDecimal paidOut) {
-        return new CashShiftResponse(
-                shiftId,
-                1L,
-                11L,
-                100L,
-                CashShiftStatus.OPEN,
-                opening,
-                paidIn,
-                paidOut,
-                opening.add(paidIn).subtract(paidOut),
-                null,
-                null,
-                Instant.parse("2026-02-10T12:00:00Z"),
-                null
+    private static SaleReturnResponse returnResponse() {
+        return new SaleReturnResponse(
+                9001L,
+                501L,
+                "R-0000501",
+                "RET-SALE-501",
+                "DAMAGED",
+                TenderType.CASH,
+                new BigDecimal("2.12"),
+                new BigDecimal("0.38"),
+                new BigDecimal("2.50"),
+                List.of(new SaleReturnLineResponse(
+                        1L,
+                        1001L,
+                        301L,
+                        1,
+                        new BigDecimal("1.000"),
+                        new BigDecimal("2.12"),
+                        new BigDecimal("0.38"),
+                        new BigDecimal("2.50")
+                )),
+                NOW
         );
     }
 
     private static final class FakePosApiClient implements PosApiClient {
 
-        private CashShiftResponse openShiftResponse;
-        private CashShiftResponse shiftByIdResponse;
-        private CashMovementResponse cashMovementResponse;
-        private RuntimeException openShiftFailure;
+        private SaleReturnLookupResponse lookupResponse;
+        private SaleReturnResponse submitResponse;
+        private SaleReturnSubmitRequest submitRequest;
+        private RuntimeException submitFailure;
 
         @Override
         public CompletableFuture<Boolean> ping() {
@@ -145,25 +172,22 @@ class ShiftControlCoordinatorTest {
 
         @Override
         public CompletableFuture<CashShiftResponse> openShift(CashShiftOpenRequest request) {
-            if (openShiftFailure != null) {
-                return CompletableFuture.failedFuture(openShiftFailure);
-            }
-            return CompletableFuture.completedFuture(openShiftResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<CashMovementResponse> addCashMovement(Long shiftId, CashMovementRequest request) {
-            return CompletableFuture.completedFuture(cashMovementResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<CashShiftResponse> closeShift(Long shiftId, CashShiftCloseRequest request) {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<CashShiftResponse> getShift(Long shiftId) {
-            return CompletableFuture.completedFuture(shiftByIdResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
@@ -213,12 +237,16 @@ class ShiftControlCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(lookupResponse);
         }
 
         @Override
         public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            this.submitRequest = request;
+            if (submitFailure != null) {
+                return CompletableFuture.failedFuture(submitFailure);
+            }
+            return CompletableFuture.completedFuture(submitResponse);
         }
 
         @Override

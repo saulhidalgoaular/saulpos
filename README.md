@@ -56,6 +56,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O3` Shift open/close and cash controls UI.
 - `O4` Product search and cart screen.
 - `O5` Checkout and payments UI.
+- `O6` Returns and refunds UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -73,7 +74,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, and the selling workstation flow (`O1` + `O2` + `O3` + `O4`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, and cashier workstation flows for selling, checkout, and returns (`O1` + `O2` + `O3` + `O4` + `O5` + `O6`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -131,6 +132,19 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP checkout contract mapping and idempotency header propagation,
   - sell coordinator checkout success path and split/insufficient-tender validation failures.
+
+### Client Returns and Refunds UI (`O6`)
+- Returns screen now supports:
+  - receipt lookup (`receiptNumber`) to resolve sale context and eligible return lines,
+  - partial or full quantity return submission with reason-code capture,
+  - refund tender capture (`CASH`/`CARD`) with optional reference and note fields,
+  - explicit manager-approval guidance when return-window policy rejects cashier-level submission.
+- Client returns operations consume server contracts:
+  - `GET /api/refunds/lookup?receiptNumber={value}`
+  - `POST /api/refunds/submit`
+- Tests now cover:
+  - HTTP refund lookup/submit contract mapping,
+  - returns coordinator success/error paths for lookup, submit, and manager-approval-required flows.
 
 ## Implemented Domain Capabilities
 

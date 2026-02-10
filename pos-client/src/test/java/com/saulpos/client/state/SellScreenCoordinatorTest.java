@@ -7,6 +7,9 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSaleMode;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.catalog.ProductUnitOfMeasure;
+import com.saulpos.api.refund.SaleReturnLookupResponse;
+import com.saulpos.api.refund.SaleReturnResponse;
+import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartLineResponse;
@@ -378,6 +381,16 @@ class SellScreenCoordinatorTest {
         public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
             this.checkoutRequest = request;
             return CompletableFuture.completedFuture(checkoutResponse);
+        }
+
+        @Override
+        public CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override

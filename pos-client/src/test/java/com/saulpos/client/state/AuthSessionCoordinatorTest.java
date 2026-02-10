@@ -4,6 +4,9 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.refund.SaleReturnLookupResponse;
+import com.saulpos.api.refund.SaleReturnResponse;
+import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
@@ -275,6 +278,16 @@ class AuthSessionCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
             return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 

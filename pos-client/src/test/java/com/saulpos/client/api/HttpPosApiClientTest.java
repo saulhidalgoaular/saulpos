@@ -2,6 +2,8 @@ package com.saulpos.client.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
+import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
@@ -285,6 +287,70 @@ class HttpPosApiClientTest {
         assertTrue(searchRequest.uri().getRawQuery().contains("q=soda"));
         assertEquals("Bearer access-123", addLineRequest.headers().firstValue("Authorization").orElseThrow());
         assertTrue(checkoutRequest.headers().firstValue("Idempotency-Key").orElseThrow().startsWith("pos-client-"));
+    }
+
+    @Test
+    void refundContracts_shouldUseLookupAndSubmitEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    String query = request.uri().getRawQuery();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"CASHIER\"]}"
+                        ));
+                    }
+                    if ("/api/refunds/lookup".equals(path) && query.contains("receiptNumber=R-0000501")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"saleId\":501,\"receiptNumber\":\"R-0000501\",\"storeLocationId\":1,"
+                                        + "\"terminalDeviceId\":3,\"soldAt\":\"2026-02-10T11:00:00Z\",\"lines\":["
+                                        + "{\"saleLineId\":1001,\"productId\":301,\"lineNumber\":1,\"quantitySold\":2.000,"
+                                        + "\"quantityReturned\":1.000,\"quantityAvailable\":1.000,\"unitPrice\":2.50,\"grossAmount\":5.00}]}"
+                        ));
+                    }
+                    if ("/api/refunds/submit".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"saleReturnId\":9001,\"saleId\":501,\"receiptNumber\":\"R-0000501\","
+                                        + "\"returnReference\":\"RET-SALE-501\",\"reasonCode\":\"DAMAGED\","
+                                        + "\"refundTenderType\":\"CASH\",\"subtotalNet\":2.12,\"totalTax\":0.38,\"totalGross\":2.50,"
+                                        + "\"lines\":[{\"saleReturnLineId\":1,\"saleLineId\":1001,\"productId\":301,\"lineNumber\":1,"
+                                        + "\"quantity\":1.000,\"netAmount\":2.12,\"taxAmount\":0.38,\"grossAmount\":2.50}],"
+                                        + "\"createdAt\":\"2026-02-10T12:05:00Z\"}"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("cashier", "secret").join();
+        assertEquals(501L, client.lookupReturnByReceipt("R-0000501").join().saleId());
+        assertEquals("RET-SALE-501", client.submitReturn(new SaleReturnSubmitRequest(
+                501L,
+                "R-0000501",
+                "DAMAGED",
+                TenderType.CASH,
+                null,
+                "can dent",
+                List.of(new SaleReturnSubmitLineRequest(1001L, BigDecimal.ONE))
+        )).join().returnReference());
+
+        HttpRequest lookupRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/refunds/lookup")).findFirst().orElseThrow();
+        HttpRequest submitRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/refunds/submit")).findFirst().orElseThrow();
+        assertTrue(lookupRequest.uri().getRawQuery().contains("receiptNumber=R-0000501"));
+        assertEquals("Bearer access-123", submitRequest.headers().firstValue("Authorization").orElseThrow());
     }
 
     private static String cartJson() {

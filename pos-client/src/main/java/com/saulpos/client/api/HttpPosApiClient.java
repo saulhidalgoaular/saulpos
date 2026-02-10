@@ -6,6 +6,9 @@ import com.saulpos.api.auth.LoginRequest;
 import com.saulpos.api.auth.RefreshTokenRequest;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.refund.SaleReturnLookupResponse;
+import com.saulpos.api.refund.SaleReturnResponse;
+import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
@@ -217,6 +220,20 @@ public final class HttpPosApiClient implements PosApiClient {
     @Override
     public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
         return postJsonWithIdempotency("/api/sales/checkout", request, SaleCheckoutResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber) {
+        String path = "/api/refunds/lookup?receiptNumber=" + encodeQueryParam(receiptNumber);
+        HttpRequest request = baseRequest(path)
+                .GET()
+                .build();
+        return send(request, SaleReturnLookupResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
+        return postJson("/api/refunds/submit", request, SaleReturnResponse.class);
     }
 
     @Override

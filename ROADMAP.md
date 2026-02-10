@@ -882,7 +882,7 @@ Out of Scope:
 1. Integration tests for successful and failed checkout paths.
 2. Edge-case tests for split tender validation.
 
-#### Card O6: Returns and Refunds UI
+#### Card O6: Returns and Refunds UI [SOLVED]
 - Goal: Enable cashier and manager return workflows.
 - Dependencies: G3, O1.
 - Acceptance Criteria:
@@ -1117,7 +1117,7 @@ Out of Scope:
 | O3 | DONE |  |  | Implemented shift-control UI workflow in `pos-client` with open/load/paid-in/paid-out/close actions mapped to `/api/shifts` contracts, deterministic operator feedback and shift totals/variance visibility, plus client coordinator + HTTP contract tests for shift state transitions |
 | O4 | DONE |  |  | Implemented Sell screen workflow in `pos-client` with cart create/load, barcode lookup add-line path, paginated product search, quick-add, cart line quantity update/remove, totals recalculation feedback, and client API/coordinator tests covering success and error handling |
 | O5 | DONE |  |  | Implemented checkout UI workflow in `pos-client` with tender capture (`cash`/`card`/split), allocation-vs-payable and due/change visibility, checkout commit integration (`POST /api/sales/checkout`) including `Idempotency-Key` propagation, receipt/payment summary feedback, and client API/coordinator coverage for successful and failed validation paths |
-| O6 | TODO |  |  |  |
+| O6 | DONE |  |  | Implemented returns UI workflow in `pos-client` with receipt lookup (`GET /api/refunds/lookup`), eligible-line review, partial/full quantity return submission with reason/tender capture (`POST /api/refunds/submit`), and manager-approval-required guidance when policy rejects cashier-only returns; added client API/coordinator tests for lookup/submit/approval paths |
 | O7 | TODO |  |  |  |
 | O8 | TODO |  |  |  |
 | O9 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O6` Returns and refunds UI.
-2. `O7` Backoffice UI (catalog, pricing, customers).
-3. `O8` Reporting and export UI.
+1. `O7` Backoffice UI (catalog, pricing, customers).
+2. `O8` Reporting and export UI.
+3. `O9` Hardware interaction UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

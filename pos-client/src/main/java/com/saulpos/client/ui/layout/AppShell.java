@@ -8,6 +8,10 @@ import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.refund.SaleReturnLookupLineResponse;
+import com.saulpos.api.refund.SaleReturnLookupResponse;
+import com.saulpos.api.refund.SaleReturnResponse;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
@@ -15,6 +19,7 @@ import com.saulpos.client.app.ScreenRegistry;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
+import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
 import com.saulpos.client.ui.components.PosButton;
@@ -49,7 +54,8 @@ public final class AppShell {
                                     NavigationState navigationState,
                                     AuthSessionCoordinator authSessionCoordinator,
                                     ShiftControlCoordinator shiftControlCoordinator,
-                                    SellScreenCoordinator sellScreenCoordinator) {
+                                    SellScreenCoordinator sellScreenCoordinator,
+                                    ReturnsScreenCoordinator returnsScreenCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -89,6 +95,7 @@ public final class AppShell {
                 authSessionCoordinator,
                 shiftControlCoordinator,
                 sellScreenCoordinator,
+                returnsScreenCoordinator,
                 stateStore,
                 navigationState
         );
@@ -102,6 +109,7 @@ public final class AppShell {
                     authSessionCoordinator,
                     shiftControlCoordinator,
                     sellScreenCoordinator,
+                    returnsScreenCoordinator,
                     stateStore,
                     navigationState
             );
@@ -148,6 +156,7 @@ public final class AppShell {
                                       AuthSessionCoordinator authSessionCoordinator,
                                       ShiftControlCoordinator shiftControlCoordinator,
                                       SellScreenCoordinator sellScreenCoordinator,
+                                      ReturnsScreenCoordinator returnsScreenCoordinator,
                                       AppStateStore appStateStore,
                                       NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
@@ -173,6 +182,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.CHECKOUT) {
             renderCheckout(screenBody, sellScreenCoordinator, shiftControlCoordinator, navigationState);
+            return;
+        }
+
+        if (target == NavigationTarget.RETURNS) {
+            renderReturns(screenBody, returnsScreenCoordinator);
             return;
         }
 
@@ -620,6 +634,110 @@ public final class AppShell {
         );
     }
 
+    private static void renderReturns(VBox screenBody,
+                                      ReturnsScreenCoordinator returnsScreenCoordinator) {
+        Label lookupSummary = new Label();
+        lookupSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toReturnLookupSummary(returnsScreenCoordinator.lookupState()),
+                returnsScreenCoordinator.lookupStateProperty()
+        ));
+
+        Label returnSummary = new Label();
+        returnSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toReturnSubmitSummary(returnsScreenCoordinator.submitState()),
+                returnsScreenCoordinator.submitStateProperty()
+        ));
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(returnsScreenCoordinator.returnsMessageProperty());
+
+        Label managerHint = new Label("Manager approval required: have a manager sign in and retry this return.");
+        managerHint.visibleProperty().bind(returnsScreenCoordinator.managerApprovalRequiredProperty());
+        managerHint.managedProperty().bind(managerHint.visibleProperty());
+
+        PosTextField receiptNumber = new PosTextField("Receipt number");
+        PosButton lookup = PosButton.primary("Lookup Receipt");
+        lookup.disableProperty().bind(returnsScreenCoordinator.busyProperty());
+        lookup.setOnAction(event -> returnsScreenCoordinator.lookupByReceipt(receiptNumber.getText()));
+        receiptNumber.setOnAction(event -> returnsScreenCoordinator.lookupByReceipt(receiptNumber.getText()));
+
+        ListView<SaleReturnLookupLineResponse> returnLines = new ListView<>();
+        returnLines.setPrefHeight(180);
+        returnsScreenCoordinator.lookupStateProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null || newValue.lines() == null) {
+                returnLines.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            returnLines.setItems(FXCollections.observableArrayList(newValue.lines()));
+        });
+        returnLines.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(SaleReturnLookupLineResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText("#" + item.saleLineId()
+                        + " | line=" + item.lineNumber()
+                        + " | product=" + item.productId()
+                        + " | sold=" + item.quantitySold()
+                        + " | returned=" + item.quantityReturned()
+                        + " | available=" + item.quantityAvailable()
+                        + " | gross=" + defaultMoney(item.grossAmount()));
+            }
+        });
+
+        PosTextField saleLineId = new PosTextField("Sale line ID");
+        PosTextField quantity = new PosTextField("Return quantity");
+        PosTextField reasonCode = new PosTextField("Reason code (e.g. DAMAGED)");
+        PosTextField refundTenderType = new PosTextField("Refund tender type: CASH or CARD");
+        refundTenderType.setText(TenderType.CASH.name());
+        PosTextField refundReference = new PosTextField("Refund reference (optional)");
+        PosTextField note = new PosTextField("Note (optional)");
+
+        PosButton useSelected = PosButton.accent("Use Selected Line");
+        useSelected.disableProperty().bind(returnsScreenCoordinator.busyProperty());
+        useSelected.setOnAction(event -> {
+            SaleReturnLookupLineResponse selected = returnLines.getSelectionModel().getSelectedItem();
+            if (selected == null) {
+                returnsScreenCoordinator.returnsMessageProperty().set("Select a return line first.");
+                return;
+            }
+            saleLineId.setText(Long.toString(selected.saleLineId()));
+            quantity.setText(selected.quantityAvailable().toPlainString());
+        });
+
+        PosButton submit = PosButton.primary("Submit Return");
+        submit.disableProperty().bind(returnsScreenCoordinator.busyProperty());
+        submit.setOnAction(event -> returnsScreenCoordinator.submitReturn(
+                parseLong(saleLineId.getText()),
+                parseDecimal(quantity.getText()),
+                reasonCode.getText(),
+                parseTenderType(refundTenderType.getText()),
+                refundReference.getText(),
+                note.getText()
+        ));
+
+        screenBody.getChildren().addAll(
+                new Label("Returns workstation: lookup receipt, review eligible lines, and submit refunds"),
+                lookupSummary,
+                returnSummary,
+                feedback,
+                managerHint,
+                receiptNumber,
+                lookup,
+                returnLines,
+                new HBox(8, useSelected, saleLineId),
+                quantity,
+                reasonCode,
+                refundTenderType,
+                refundReference,
+                note,
+                submit
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
     }
@@ -665,6 +783,29 @@ public final class AppShell {
                 + " | change=" + defaultMoney(checkout.changeAmount());
     }
 
+    private static String toReturnLookupSummary(SaleReturnLookupResponse lookup) {
+        if (lookup == null) {
+            return "No receipt lookup loaded.";
+        }
+        int lineCount = lookup.lines() == null ? 0 : lookup.lines().size();
+        return "Sale #" + lookup.saleId()
+                + " | receipt=" + lookup.receiptNumber()
+                + " | lines=" + lineCount
+                + " | soldAt=" + lookup.soldAt();
+    }
+
+    private static String toReturnSubmitSummary(SaleReturnResponse response) {
+        if (response == null) {
+            return "No return submitted yet.";
+        }
+        int lineCount = response.lines() == null ? 0 : response.lines().size();
+        return "Return #" + response.saleReturnId()
+                + " | ref=" + response.returnReference()
+                + " | tender=" + response.refundTenderType()
+                + " | lines=" + lineCount
+                + " | gross=" + defaultMoney(response.totalGross());
+    }
+
     private static String defaultMoney(BigDecimal value) {
         return value == null ? "0.00" : value.toPlainString();
     }
@@ -704,6 +845,17 @@ public final class AppShell {
 
     private static BigDecimal parseDecimal(String value) {
         return parseMoney(value);
+    }
+
+    private static TenderType parseTenderType(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return TenderType.valueOf(value.trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            return null;
+        }
     }
 
     private static String formatExpiryValue(AuthSessionState session) {

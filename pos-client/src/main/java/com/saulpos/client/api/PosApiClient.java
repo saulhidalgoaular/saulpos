@@ -4,6 +4,9 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.refund.SaleReturnLookupResponse;
+import com.saulpos.api.refund.SaleReturnResponse;
+import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
@@ -54,6 +57,10 @@ public interface PosApiClient {
     CompletableFuture<SaleCartResponse> recalculateCart(Long cartId);
 
     CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request);
+
+    CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber);
+
+    CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request);
 
     void setAccessToken(String accessToken);
 }
