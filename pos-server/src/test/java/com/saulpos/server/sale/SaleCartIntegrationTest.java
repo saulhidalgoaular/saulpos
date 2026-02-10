@@ -96,6 +96,7 @@ class SaleCartIntegrationTest {
         jdbcTemplate.execute("DELETE FROM payment_allocation");
         jdbcTemplate.execute("DELETE FROM payment");
         jdbcTemplate.execute("DELETE FROM sale_override_event");
+        jdbcTemplate.execute("DELETE FROM void_reason_code");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
         jdbcTemplate.execute("DELETE FROM sale_cart_line");
@@ -151,6 +152,7 @@ class SaleCartIntegrationTest {
         merchant.setName("Merchant G1");
         merchant.setActive(true);
         merchant = merchantRepository.save(merchant);
+        seedVoidReasonCodes();
 
         StoreLocationEntity storeLocation = new StoreLocationEntity();
         storeLocation.setMerchant(merchant);
@@ -203,6 +205,24 @@ class SaleCartIntegrationTest {
         product.setActive(true);
         product = productRepository.save(product);
         unitProductId = product.getId();
+    }
+
+    private void seedVoidReasonCodes() {
+        jdbcTemplate.update(
+                "INSERT INTO void_reason_code (merchant_id, code, description, is_active, created_at, updated_at) "
+                        + "VALUES (NULL, ?, ?, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                "SCAN_ERROR",
+                "Scan error");
+        jdbcTemplate.update(
+                "INSERT INTO void_reason_code (merchant_id, code, description, is_active, created_at, updated_at) "
+                        + "VALUES (NULL, ?, ?, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                "PRICE_MATCH",
+                "Price match");
+        jdbcTemplate.update(
+                "INSERT INTO void_reason_code (merchant_id, code, description, is_active, created_at, updated_at) "
+                        + "VALUES (NULL, ?, ?, TRUE, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)",
+                "CUSTOMER_REQUEST",
+                "Customer request");
     }
 
     @Test
