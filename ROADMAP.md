@@ -693,7 +693,7 @@ Out of Scope:
 1. Policy defines LAN dependency expectations and fail behavior.
 2. Policy maps to technical controls and user-facing messages.
 
-#### Card K2: Idempotent Event Ingestion
+#### Card K2: Idempotent Event Ingestion [SOLVED]
 - Goal: Protect server from duplicate client submissions.
 - Dependencies: K1.
 - Data Model: `idempotency_key` or equivalent event dedupe store.
@@ -1100,7 +1100,7 @@ Out of Scope:
 | J3 | TODO |  |  |  |
 | J4 | TODO |  |  |  |
 | K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
-| K2 | TODO |  |  |  |
+| K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
 | L1 | TODO |  |  |  |
 | L2 | TODO |  |  |  |
 | L3 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `K2` Idempotent event ingestion.
-2. `L1` Sales and returns reports.
-3. `L2` Inventory reports.
+1. `L1` Sales and returns reports.
+2. `L2` Inventory reports.
+3. `L3` Cash and shift reports.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -14,6 +14,7 @@ import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.idempotency.service.IdempotencyService;
 import com.saulpos.server.inventory.service.InventoryLotService;
 import com.saulpos.server.receipt.service.ReceiptService;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
@@ -58,12 +59,27 @@ public class SaleCheckoutService {
     private final PaymentService paymentService;
     private final ReceiptService receiptService;
     private final InventoryLotService inventoryLotService;
+    private final IdempotencyService idempotencyService;
 
     @Value("${app.inventory.expiry-override-enabled:false}")
     private boolean expiryOverrideEnabled;
 
     @Transactional
+    public SaleCheckoutResponse checkout(String idempotencyKey, SaleCheckoutRequest request) {
+        return idempotencyService.execute(
+                "POST:/api/sales/checkout",
+                idempotencyKey,
+                request,
+                SaleCheckoutResponse.class,
+                () -> doCheckout(request));
+    }
+
+    @Transactional
     public SaleCheckoutResponse checkout(SaleCheckoutRequest request) {
+        return doCheckout(request);
+    }
+
+    private SaleCheckoutResponse doCheckout(SaleCheckoutRequest request) {
         SaleCartEntity cart = requireActiveCartForUpdate(request.cartId());
         requireOperatorContext(cart, request.cashierUserId(), request.terminalDeviceId());
         requireCartHasLines(cart);

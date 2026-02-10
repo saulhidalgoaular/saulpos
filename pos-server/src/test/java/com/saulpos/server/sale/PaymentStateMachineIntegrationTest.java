@@ -33,6 +33,7 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -86,6 +87,7 @@ class PaymentStateMachineIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM idempotency_key_event");
         jdbcTemplate.execute("DELETE FROM payment_transition");
         jdbcTemplate.execute("DELETE FROM payment_allocation");
         jdbcTemplate.execute("DELETE FROM payment");
@@ -213,6 +215,7 @@ class PaymentStateMachineIntegrationTest {
                 .andExpect(jsonPath("$.transitions[0].toStatus").value("AUTHORIZED"));
 
         mockMvc.perform(post("/api/payments/{id}/capture", paymentId)
+                        .header("Idempotency-Key", "payment-capture-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -227,6 +230,7 @@ class PaymentStateMachineIntegrationTest {
                 .andExpect(jsonPath("$.transitions[1].toStatus").value("CAPTURED"));
 
         mockMvc.perform(post("/api/payments/{id}/refund", paymentId)
+                        .header("Idempotency-Key", "payment-refund-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -260,6 +264,7 @@ class PaymentStateMachineIntegrationTest {
         long paymentId = checkout(cartId);
 
         mockMvc.perform(post("/api/payments/{id}/capture", paymentId)
+                        .header("Idempotency-Key", "payment-capture-2")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -270,10 +275,159 @@ class PaymentStateMachineIntegrationTest {
                 .andExpect(jsonPath("$.status").value("CAPTURED"));
 
         mockMvc.perform(post("/api/payments/{id}/void", paymentId)
+                        .header("Idempotency-Key", "payment-void-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "note": "void after capture should fail"
+                                }
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("POS-4009"));
+    }
+
+    @Test
+    void checkoutReplayWithSameIdempotencyKeyReturnsOriginalResponse() throws Exception {
+        long cartId = createCart();
+        addLine(cartId);
+        String idempotencyKey = "checkout-replay-" + UUID.randomUUID();
+        String requestBody = """
+                {
+                  "cartId": %d,
+                  "cashierUserId": %d,
+                  "terminalDeviceId": %d,
+                  "payments": [
+                    {
+                      "tenderType": "CASH",
+                      "amount": 11.00,
+                      "tenderedAmount": 11.00
+                    }
+                  ]
+                }
+                """.formatted(cartId, cashierUserId, terminalDeviceId);
+
+        MvcResult firstResult = mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        MvcResult replayResult = mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode firstJson = objectMapper.readTree(firstResult.getResponse().getContentAsString());
+        JsonNode replayJson = objectMapper.readTree(replayResult.getResponse().getContentAsString());
+
+        Integer saleCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM sale WHERE cart_id = ?",
+                Integer.class,
+                cartId);
+        Integer paymentCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM payment WHERE cart_id = ?",
+                Integer.class,
+                cartId);
+
+        assertThat(replayJson.get("saleId").asLong()).isEqualTo(firstJson.get("saleId").asLong());
+        assertThat(replayJson.get("paymentId").asLong()).isEqualTo(firstJson.get("paymentId").asLong());
+        assertThat(replayJson.get("receiptNumber").asText()).isEqualTo(firstJson.get("receiptNumber").asText());
+        assertThat(saleCount).isEqualTo(1);
+        assertThat(paymentCount).isEqualTo(1);
+    }
+
+    @Test
+    void checkoutReuseWithDifferentPayloadReturnsConflict() throws Exception {
+        long cartId = createCart();
+        addLine(cartId);
+        String idempotencyKey = "checkout-conflict-" + UUID.randomUUID();
+
+        mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cartId": %d,
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "payments": [
+                                    {
+                                      "tenderType": "CASH",
+                                      "amount": 11.00,
+                                      "tenderedAmount": 11.00
+                                    }
+                                  ]
+                                }
+                                """.formatted(cartId, cashierUserId, terminalDeviceId)))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "cartId": %d,
+                                  "cashierUserId": %d,
+                                  "terminalDeviceId": %d,
+                                  "payments": [
+                                    {
+                                      "tenderType": "CARD",
+                                      "amount": 11.00,
+                                      "reference": "ALT-REF"
+                                    }
+                                  ]
+                                }
+                                """.formatted(cartId, cashierUserId, terminalDeviceId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("POS-4009"));
+    }
+
+    @Test
+    void paymentTransitionReplayReturnsOriginalAndPayloadMismatchConflicts() throws Exception {
+        long cartId = createCart();
+        addLine(cartId);
+        long paymentId = checkout(cartId);
+        String idempotencyKey = "capture-replay-" + UUID.randomUUID();
+
+        mockMvc.perform(post("/api/payments/{id}/capture", paymentId)
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "note": "capture once"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CAPTURED"))
+                .andExpect(jsonPath("$.transitions.length()").value(2));
+
+        mockMvc.perform(post("/api/payments/{id}/capture", paymentId)
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "note": "capture once"
+                                }
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CAPTURED"))
+                .andExpect(jsonPath("$.transitions.length()").value(2));
+
+        Integer captureTransitions = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM payment_transition WHERE payment_id = ? AND action = 'CAPTURE'",
+                Integer.class,
+                paymentId);
+        assertThat(captureTransitions).isEqualTo(1);
+
+        mockMvc.perform(post("/api/payments/{id}/capture", paymentId)
+                        .header("Idempotency-Key", idempotencyKey)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "note": "different note"
                                 }
                                 """))
                 .andExpect(status().isConflict())
@@ -317,6 +471,7 @@ class PaymentStateMachineIntegrationTest {
 
     private long checkout(long cartId) throws Exception {
         MvcResult result = mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "payment-checkout-" + cartId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

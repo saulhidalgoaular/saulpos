@@ -310,6 +310,7 @@ class InventoryLedgerIntegrationTest {
 
     private void checkout(long cartId) throws Exception {
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "inventory-ledger-checkout-" + cartId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

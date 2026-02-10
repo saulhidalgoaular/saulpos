@@ -40,6 +40,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
 - `K1` Offline policy definition.
+- `K2` Idempotent event ingestion.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -253,7 +254,7 @@ Backend source of truth:
 
 ### Tender and Split Payments
 - Checkout payment API:
-  - `POST /api/sales/checkout`
+  - `POST /api/sales/checkout` (requires `Idempotency-Key` header)
 - Payment model:
   - `payment`
   - `payment_allocation`
@@ -266,9 +267,9 @@ Backend source of truth:
 ### Payment State Machine
 - Payment lifecycle APIs:
   - `GET /api/payments/{id}`
-  - `POST /api/payments/{id}/capture`
-  - `POST /api/payments/{id}/void`
-  - `POST /api/payments/{id}/refund`
+  - `POST /api/payments/{id}/capture` (requires `Idempotency-Key` header)
+  - `POST /api/payments/{id}/void` (requires `Idempotency-Key` header)
+  - `POST /api/payments/{id}/refund` (requires `Idempotency-Key` header)
 - Payment lifecycle model:
   - `payment.status` (`AUTHORIZED`, `CAPTURED`, `VOIDED`, `REFUNDED`)
   - `payment_transition`
@@ -284,6 +285,14 @@ Backend source of truth:
   - cached reference viewing (`CATALOG_REFERENCE_VIEW`) is `DEGRADED_READ_ONLY`.
 - Technical controls and user-facing fail behavior are standardized and documented in:
   - `docs/adr/ADR-0001-offline-policy-v1.md`
+
+### Idempotent Event Ingestion
+- Idempotency persistence model:
+  - `idempotency_key_event`
+- Enforced idempotency rules:
+  - duplicate `Idempotency-Key` with same request payload replays the original response,
+  - duplicate `Idempotency-Key` with a different payload returns stable conflict (`POS-4009`),
+  - checkout and payment transition endpoints are replay-safe.
 
 ### Atomic Checkout
 - Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.

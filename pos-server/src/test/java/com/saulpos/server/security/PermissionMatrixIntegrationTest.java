@@ -190,30 +190,36 @@ class PermissionMatrixIntegrationTest {
         String limitedToken = login("limited-user");
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "perm-checkout-limited")
                         .header("Authorization", "Bearer " + limitedToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "perm-checkout-sales")
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isBadRequest());
 
         mockMvc.perform(post("/api/payments/1/capture")
+                        .header("Idempotency-Key", "perm-capture-limited")
                         .header("Authorization", "Bearer " + limitedToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(post("/api/payments/1/capture")
+                        .header("Idempotency-Key", "perm-capture-sales")
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("POS-4004"));
 
         mockMvc.perform(post("/api/payments/1/refund")
+                        .header("Idempotency-Key", "perm-refund-sales")
                         .header("Authorization", "Bearer " + salesToken))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(post("/api/payments/1/refund")
+                        .header("Idempotency-Key", "perm-refund-user")
                         .header("Authorization", "Bearer " + refundToken))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("POS-4004"));

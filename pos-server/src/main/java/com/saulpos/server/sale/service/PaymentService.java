@@ -8,6 +8,7 @@ import com.saulpos.api.sale.PaymentTransitionResponse;
 import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.idempotency.service.IdempotencyService;
 import com.saulpos.server.sale.model.PaymentAllocationEntity;
 import com.saulpos.server.sale.model.PaymentEntity;
 import com.saulpos.server.sale.model.PaymentTransitionEntity;
@@ -35,6 +36,7 @@ public class PaymentService {
     private final PaymentTransitionRepository paymentTransitionRepository;
     private final SaleRepository saleRepository;
     private final UserAccountRepository userAccountRepository;
+    private final IdempotencyService idempotencyService;
 
     @Transactional(readOnly = true)
     public PaymentDetailsResponse getPayment(Long paymentId) {
@@ -43,18 +45,33 @@ public class PaymentService {
     }
 
     @Transactional
-    public PaymentDetailsResponse capture(Long paymentId, PaymentTransitionRequest request) {
-        return transition(paymentId, PaymentTransitionAction.CAPTURE, request);
+    public PaymentDetailsResponse capture(Long paymentId, String idempotencyKey, PaymentTransitionRequest request) {
+        return idempotencyService.execute(
+                "POST:/api/payments/%d/capture".formatted(paymentId),
+                idempotencyKey,
+                request,
+                PaymentDetailsResponse.class,
+                () -> transition(paymentId, PaymentTransitionAction.CAPTURE, request));
     }
 
     @Transactional
-    public PaymentDetailsResponse voidPayment(Long paymentId, PaymentTransitionRequest request) {
-        return transition(paymentId, PaymentTransitionAction.VOID, request);
+    public PaymentDetailsResponse voidPayment(Long paymentId, String idempotencyKey, PaymentTransitionRequest request) {
+        return idempotencyService.execute(
+                "POST:/api/payments/%d/void".formatted(paymentId),
+                idempotencyKey,
+                request,
+                PaymentDetailsResponse.class,
+                () -> transition(paymentId, PaymentTransitionAction.VOID, request));
     }
 
     @Transactional
-    public PaymentDetailsResponse refund(Long paymentId, PaymentTransitionRequest request) {
-        return transition(paymentId, PaymentTransitionAction.REFUND, request);
+    public PaymentDetailsResponse refund(Long paymentId, String idempotencyKey, PaymentTransitionRequest request) {
+        return idempotencyService.execute(
+                "POST:/api/payments/%d/refund".formatted(paymentId),
+                idempotencyKey,
+                request,
+                PaymentDetailsResponse.class,
+                () -> transition(paymentId, PaymentTransitionAction.REFUND, request));
     }
 
     @Transactional

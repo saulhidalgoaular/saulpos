@@ -267,6 +267,7 @@ class LotExpiryIntegrationTest {
         addLine(secondCartId, new BigDecimal("1.000"));
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "lot-expired-checkout-" + secondCartId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -433,6 +434,7 @@ class LotExpiryIntegrationTest {
 
     private void checkout(long cartId, BigDecimal amount) throws Exception {
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "lot-checkout-" + cartId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

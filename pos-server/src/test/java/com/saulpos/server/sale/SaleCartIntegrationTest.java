@@ -302,6 +302,7 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.totalPayable").value(11.00));
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "checkout-split-payments-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -399,6 +400,7 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.totalPayable").value(11.00));
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "checkout-invalid-allocation-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -838,6 +840,7 @@ class SaleCartIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(post("/api/sales/checkout")
+                        .header("Idempotency-Key", "checkout-auth-forbidden-1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {

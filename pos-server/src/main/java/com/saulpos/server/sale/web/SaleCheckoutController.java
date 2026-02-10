@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +21,8 @@ public class SaleCheckoutController {
     private final SaleCheckoutService saleCheckoutService;
 
     @PostMapping("/checkout")
-    public SaleCheckoutResponse checkout(@Valid @RequestBody SaleCheckoutRequest request) {
-        return saleCheckoutService.checkout(request);
+    public SaleCheckoutResponse checkout(@RequestHeader("Idempotency-Key") String idempotencyKey,
+                                         @Valid @RequestBody SaleCheckoutRequest request) {
+        return saleCheckoutService.checkout(idempotencyKey, request);
     }
 }
