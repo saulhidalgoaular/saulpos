@@ -7,12 +7,17 @@ import com.saulpos.api.inventory.StockAdjustmentApproveRequest;
 import com.saulpos.api.inventory.StockAdjustmentCreateRequest;
 import com.saulpos.api.inventory.StockAdjustmentPostRequest;
 import com.saulpos.api.inventory.StockAdjustmentResponse;
+import com.saulpos.api.inventory.StockTransferCreateRequest;
+import com.saulpos.api.inventory.StockTransferReceiveRequest;
+import com.saulpos.api.inventory.StockTransferResponse;
+import com.saulpos.api.inventory.StockTransferShipRequest;
 import com.saulpos.api.inventory.StocktakeCreateRequest;
 import com.saulpos.api.inventory.StocktakeFinalizeRequest;
 import com.saulpos.api.inventory.StocktakeSessionResponse;
 import com.saulpos.api.inventory.StocktakeVarianceReportResponse;
 import com.saulpos.server.inventory.service.InventoryLedgerService;
 import com.saulpos.server.inventory.service.StockAdjustmentService;
+import com.saulpos.server.inventory.service.StockTransferService;
 import com.saulpos.server.inventory.service.StocktakeService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -39,6 +44,7 @@ public class InventoryController {
     private final InventoryLedgerService inventoryLedgerService;
     private final StockAdjustmentService stockAdjustmentService;
     private final StocktakeService stocktakeService;
+    private final StockTransferService stockTransferService;
 
     @PostMapping("/adjustments")
     @ResponseStatus(HttpStatus.CREATED)
@@ -78,6 +84,29 @@ public class InventoryController {
     @GetMapping("/stocktakes/{stocktakeId}/variance")
     public StocktakeVarianceReportResponse getStocktakeVarianceReport(@PathVariable("stocktakeId") Long stocktakeId) {
         return stocktakeService.getVarianceReport(stocktakeId);
+    }
+
+    @PostMapping("/transfers")
+    @ResponseStatus(HttpStatus.CREATED)
+    public StockTransferResponse createTransfer(@Valid @RequestBody StockTransferCreateRequest request) {
+        return stockTransferService.createTransfer(request);
+    }
+
+    @GetMapping("/transfers/{transferId}")
+    public StockTransferResponse getTransfer(@PathVariable("transferId") Long transferId) {
+        return stockTransferService.getTransfer(transferId);
+    }
+
+    @PostMapping("/transfers/{transferId}/ship")
+    public StockTransferResponse shipTransfer(@PathVariable("transferId") Long transferId,
+                                              @Valid @RequestBody StockTransferShipRequest request) {
+        return stockTransferService.shipTransfer(transferId, request);
+    }
+
+    @PostMapping("/transfers/{transferId}/receive")
+    public StockTransferResponse receiveTransfer(@PathVariable("transferId") Long transferId,
+                                                 @Valid @RequestBody StockTransferReceiveRequest request) {
+        return stockTransferService.receiveTransfer(transferId, request);
     }
 
     @PostMapping("/movements")

@@ -551,7 +551,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for count variance posting.
 
-#### Card H4: Transfer Orders
+#### Card H4: Transfer Orders [SOLVED]
 - Goal: Track stock movement between stores.
 - Dependencies: H1, B1.
 - Data Model:
@@ -1089,7 +1089,7 @@ Out of Scope:
 | H1 | DONE |  |  | Implemented inventory ledger APIs (`POST /api/inventory/movements`, `GET /api/inventory/movements`, `GET /api/inventory/balances`) with migration `V26` extending typed movement/reference enforcement (`SALE`, `RETURN`, `ADJUSTMENT`) and computed stock-balance projection from immutable movement history, covered by unit/integration permission-matrix tests |
 | H2 | DONE |  |  | Implemented stock adjustment workflow with migration `V29` (`stock_adjustment`), create/approve/post APIs (`POST /api/inventory/adjustments`, `/api/inventory/adjustments/{id}/approve`, `/api/inventory/adjustments/{id}/post`), manager-threshold approval enforcement, and integration coverage ensuring posted adjustments write immutable `ADJUSTMENT` ledger movements |
 | H3 | DONE |  |  | Implemented stocktake workflow with migration `V30` (`stocktake_session`, `stocktake_line`), create/start/finalize + variance-report APIs (`/api/inventory/stocktakes`), fixed snapshot-at-start behavior, and finalize variance postings as immutable `ADJUSTMENT` movements (`reference_type=STOCKTAKE`) with integration coverage by product/category |
-| H4 | TODO |  |  |  |
+| H4 | DONE |  |  | Implemented transfer workflow with migration `V31` (`stock_transfer`, `stock_transfer_line`), transfer APIs (`POST /api/inventory/transfers`, `GET /api/inventory/transfers/{id}`, `POST /api/inventory/transfers/{id}/ship`, `POST /api/inventory/transfers/{id}/receive`), and paired inventory movement traceability via `STOCK_TRANSFER_OUT`/`STOCK_TRANSFER_IN` with integration coverage for partial receive and completion |
 | H5 | TODO |  |  |  |
 | I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
 | I2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `H4` Transfer orders.
-2. `I2` Purchase orders and receiving.
-3. `H5` Lot and expiry tracking (after `I2` dependency).
+1. `I2` Purchase orders and receiving.
+2. `H5` Lot and expiry tracking (after `I2` dependency).
+3. `I3` Costing v1.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
