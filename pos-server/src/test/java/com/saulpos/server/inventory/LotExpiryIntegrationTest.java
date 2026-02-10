@@ -385,6 +385,7 @@ class LotExpiryIntegrationTest {
                                     {
                                       "productId": %d,
                                       "receivedQuantity": %s,
+                                      "unitCost": 1.0000,
                                       "lots": [
                                         %s
                                       ]

@@ -35,6 +35,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F3` Customer history.
 - `I1` Supplier master.
 - `I2` Purchase orders and receiving.
+- `I3` Costing v1.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
 - `G1` Cart lifecycle service.
@@ -166,7 +167,18 @@ Backend source of truth:
   - purchase order lifecycle is explicit (`DRAFT` -> `APPROVED` -> `PARTIALLY_RECEIVED`/`RECEIVED`),
   - partial receiving is cumulative by line and cannot exceed ordered quantity,
   - supplier/store/product merchant consistency is enforced before receiving,
-  - receiving posts immutable positive inventory movements with `PURCHASE_RECEIPT` reference type.
+  - receiving posts immutable positive inventory movements with `PURCHASE_RECEIPT` reference type,
+  - each receive line includes `unitCost`, which drives deterministic inventory costing updates.
+
+### Costing v1
+- Costing model:
+  - `inventory_product_cost` (store+product context)
+- Costing behavior:
+  - each purchase receipt updates `weightedAverageCost` and `lastCost`,
+  - costing updates are linked to the latest receipt reference and movement for auditability.
+- Inventory balance responses now include:
+  - `weightedAverageCost`
+  - `lastCost`
 
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`

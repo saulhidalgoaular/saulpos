@@ -70,6 +70,7 @@ class PurchaseOrderIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        jdbcTemplate.execute("DELETE FROM inventory_product_cost");
         jdbcTemplate.execute("DELETE FROM goods_receipt");
         jdbcTemplate.execute("DELETE FROM purchase_order_line");
         jdbcTemplate.execute("DELETE FROM purchase_order");
@@ -170,11 +171,13 @@ class PurchaseOrderIntegrationTest {
                                   "lines": [
                                     {
                                       "productId": %d,
-                                      "receivedQuantity": 4.000
+                                      "receivedQuantity": 4.000,
+                                      "unitCost": 2.5000
                                     },
                                     {
                                       "productId": %d,
-                                      "receivedQuantity": 5.000
+                                      "receivedQuantity": 5.000,
+                                      "unitCost": 5.5000
                                     }
                                   ],
                                   "note": "first-receive"
@@ -209,7 +212,8 @@ class PurchaseOrderIntegrationTest {
                                   "lines": [
                                     {
                                       "productId": %d,
-                                      "receivedQuantity": 6.000
+                                      "receivedQuantity": 6.000,
+                                      "unitCost": 2.7000
                                     }
                                   ],
                                   "note": "final-receive"
@@ -273,7 +277,8 @@ class PurchaseOrderIntegrationTest {
                                   "lines": [
                                     {
                                       "productId": %d,
-                                      "receivedQuantity": 1.000
+                                      "receivedQuantity": 1.000,
+                                      "unitCost": 1.2500
                                     }
                                   ]
                                 }
@@ -300,7 +305,8 @@ class PurchaseOrderIntegrationTest {
                                   "lines": [
                                     {
                                       "productId": %d,
-                                      "receivedQuantity": 4.000
+                                      "receivedQuantity": 4.000,
+                                      "unitCost": 1.2500
                                     }
                                   ]
                                 }
@@ -315,13 +321,93 @@ class PurchaseOrderIntegrationTest {
                                   "lines": [
                                     {
                                       "productId": 999999,
-                                      "receivedQuantity": 1.000
+                                      "receivedQuantity": 1.000,
+                                      "unitCost": 1.2500
                                     }
                                   ]
                                 }
                                 """))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
+    @Test
+    void purchaseOrderReceivingUpdatesWeightedAverageAndLastCost() throws Exception {
+        JsonNode created = createPurchaseOrder(supplierId, storeId, productOneId, productTwoId, "10.000", "1.000");
+        long purchaseOrderId = created.get("id").asLong();
+
+        mockMvc.perform(post("/api/inventory/purchase-orders/{purchaseOrderId}/approve", purchaseOrderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("APPROVED"));
+
+        mockMvc.perform(post("/api/inventory/purchase-orders/{purchaseOrderId}/receive", purchaseOrderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lines": [
+                                    {
+                                      "productId": %d,
+                                      "receivedQuantity": 4.000,
+                                      "unitCost": 2.5000
+                                    }
+                                  ]
+                                }
+                                """.formatted(productOneId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PARTIALLY_RECEIVED"));
+
+        mockMvc.perform(post("/api/inventory/purchase-orders/{purchaseOrderId}/receive", purchaseOrderId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "lines": [
+                                    {
+                                      "productId": %d,
+                                      "receivedQuantity": 6.000,
+                                      "unitCost": 3.5000
+                                    }
+                                  ]
+                                }
+                                """.formatted(productOneId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("PARTIALLY_RECEIVED"));
+
+        mockMvc.perform(get("/api/inventory/balances")
+                        .param("storeLocationId", String.valueOf(storeId))
+                        .param("productId", String.valueOf(productOneId)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].quantityOnHand").value(10.000))
+                .andExpect(jsonPath("$[0].weightedAverageCost").value(3.1000))
+                .andExpect(jsonPath("$[0].lastCost").value(3.5000));
+
+        BigDecimal weightedAverageCost = jdbcTemplate.queryForObject(
+                "SELECT weighted_average_cost FROM inventory_product_cost WHERE store_location_id = ? AND product_id = ?",
+                BigDecimal.class,
+                storeId,
+                productOneId);
+        BigDecimal lastCost = jdbcTemplate.queryForObject(
+                "SELECT last_cost FROM inventory_product_cost WHERE store_location_id = ? AND product_id = ?",
+                BigDecimal.class,
+                storeId,
+                productOneId);
+        String lastReference = jdbcTemplate.queryForObject(
+                "SELECT last_receipt_reference FROM inventory_product_cost WHERE store_location_id = ? AND product_id = ?",
+                String.class,
+                storeId,
+                productOneId);
+        Long lastMovementId = jdbcTemplate.queryForObject(
+                "SELECT last_movement_id FROM inventory_product_cost WHERE store_location_id = ? AND product_id = ?",
+                Long.class,
+                storeId,
+                productOneId);
+
+        assertThat(weightedAverageCost).isEqualByComparingTo(new BigDecimal("3.1000"));
+        assertThat(lastCost).isEqualByComparingTo(new BigDecimal("3.5000"));
+        assertThat(lastReference).startsWith("GR-");
+        assertThat(lastMovementId).isNotNull();
     }
 
     private JsonNode createPurchaseOrder(Long supplierId,

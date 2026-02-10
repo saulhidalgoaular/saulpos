@@ -10,6 +10,8 @@ public record InventoryStockBalanceResponse(
         Long inventoryLotId,
         String lotCode,
         LocalDate expiryDate,
-        InventoryExpiryState expiryState
+        InventoryExpiryState expiryState,
+        BigDecimal weightedAverageCost,
+        BigDecimal lastCost
 ) {
 }

@@ -55,6 +55,8 @@ public class PurchaseOrderService {
     private final ProductRepository productRepository;
     private final InventoryMovementRepository inventoryMovementRepository;
     private final InventoryBalanceCalculator balanceCalculator;
+    private final CostingCalculator costingCalculator;
+    private final InventoryCostingService inventoryCostingService;
     private final InventoryLotService inventoryLotService;
     private final Clock clock;
 
@@ -153,6 +155,7 @@ public class PurchaseOrderService {
                 throw new BaseException(ErrorCode.CONFLICT,
                         "receivedQuantity exceeds remaining ordered quantity for productId: " + productId);
             }
+            BigDecimal onHandBeforeReceipt = computeCurrentProductBalance(order.getStoreLocation().getId(), productId);
 
             BigDecimal updatedReceived = balanceCalculator.normalizeScale(received.add(receiveNow));
             line.setReceivedQuantity(updatedReceived);
@@ -172,7 +175,11 @@ public class PurchaseOrderService {
                     line.getProduct(),
                     receiveNow,
                     receiveLineInput.lots());
-            movementDrafts.add(new ReceiveMovementDraft(movement, lotAllocations));
+            movementDrafts.add(new ReceiveMovementDraft(
+                    movement,
+                    lotAllocations,
+                    onHandBeforeReceipt,
+                    receiveLineInput.unitCost()));
         }
 
         GoodsReceiptEntity receipt = new GoodsReceiptEntity();
@@ -189,6 +196,14 @@ public class PurchaseOrderService {
             inventoryLotService.persistMovementLotAllocations(
                     movementDraft.movement(),
                     movementDraft.lotAllocations());
+            inventoryCostingService.applyPurchaseReceiptCosting(
+                    movementDraft.movement().getStoreLocation(),
+                    movementDraft.movement().getProduct(),
+                    movementDraft.onHandBeforeReceipt(),
+                    movementDraft.movement().getQuantityDelta(),
+                    movementDraft.unitCost(),
+                    movementDraft.movement().getReferenceNumber(),
+                    movementDraft.movement());
         }
 
         boolean fullyReceived = order.getLines().stream().allMatch(line -> {
@@ -280,8 +295,9 @@ public class PurchaseOrderService {
                 throw new BaseException(ErrorCode.VALIDATION_ERROR, "productId is required");
             }
             BigDecimal receiveNow = normalizePositiveQuantity(line.receivedQuantity(), "receivedQuantity is required");
+            BigDecimal unitCost = normalizePositiveCost(line.unitCost(), "unitCost is required");
             List<PurchaseOrderReceiveLotRequest> lots = line.lots() == null ? List.of() : List.copyOf(line.lots());
-            if (normalized.putIfAbsent(line.productId(), new ReceiveLineInput(receiveNow, lots)) != null) {
+            if (normalized.putIfAbsent(line.productId(), new ReceiveLineInput(receiveNow, unitCost, lots)) != null) {
                 throw new BaseException(ErrorCode.VALIDATION_ERROR,
                         "duplicate productId in receive lines: " + line.productId());
             }
@@ -299,6 +315,27 @@ public class PurchaseOrderService {
                     requiredMessage.replace(" is required", " must be greater than zero"));
         }
         return normalized;
+    }
+
+    private BigDecimal normalizePositiveCost(BigDecimal unitCost, String requiredMessage) {
+        if (unitCost == null) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, requiredMessage);
+        }
+        BigDecimal normalized = costingCalculator.normalizeCostScale(unitCost);
+        if (normalized.signum() <= 0) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    requiredMessage.replace(" is required", " must be greater than zero"));
+        }
+        return normalized;
+    }
+
+    private BigDecimal computeCurrentProductBalance(Long storeLocationId, Long productId) {
+        return inventoryMovementRepository.sumByStoreLocationAndProduct(storeLocationId, productId)
+                .stream()
+                .findFirst()
+                .map(InventoryMovementRepository.ProductBalanceProjection::getQuantityOnHand)
+                .map(balanceCalculator::normalizeScale)
+                .orElse(BigDecimal.ZERO.setScale(3));
     }
 
     private PurchaseOrderResponse toResponse(PurchaseOrderEntity order) {
@@ -371,10 +408,14 @@ public class PurchaseOrderService {
         return "GR-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20).toUpperCase(Locale.ROOT);
     }
 
-    private record ReceiveLineInput(BigDecimal quantity, List<PurchaseOrderReceiveLotRequest> lots) {
+    private record ReceiveLineInput(BigDecimal quantity,
+                                    BigDecimal unitCost,
+                                    List<PurchaseOrderReceiveLotRequest> lots) {
     }
 
     private record ReceiveMovementDraft(InventoryMovementEntity movement,
-                                        List<InventoryLotService.LotAllocation> lotAllocations) {
+                                        List<InventoryLotService.LotAllocation> lotAllocations,
+                                        BigDecimal onHandBeforeReceipt,
+                                        BigDecimal unitCost) {
     }
 }

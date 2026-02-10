@@ -33,6 +33,8 @@ public class InventoryLedgerService {
     private final StoreLocationRepository storeLocationRepository;
     private final ProductRepository productRepository;
     private final InventoryBalanceCalculator balanceCalculator;
+    private final CostingCalculator costingCalculator;
+    private final InventoryCostingService inventoryCostingService;
     private final InventoryLotService inventoryLotService;
 
     @Transactional
@@ -98,22 +100,35 @@ public class InventoryLedgerService {
         }
 
         if (lotLevel) {
+            Map<Long, InventoryCostingService.CostSnapshot> costsByProduct = inventoryCostingService.findCostSnapshots(
+                    storeLocationId,
+                    productId);
             return inventoryLotService.listPositiveLotBalances(storeLocationId, productId)
                     .stream()
-                    .map(this::toLotBalanceResponse)
+                    .map(balance -> toLotBalanceResponse(
+                            balance,
+                            costsByProduct.get(balance.getInventoryLot().getProduct().getId())))
                     .toList();
         }
 
+        Map<Long, InventoryCostingService.CostSnapshot> costsByProduct = inventoryCostingService.findCostSnapshots(
+                storeLocationId,
+                productId);
         return inventoryMovementRepository.sumByStoreLocationAndProduct(storeLocationId, productId)
                 .stream()
-                .map(balance -> new InventoryStockBalanceResponse(
-                        storeLocationId,
-                        balance.getProductId(),
-                        balanceCalculator.normalizeScale(balance.getQuantityOnHand()),
-                        null,
-                        null,
-                        null,
-                        null))
+                .map(balance -> {
+                    InventoryCostingService.CostSnapshot costSnapshot = costsByProduct.get(balance.getProductId());
+                    return new InventoryStockBalanceResponse(
+                            storeLocationId,
+                            balance.getProductId(),
+                            balanceCalculator.normalizeScale(balance.getQuantityOnHand()),
+                            null,
+                            null,
+                            null,
+                            null,
+                            costSnapshot == null ? null : costingCalculator.normalizeCostScale(costSnapshot.weightedAverageCost()),
+                            costSnapshot == null ? null : costingCalculator.normalizeCostScale(costSnapshot.lastCost()));
+                })
                 .toList();
     }
 
@@ -144,7 +159,8 @@ public class InventoryLedgerService {
                 entity.getCreatedAt());
     }
 
-    private InventoryStockBalanceResponse toLotBalanceResponse(InventoryLotBalanceEntity balance) {
+    private InventoryStockBalanceResponse toLotBalanceResponse(InventoryLotBalanceEntity balance,
+                                                               InventoryCostingService.CostSnapshot costSnapshot) {
         return new InventoryStockBalanceResponse(
                 balance.getInventoryLot().getStoreLocation().getId(),
                 balance.getInventoryLot().getProduct().getId(),
@@ -152,7 +168,9 @@ public class InventoryLedgerService {
                 balance.getInventoryLot().getId(),
                 balance.getInventoryLot().getLotCode(),
                 balance.getInventoryLot().getExpiryDate(),
-                inventoryLotService.resolveExpiryState(balance.getInventoryLot().getExpiryDate()));
+                inventoryLotService.resolveExpiryState(balance.getInventoryLot().getExpiryDate()),
+                costSnapshot == null ? null : costingCalculator.normalizeCostScale(costSnapshot.weightedAverageCost()),
+                costSnapshot == null ? null : costingCalculator.normalizeCostScale(costSnapshot.lastCost()));
     }
 
     private List<InventoryMovementLotResponse> toLotResponses(List<InventoryMovementLotEntity> movementLots) {
