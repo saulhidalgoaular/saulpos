@@ -67,6 +67,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O11` Suspended sales and override UX.
 - `O12` Lot/expiry and supplier return UX.
 - `O13` Receipt reprint and exception monitoring UX.
+- `P1` End-to-end UAT scenarios.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -270,6 +271,14 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - HTTP contract mapping for receipt journal/reprint endpoints,
   - hardware coordinator permission + journal lookup + reprint flows,
   - reporting coordinator exception drill-down preview rendering.
+
+### Release UAT Scenarios (`P1`)
+- Added executable persona-based UAT suite in `pos-server`:
+  - `P1EndToEndUatIntegrationTest` covers cashier, manager, inventory clerk, and admin flows.
+- Added UAT checklist/evidence document:
+  - `docs/uat/P1-end-to-end-uat-scenarios.md`.
+- Suite execution command:
+  - `mvn -pl pos-server test -Dtest=P1EndToEndUatIntegrationTest`.
 
 ## Implemented Domain Capabilities
 

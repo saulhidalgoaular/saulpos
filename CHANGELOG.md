@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- Implemented Card P1 End-to-End UAT Scenarios with executable persona coverage.
+- Added `P1EndToEndUatIntegrationTest` in `pos-server` covering cashier, manager, inventory clerk, and admin workflow paths.
+- Added `docs/uat/P1-end-to-end-uat-scenarios.md` with UAT checklist scaffold and execution evidence mapping.
+- Updated roadmap tracking to mark `P1` as `DONE` and advanced immediate next cards to `P2`, `P3`, and `P4`.
 - Implemented Card M3 Scanner/Scale Extension Interfaces in `pos-core` and `pos-server`.
 - Added scanner and scale hardware extension contracts (`ScannerAdapter`, `ScaleAdapter`) with request/result/status DTOs in `pos-core`.
 - Added default server-side no-op hardware stubs (`NoOpScannerAdapter`, `NoOpScaleAdapter`) for deterministic unsupported/failure behavior until concrete device adapters are configured.
