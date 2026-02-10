@@ -39,6 +39,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.StringJoiner;
 
 @Service
 @RequiredArgsConstructor
@@ -414,10 +415,328 @@ public class ReportService {
         return new EndOfDayCashReportResponse(from, to, storeLocationId, terminalDeviceId, cashierUserId, rows);
     }
 
+    @Transactional(readOnly = true)
+    public String exportSalesReturnsReportCsv(Instant from,
+                                              Instant to,
+                                              Long storeLocationId,
+                                              Long terminalDeviceId,
+                                              Long cashierUserId,
+                                              Long categoryId,
+                                              Long taxGroupId) {
+        SalesReturnsReportResponse report = getSalesReturnsReport(
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                categoryId,
+                taxGroupId);
+        List<List<String>> rows = new ArrayList<>();
+        appendSalesBucketRows(rows, "DAY", report.byDay());
+        appendSalesBucketRows(rows, "STORE", report.byStore());
+        appendSalesBucketRows(rows, "TERMINAL", report.byTerminal());
+        appendSalesBucketRows(rows, "CASHIER", report.byCashier());
+        appendSalesBucketRows(rows, "CATEGORY", report.byCategory());
+        appendSalesBucketRows(rows, "TAX_GROUP", report.byTaxGroup());
+        return renderCsv(
+                List.of(
+                        "dimension",
+                        "key",
+                        "id",
+                        "code",
+                        "label",
+                        "salesQuantity",
+                        "returnQuantity",
+                        "salesNet",
+                        "returnNet",
+                        "salesTax",
+                        "returnTax",
+                        "salesGross",
+                        "returnGross",
+                        "netGross"),
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public String exportInventoryStockOnHandReportCsv(Long storeLocationId, Long categoryId, Long supplierId) {
+        InventoryStockOnHandReportResponse report = getInventoryStockOnHandReport(storeLocationId, categoryId, supplierId);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.productId()),
+                        stringValue(row.productSku()),
+                        stringValue(row.productName()),
+                        stringValue(row.categoryId()),
+                        stringValue(row.categoryCode()),
+                        stringValue(row.categoryName()),
+                        stringValue(row.quantityOnHand()),
+                        stringValue(row.weightedAverageCost()),
+                        stringValue(row.lastCost()),
+                        stringValue(row.stockValue())))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "productId",
+                        "productSku",
+                        "productName",
+                        "categoryId",
+                        "categoryCode",
+                        "categoryName",
+                        "quantityOnHand",
+                        "weightedAverageCost",
+                        "lastCost",
+                        "stockValue"),
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public String exportInventoryLowStockReportCsv(Long storeLocationId,
+                                                   Long categoryId,
+                                                   Long supplierId,
+                                                   BigDecimal minimumQuantity) {
+        InventoryLowStockReportResponse report = getInventoryLowStockReport(
+                storeLocationId,
+                categoryId,
+                supplierId,
+                minimumQuantity);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.productId()),
+                        stringValue(row.productSku()),
+                        stringValue(row.productName()),
+                        stringValue(row.categoryId()),
+                        stringValue(row.categoryCode()),
+                        stringValue(row.categoryName()),
+                        stringValue(row.quantityOnHand()),
+                        stringValue(row.minimumQuantity()),
+                        stringValue(row.shortageQuantity())))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "productId",
+                        "productSku",
+                        "productName",
+                        "categoryId",
+                        "categoryCode",
+                        "categoryName",
+                        "quantityOnHand",
+                        "minimumQuantity",
+                        "shortageQuantity"),
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public String exportInventoryMovementReportCsv(Instant from,
+                                                   Instant to,
+                                                   Long storeLocationId,
+                                                   Long categoryId,
+                                                   Long supplierId) {
+        InventoryMovementReportResponse report = getInventoryMovementReport(from, to, storeLocationId, categoryId, supplierId);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.movementId()),
+                        stringValue(row.occurredAt()),
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.productId()),
+                        stringValue(row.productSku()),
+                        stringValue(row.productName()),
+                        stringValue(row.categoryId()),
+                        stringValue(row.categoryCode()),
+                        stringValue(row.categoryName()),
+                        stringValue(row.movementType()),
+                        stringValue(row.referenceType()),
+                        stringValue(row.referenceNumber()),
+                        stringValue(row.quantityDelta())))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "movementId",
+                        "occurredAt",
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "productId",
+                        "productSku",
+                        "productName",
+                        "categoryId",
+                        "categoryCode",
+                        "categoryName",
+                        "movementType",
+                        "referenceType",
+                        "referenceNumber",
+                        "quantityDelta"),
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public String exportCashShiftReportCsv(Instant from,
+                                           Instant to,
+                                           Long storeLocationId,
+                                           Long terminalDeviceId,
+                                           Long cashierUserId) {
+        CashShiftReportResponse report = getCashShiftReport(from, to, storeLocationId, terminalDeviceId, cashierUserId);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.shiftId()),
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.terminalDeviceId()),
+                        stringValue(row.terminalDeviceCode()),
+                        stringValue(row.terminalDeviceName()),
+                        stringValue(row.cashierUserId()),
+                        stringValue(row.cashierUsername()),
+                        stringValue(row.status()),
+                        stringValue(row.openingCash()),
+                        stringValue(row.totalPaidIn()),
+                        stringValue(row.totalPaidOut()),
+                        stringValue(row.expectedCloseCash()),
+                        stringValue(row.countedCloseCash()),
+                        stringValue(row.varianceCash()),
+                        stringValue(row.varianceReason()),
+                        stringValue(row.openedAt()),
+                        stringValue(row.closedAt())))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "shiftId",
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "terminalDeviceId",
+                        "terminalDeviceCode",
+                        "terminalDeviceName",
+                        "cashierUserId",
+                        "cashierUsername",
+                        "status",
+                        "openingCash",
+                        "totalPaidIn",
+                        "totalPaidOut",
+                        "expectedCloseCash",
+                        "countedCloseCash",
+                        "varianceCash",
+                        "varianceReason",
+                        "openedAt",
+                        "closedAt"),
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public String exportEndOfDayCashReportCsv(Instant from,
+                                              Instant to,
+                                              Long storeLocationId,
+                                              Long terminalDeviceId,
+                                              Long cashierUserId) {
+        EndOfDayCashReportResponse report = getEndOfDayCashReport(from, to, storeLocationId, terminalDeviceId, cashierUserId);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.businessDate()),
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.shiftCount()),
+                        stringValue(row.expectedCloseCash()),
+                        stringValue(row.countedCloseCash()),
+                        stringValue(row.varianceCash()),
+                        stringValue(formatVarianceReasons(row.varianceReasons()))))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "businessDate",
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "shiftCount",
+                        "expectedCloseCash",
+                        "countedCloseCash",
+                        "varianceCash",
+                        "varianceReasons"),
+                rows);
+    }
+
     private void validateDateRange(Instant from, Instant to) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR, "from must be before or equal to to");
         }
+    }
+
+    private void appendSalesBucketRows(List<List<String>> target,
+                                       String dimension,
+                                       List<SalesReturnsReportBucketResponse> buckets) {
+        for (SalesReturnsReportBucketResponse bucket : buckets) {
+            target.add(List.of(
+                    dimension,
+                    stringValue(bucket.key()),
+                    stringValue(bucket.id()),
+                    stringValue(bucket.code()),
+                    stringValue(bucket.label()),
+                    stringValue(bucket.salesQuantity()),
+                    stringValue(bucket.returnQuantity()),
+                    stringValue(bucket.salesNet()),
+                    stringValue(bucket.returnNet()),
+                    stringValue(bucket.salesTax()),
+                    stringValue(bucket.returnTax()),
+                    stringValue(bucket.salesGross()),
+                    stringValue(bucket.returnGross()),
+                    stringValue(bucket.netGross())));
+        }
+    }
+
+    private String renderCsv(List<String> headers, List<List<String>> rows) {
+        StringBuilder csv = new StringBuilder();
+        csv.append(renderCsvRow(headers)).append('\n');
+        for (List<String> row : rows) {
+            csv.append(renderCsvRow(row)).append('\n');
+        }
+        return csv.toString();
+    }
+
+    private String renderCsvRow(List<String> values) {
+        StringJoiner row = new StringJoiner(",");
+        for (String value : values) {
+            row.add(escapeCsv(value));
+        }
+        return row.toString();
+    }
+
+    private String escapeCsv(String value) {
+        String safe = value == null ? "" : value;
+        boolean requiresQuotes = safe.contains(",")
+                || safe.contains("\"")
+                || safe.contains("\n")
+                || safe.contains("\r");
+        if (!requiresQuotes) {
+            return safe;
+        }
+        return "\"" + safe.replace("\"", "\"\"") + "\"";
+    }
+
+    private String formatVarianceReasons(List<EndOfDayCashVarianceReasonResponse> reasons) {
+        if (reasons == null || reasons.isEmpty()) {
+            return "";
+        }
+        return reasons.stream()
+                .map(reason -> reason.reason() + ":" + reason.count())
+                .sorted()
+                .reduce((left, right) -> left + "|" + right)
+                .orElse("");
+    }
+
+    private String stringValue(Object value) {
+        return value == null ? "" : value.toString();
     }
 
     private void applySale(BucketKey key,

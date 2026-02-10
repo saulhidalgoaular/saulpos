@@ -44,6 +44,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L1` Sales and returns reports.
 - `L2` Inventory reports.
 - `L3` Cash and shift reports.
+- `L4` CSV export.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -266,12 +267,15 @@ Backend source of truth:
 - Aggregated reporting APIs:
   - `GET /api/reports/sales`
   - `GET /api/reports/sales-returns` (alias)
+- CSV export API:
+  - `GET /api/reports/sales/export`
 - Supported filters:
   - `from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`, `categoryId`, `taxGroupId`
 - Report outputs:
   - summary totals for sales and returns,
   - explicit return breakout (`returnGross`) and discount breakout (`discountGross`),
   - grouped breakdowns by day, store, terminal, cashier, category, and tax group.
+  - CSV exports return `text/csv;charset=UTF-8` with deterministic header and column order.
 - Enforced rules:
   - sum of allocated tenders must equal cart payable total,
   - cash allocations support explicit tendered amount and deterministic change calculation,
@@ -283,6 +287,10 @@ Backend source of truth:
   - `GET /api/reports/inventory/stock-on-hand`
   - `GET /api/reports/inventory/low-stock`
   - `GET /api/reports/inventory/movements`
+- CSV export APIs:
+  - `GET /api/reports/inventory/stock-on-hand/export`
+  - `GET /api/reports/inventory/low-stock/export`
+  - `GET /api/reports/inventory/movements/export`
 - Supported filters:
   - `storeLocationId`, `categoryId`, `supplierId`
   - movement report also supports `from` and `to`
@@ -296,6 +304,9 @@ Backend source of truth:
 - Cash reporting APIs:
   - `GET /api/reports/cash/shifts`
   - `GET /api/reports/cash/end-of-day`
+- CSV export APIs:
+  - `GET /api/reports/cash/shifts/export`
+  - `GET /api/reports/cash/end-of-day/export`
 - Supported filters:
   - `from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`
 - Report outputs:

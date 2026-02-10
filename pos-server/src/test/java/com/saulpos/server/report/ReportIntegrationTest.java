@@ -51,12 +51,14 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -527,6 +529,66 @@ class ReportIntegrationTest {
     }
 
     @Test
+    void csvExportEndpointsReturnDeterministicHeadersAndUtf8() throws Exception {
+        CheckoutSeed saleOne = checkout(cashierOneId, storeOneId, terminalOneId, productOneId, new BigDecimal("2.000"));
+        setSaleTimestamp(saleOne.saleId(), Instant.parse("2026-02-01T10:00:00Z"));
+
+        insertInventoryMovement(
+                storeOneId,
+                productOneId,
+                "ADJUSTMENT",
+                new BigDecimal("8.000"),
+                "PURCHASE_RECEIPT",
+                "PO-L4-1",
+                Instant.parse("2026-02-01T08:00:00Z"));
+
+        Long shiftId = shiftService.openShift(new CashShiftOpenRequest(cashierOneId, terminalOneId, new BigDecimal("50.00"))).id();
+        shiftService.closeShift(shiftId, new CashShiftCloseRequest(new BigDecimal("49.00"), "REGISTER_SHORT"));
+        setShiftTimestamps(shiftId, Instant.parse("2026-02-01T07:00:00Z"), Instant.parse("2026-02-01T15:00:00Z"));
+
+        var salesResponse = mockMvc.perform(get("/api/reports/sales/export")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-03T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+        assertThat(salesResponse.getContentType()).isEqualTo("text/csv;charset=UTF-8");
+        assertThat(salesResponse.getHeader("Content-Disposition")).contains("sales-returns-report.csv");
+        byte[] salesCsv = salesResponse.getContentAsByteArray();
+        String salesBody = new String(salesCsv, StandardCharsets.UTF_8);
+        assertThat(salesBody)
+                .startsWith("dimension,key,id,code,label,salesQuantity,returnQuantity,salesNet,returnNet,salesTax,returnTax,salesGross,returnGross,netGross\n")
+                .contains("DAY,2026-02-01,,,2026-02-01");
+
+        var inventoryResponse = mockMvc.perform(get("/api/reports/inventory/stock-on-hand/export")
+                        .param("storeLocationId", storeOneId.toString()))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+        assertThat(inventoryResponse.getContentType()).isEqualTo("text/csv;charset=UTF-8");
+        assertThat(inventoryResponse.getHeader("Content-Disposition")).contains("inventory-stock-on-hand-report.csv");
+        byte[] inventoryCsv = inventoryResponse.getContentAsByteArray();
+        String inventoryBody = new String(inventoryCsv, StandardCharsets.UTF_8);
+        assertThat(inventoryBody)
+                .startsWith("storeLocationId,storeLocationCode,storeLocationName,productId,productSku,productName,categoryId,categoryCode,categoryName,quantityOnHand,weightedAverageCost,lastCost,stockValue\n")
+                .contains("STORE-L1-A");
+
+        var cashResponse = mockMvc.perform(get("/api/reports/cash/end-of-day/export")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-03T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+        assertThat(cashResponse.getContentType()).isEqualTo("text/csv;charset=UTF-8");
+        assertThat(cashResponse.getHeader("Content-Disposition")).contains("cash-end-of-day-report.csv");
+        byte[] cashCsv = cashResponse.getContentAsByteArray();
+        String cashBody = new String(cashCsv, StandardCharsets.UTF_8);
+        assertThat(cashBody)
+                .startsWith("businessDate,storeLocationId,storeLocationCode,storeLocationName,shiftCount,expectedCloseCash,countedCloseCash,varianceCash,varianceReasons\n")
+                .contains("REGISTER_SHORT:1");
+    }
+
+    @Test
     @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
     void salesAndReturnsReportRequiresReportPermission() throws Exception {
         mockMvc.perform(get("/api/reports/sales"))
@@ -542,6 +604,18 @@ class ReportIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(get("/api/reports/cash/end-of-day"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/sales/export"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/inventory/stock-on-hand/export"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/cash/end-of-day/export"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
     }
