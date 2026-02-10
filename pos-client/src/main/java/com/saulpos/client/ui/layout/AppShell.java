@@ -2,6 +2,10 @@ package com.saulpos.client.ui.layout;
 
 import com.saulpos.api.shift.CashShiftResponse;
 import com.saulpos.api.shift.CashShiftStatus;
+import com.saulpos.api.catalog.ProductResponse;
+import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.sale.SaleCartLineResponse;
+import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
@@ -9,14 +13,17 @@ import com.saulpos.client.app.ScreenRegistry;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
+import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
 import com.saulpos.client.ui.components.PosButton;
 import com.saulpos.client.ui.components.PosTextField;
 import com.saulpos.client.ui.components.ToastHost;
 import javafx.beans.binding.Bindings;
+import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -39,7 +46,8 @@ public final class AppShell {
     public static Parent createRoot(AppStateStore stateStore,
                                     NavigationState navigationState,
                                     AuthSessionCoordinator authSessionCoordinator,
-                                    ShiftControlCoordinator shiftControlCoordinator) {
+                                    ShiftControlCoordinator shiftControlCoordinator,
+                                    SellScreenCoordinator sellScreenCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -78,11 +86,23 @@ public final class AppShell {
                 screenBody,
                 authSessionCoordinator,
                 shiftControlCoordinator,
-                stateStore
+                sellScreenCoordinator,
+                stateStore,
+                navigationState
         );
         navigationState.activeTargetProperty().addListener((obs, oldValue, newValue) -> {
             authSessionCoordinator.onNavigationChanged(newValue);
-            updateContent(newValue, title, description, screenBody, authSessionCoordinator, shiftControlCoordinator, stateStore);
+            updateContent(
+                    newValue,
+                    title,
+                    description,
+                    screenBody,
+                    authSessionCoordinator,
+                    shiftControlCoordinator,
+                    sellScreenCoordinator,
+                    stateStore,
+                    navigationState
+            );
         });
 
         content.getChildren().addAll(title, description, screenBody);
@@ -125,7 +145,9 @@ public final class AppShell {
                                       VBox screenBody,
                                       AuthSessionCoordinator authSessionCoordinator,
                                       ShiftControlCoordinator shiftControlCoordinator,
-                                      AppStateStore appStateStore) {
+                                      SellScreenCoordinator sellScreenCoordinator,
+                                      AppStateStore appStateStore,
+                                      NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
                 .orElseThrow(() -> new IllegalStateException("Screen not found: " + target));
         title.setText(screen.title());
@@ -139,6 +161,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.SHIFT_CONTROL) {
             renderShiftControl(screenBody, shiftControlCoordinator);
+            return;
+        }
+
+        if (target == NavigationTarget.SELL) {
+            renderSell(screenBody, sellScreenCoordinator, shiftControlCoordinator, navigationState);
             return;
         }
 
@@ -283,8 +310,228 @@ public final class AppShell {
         );
     }
 
+    private static void renderSell(VBox screenBody,
+                                   SellScreenCoordinator sellScreenCoordinator,
+                                   ShiftControlCoordinator shiftControlCoordinator,
+                                   NavigationState navigationState) {
+        Label cartSummary = new Label();
+        cartSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toCartSummary(sellScreenCoordinator.cartState()),
+                sellScreenCoordinator.cartStateProperty()
+        ));
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(sellScreenCoordinator.sellMessageProperty());
+
+        PosTextField cashierUserId = new PosTextField("Cashier user ID");
+        PosTextField storeLocationId = new PosTextField("Store location ID");
+        PosTextField terminalDeviceId = new PosTextField("Terminal device ID");
+        PosButton createCart = PosButton.primary("Create Cart");
+        createCart.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        createCart.setOnAction(event -> sellScreenCoordinator.createCart(
+                parseLong(cashierUserId.getText()),
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText())
+        ));
+
+        PosTextField loadCartId = new PosTextField("Load cart by ID");
+        PosButton loadCart = PosButton.accent("Load Cart");
+        loadCart.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        loadCart.setOnAction(event -> sellScreenCoordinator.loadCart(parseLong(loadCartId.getText())));
+
+        PosTextField merchantId = new PosTextField("Merchant ID");
+        PosTextField barcode = new PosTextField("Scan barcode and press Enter");
+        PosTextField scanQuantity = new PosTextField("Scan quantity (default 1)");
+        scanQuantity.setText("1");
+        barcode.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        barcode.setOnAction(event -> sellScreenCoordinator.scanBarcode(
+                parseLong(merchantId.getText()),
+                barcode.getText(),
+                parseDecimal(scanQuantity.getText())
+        ));
+
+        PosTextField searchQuery = new PosTextField("Search products");
+        PosTextField searchPage = new PosTextField("Page");
+        searchPage.setText("0");
+        PosButton searchButton = PosButton.primary("Search");
+        searchButton.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        searchButton.setOnAction(event -> sellScreenCoordinator.searchProducts(
+                parseLong(merchantId.getText()),
+                searchQuery.getText(),
+                parseInt(searchPage.getText(), 0)
+        ));
+
+        PosButton previousPage = PosButton.accent("Prev");
+        PosButton nextPage = PosButton.accent("Next");
+        previousPage.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get()
+                        || sellScreenCoordinator.searchStateProperty().get() == null
+                        || !sellScreenCoordinator.searchStateProperty().get().hasPrevious(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.searchStateProperty()
+        ));
+        nextPage.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get()
+                        || sellScreenCoordinator.searchStateProperty().get() == null
+                        || !sellScreenCoordinator.searchStateProperty().get().hasNext(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.searchStateProperty()
+        ));
+        previousPage.setOnAction(event -> {
+            ProductSearchResponse search = sellScreenCoordinator.searchStateProperty().get();
+            if (search == null) {
+                return;
+            }
+            int targetPage = Math.max(0, search.page() - 1);
+            searchPage.setText(Integer.toString(targetPage));
+            sellScreenCoordinator.searchProducts(parseLong(merchantId.getText()), searchQuery.getText(), targetPage);
+        });
+        nextPage.setOnAction(event -> {
+            ProductSearchResponse search = sellScreenCoordinator.searchStateProperty().get();
+            if (search == null) {
+                return;
+            }
+            int targetPage = search.page() + 1;
+            searchPage.setText(Integer.toString(targetPage));
+            sellScreenCoordinator.searchProducts(parseLong(merchantId.getText()), searchQuery.getText(), targetPage);
+        });
+
+        ListView<ProductResponse> searchResults = new ListView<>();
+        searchResults.setPrefHeight(180);
+        sellScreenCoordinator.searchStateProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null || newValue.items() == null) {
+                searchResults.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            searchResults.setItems(FXCollections.observableArrayList(newValue.items()));
+        });
+        searchResults.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(ProductResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText(item.id() + " | " + item.sku() + " | " + item.name() + " | " + defaultMoney(item.basePrice()));
+            }
+        });
+
+        PosTextField addQuantity = new PosTextField("Quick add quantity");
+        addQuantity.setText("1");
+        PosButton addSelected = PosButton.primary("Add Selected");
+        addSelected.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        addSelected.setOnAction(event -> {
+            ProductResponse selected = searchResults.getSelectionModel().getSelectedItem();
+            sellScreenCoordinator.quickAddProduct(selected == null ? null : selected.id(), parseDecimal(addQuantity.getText()));
+        });
+
+        ListView<SaleCartLineResponse> cartLines = new ListView<>();
+        cartLines.setPrefHeight(180);
+        sellScreenCoordinator.cartStateProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null || newValue.lines() == null) {
+                cartLines.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            cartLines.setItems(FXCollections.observableArrayList(newValue.lines()));
+        });
+        cartLines.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(SaleCartLineResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText("#" + item.lineId()
+                        + " | " + item.productName()
+                        + " | qty=" + item.quantity()
+                        + " | unit=" + defaultMoney(item.unitPrice())
+                        + " | gross=" + defaultMoney(item.grossAmount()));
+            }
+        });
+
+        PosTextField editLineId = new PosTextField("Line ID");
+        PosTextField editQuantity = new PosTextField("New quantity");
+        PosButton updateLine = PosButton.accent("Update Line");
+        updateLine.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        updateLine.setOnAction(event -> sellScreenCoordinator.updateLineQuantity(
+                parseLong(editLineId.getText()),
+                parseDecimal(editQuantity.getText())
+        ));
+
+        PosTextField removeLineId = new PosTextField("Line ID to remove");
+        PosButton removeLine = PosButton.accent("Remove Line");
+        removeLine.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        removeLine.setOnAction(event -> sellScreenCoordinator.removeLine(parseLong(removeLineId.getText())));
+
+        PosButton recalculate = PosButton.primary("Recalculate Totals");
+        recalculate.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        recalculate.setOnAction(event -> sellScreenCoordinator.recalculate());
+
+        PosButton continueToCheckout = PosButton.accent("Go To Checkout");
+        continueToCheckout.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.cartState() == null
+                        || sellScreenCoordinator.cartState().lines() == null
+                        || sellScreenCoordinator.cartState().lines().isEmpty(),
+                sellScreenCoordinator.cartStateProperty()
+        ));
+        continueToCheckout.setOnAction(event -> navigationState.navigate(NavigationTarget.CHECKOUT));
+
+        if (shiftControlCoordinator.shiftState() != null) {
+            cashierUserId.setText(Long.toString(shiftControlCoordinator.shiftState().cashierUserId()));
+            storeLocationId.setText(Long.toString(shiftControlCoordinator.shiftState().storeLocationId()));
+            terminalDeviceId.setText(Long.toString(shiftControlCoordinator.shiftState().terminalDeviceId()));
+        }
+
+        screenBody.getChildren().addAll(
+                new Label("Sell workstation: create/load cart, scan, search, and edit lines"),
+                cartSummary,
+                feedback,
+                new Label("Cart context"),
+                cashierUserId,
+                storeLocationId,
+                terminalDeviceId,
+                new HBox(8, createCart, loadCartId, loadCart),
+                new Label("Barcode scanner flow"),
+                merchantId,
+                barcode,
+                scanQuantity,
+                new Label("Product search"),
+                searchQuery,
+                searchPage,
+                new HBox(8, searchButton, previousPage, nextPage),
+                searchResults,
+                addQuantity,
+                addSelected,
+                new Label("Cart lines"),
+                cartLines,
+                new Label("Edit line quantity"),
+                editLineId,
+                editQuantity,
+                updateLine,
+                new Label("Remove line"),
+                removeLineId,
+                new HBox(8, removeLine, recalculate, continueToCheckout)
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
+    }
+
+    private static String toCartSummary(SaleCartResponse cart) {
+        if (cart == null) {
+            return "No cart loaded.";
+        }
+        int lineCount = cart.lines() == null ? 0 : cart.lines().size();
+        return "Cart #" + cart.id()
+                + " | status=" + cart.status()
+                + " | lines=" + lineCount
+                + " | subtotal=" + defaultMoney(cart.subtotalNet())
+                + " | tax=" + defaultMoney(cart.totalTax())
+                + " | rounding=" + defaultMoney(cart.roundingAdjustment())
+                + " | payable=" + defaultMoney(cart.totalPayable());
     }
 
     private static String toShiftSummary(CashShiftResponse shift) {
@@ -316,6 +563,17 @@ public final class AppShell {
         }
     }
 
+    private static int parseInt(String value, int fallback) {
+        if (value == null || value.isBlank()) {
+            return fallback;
+        }
+        try {
+            return Integer.parseInt(value.trim());
+        } catch (NumberFormatException ex) {
+            return fallback;
+        }
+    }
+
     private static BigDecimal parseMoney(String value) {
         if (value == null || value.isBlank()) {
             return null;
@@ -325,6 +583,10 @@ public final class AppShell {
         } catch (NumberFormatException ex) {
             return null;
         }
+    }
+
+    private static BigDecimal parseDecimal(String value) {
+        return parseMoney(value);
     }
 
     private static String formatExpiryValue(AuthSessionState session) {

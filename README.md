@@ -54,6 +54,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O1` UI architecture and design system.
 - `O2` Authentication and session UI.
 - `O3` Shift open/close and cash controls UI.
+- `O4` Product search and cart screen.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -71,7 +72,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, and shift-control workflow baseline (`O1` + `O2` + `O3`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, and the selling workstation flow (`O1` + `O2` + `O3` + `O4`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -98,6 +99,25 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `POST /api/shifts/{id}/close`
   - `GET /api/shifts/{id}`
 - UI feedback includes shift status, open/close totals, expected/counted cash, and variance visibility after each operation.
+
+### Client Product Search and Cart Screen (`O4`)
+- Sell screen now supports:
+  - creating a cart from cashier/store/terminal context,
+  - loading an existing cart by ID,
+  - scanner-first barcode entry (Enter key) that resolves barcode lookup then adds line to cart,
+  - paginated product search with quick-add to cart,
+  - cart line quantity update and line removal,
+  - explicit totals recalculation and operator-facing error feedback.
+- Client sell operations consume server contracts:
+  - `GET /api/catalog/products/lookup?merchantId={id}&barcode={value}`
+  - `GET /api/catalog/products/search?merchantId={id}&q={query}&active={bool}&page={n}&size={n}`
+  - `POST /api/sales/carts`
+  - `GET /api/sales/carts/{id}`
+  - `POST /api/sales/carts/{id}/lines`
+  - `PUT /api/sales/carts/{id}/lines/{lineId}`
+  - `DELETE /api/sales/carts/{id}/lines/{lineId}`
+  - `POST /api/sales/carts/{id}/recalculate`
+- Tests cover API contract mapping and sell coordinator success/error paths for scan/search/add/update/remove/recalculate flows.
 
 ## Implemented Domain Capabilities
 

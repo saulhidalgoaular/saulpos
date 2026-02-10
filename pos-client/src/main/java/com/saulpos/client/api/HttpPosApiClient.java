@@ -4,6 +4,12 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.auth.LoginRequest;
 import com.saulpos.api.auth.RefreshTokenRequest;
+import com.saulpos.api.catalog.ProductLookupResponse;
+import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -14,6 +20,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -123,6 +130,88 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<ProductLookupResponse> lookupProductByBarcode(Long merchantId, String barcode) {
+        String path = "/api/catalog/products/lookup?merchantId="
+                + merchantId
+                + "&barcode="
+                + encodeQueryParam(barcode);
+        HttpRequest request = baseRequest(path)
+                .GET()
+                .build();
+        return send(request, ProductLookupResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ProductSearchResponse> searchProducts(Long merchantId,
+                                                                   String query,
+                                                                   Boolean active,
+                                                                   int page,
+                                                                   int size) {
+        StringBuilder path = new StringBuilder("/api/catalog/products/search?merchantId=")
+                .append(merchantId)
+                .append("&q=").append(encodeQueryParam(query))
+                .append("&page=").append(page)
+                .append("&size=").append(size);
+        if (active != null) {
+            path.append("&active=").append(active);
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return send(request, ProductSearchResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> createCart(SaleCartCreateRequest request) {
+        return postJson("/api/sales/carts", request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> getCart(Long cartId) {
+        HttpRequest request = baseRequest("/api/sales/carts/" + cartId)
+                .GET()
+                .build();
+        return send(request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> addCartLine(Long cartId, SaleCartAddLineRequest request) {
+        return postJson("/api/sales/carts/" + cartId + "/lines", request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> updateCartLine(Long cartId, Long lineId, SaleCartUpdateLineRequest request) {
+        final String body;
+        try {
+            body = objectMapper.writeValueAsString(request);
+        } catch (IOException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+        HttpRequest httpRequest = baseRequest("/api/sales/carts/" + cartId + "/lines/" + lineId)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(httpRequest, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> removeCartLine(Long cartId, Long lineId) {
+        HttpRequest request = baseRequest("/api/sales/carts/" + cartId + "/lines/" + lineId)
+                .DELETE()
+                .build();
+        return send(request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> recalculateCart(Long cartId) {
+        HttpRequest request = baseRequest("/api/sales/carts/" + cartId + "/recalculate")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+        return send(request, SaleCartResponse.class);
+    }
+
+    @Override
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -185,5 +274,9 @@ public final class HttpPosApiClient implements PosApiClient {
                 .connectTimeout(Duration.ofSeconds(3))
                 .build();
         return request -> httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+    }
+
+    private String encodeQueryParam(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 }

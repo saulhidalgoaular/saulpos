@@ -858,7 +858,7 @@ Out of Scope:
 - Test Plan:
 1. UI integration tests for shift state transitions.
 
-#### Card O4: Product Search and Cart Screen
+#### Card O4: Product Search and Cart Screen [SOLVED]
 - Goal: Deliver the main POS selling screen.
 - Dependencies: C1, C4, G1, O1.
 - Acceptance Criteria:
@@ -1115,7 +1115,7 @@ Out of Scope:
 | O1 | DONE |  |  | Implemented JavaFX client architecture baseline with deterministic screen registry/navigation state, reusable component primitives (`button/input/table/dialog/toast`), centralized theme tokens/CSS, API/state abstraction scaffolding, and unit coverage for screen flow, design-system catalog, accessibility contrast, and session-state transitions |
 | O2 | DONE |  |  | Implemented authentication/session UI flow in `pos-client` with login form + logout control, API-backed auth client contract (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/security/me`), deterministic handling for invalid credentials/locked/disabled accounts, protected-route redirect to login when unauthenticated, visible token-expiry/session-status indicators, and client tests for coordinator behavior + auth HTTP contract mapping |
 | O3 | DONE |  |  | Implemented shift-control UI workflow in `pos-client` with open/load/paid-in/paid-out/close actions mapped to `/api/shifts` contracts, deterministic operator feedback and shift totals/variance visibility, plus client coordinator + HTTP contract tests for shift state transitions |
-| O4 | TODO |  |  |  |
+| O4 | DONE |  |  | Implemented Sell screen workflow in `pos-client` with cart create/load, barcode lookup add-line path, paginated product search, quick-add, cart line quantity update/remove, totals recalculation feedback, and client API/coordinator tests covering success and error handling |
 | O5 | TODO |  |  |  |
 | O6 | TODO |  |  |  |
 | O7 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O4` Product search and cart screen.
-2. `O5` Checkout and payments UI.
-3. `O6` Returns and refunds UI.
+1. `O5` Checkout and payments UI.
+2. `O6` Returns and refunds UI.
+3. `O7` Backoffice UI (catalog, pricing, customers).
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

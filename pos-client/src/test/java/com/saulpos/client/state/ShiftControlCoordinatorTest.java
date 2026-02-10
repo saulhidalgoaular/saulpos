@@ -2,6 +2,12 @@ package com.saulpos.client.state;
 
 import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
+import com.saulpos.api.catalog.ProductLookupResponse;
+import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashMovementType;
@@ -153,6 +159,46 @@ class ShiftControlCoordinatorTest {
         @Override
         public CompletableFuture<CashShiftResponse> getShift(Long shiftId) {
             return CompletableFuture.completedFuture(shiftByIdResponse);
+        }
+
+        @Override
+        public CompletableFuture<ProductLookupResponse> lookupProductByBarcode(Long merchantId, String barcode) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<ProductSearchResponse> searchProducts(Long merchantId, String query, Boolean active, int page, int size) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> createCart(SaleCartCreateRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> getCart(Long cartId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> addCartLine(Long cartId, SaleCartAddLineRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> updateCartLine(Long cartId, Long lineId, SaleCartUpdateLineRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> removeCartLine(Long cartId, Long lineId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> recalculateCart(Long cartId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override

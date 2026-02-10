@@ -2,6 +2,9 @@ package com.saulpos.client.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementType;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -177,6 +180,96 @@ class HttpPosApiClientTest {
         assertEquals("Bearer access-123", movementRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", closeRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", getRequest.headers().firstValue("Authorization").orElseThrow());
+    }
+
+    @Test
+    void sellContracts_shouldUseLookupSearchAndCartEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    String query = request.uri().getRawQuery();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"CASHIER\"]}"
+                        ));
+                    }
+                    if ("/api/catalog/products/lookup".equals(path) && query.contains("barcode=775123456")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"productId\":301,\"variantId\":null,\"merchantId\":1,\"sku\":\"SODA-350\","
+                                        + "\"productName\":\"Soda 350ml\",\"variantCode\":null,\"variantName\":null,"
+                                        + "\"barcode\":\"775123456\",\"saleMode\":\"UNIT\",\"quantityUom\":\"UNIT\",\"quantityPrecision\":0}"
+                        ));
+                    }
+                    if ("/api/catalog/products/search".equals(path) && query.contains("q=soda")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"items\":[{\"id\":301,\"merchantId\":1,\"categoryId\":null,\"taxGroupId\":null,"
+                                        + "\"sku\":\"SODA-350\",\"name\":\"Soda 350ml\",\"basePrice\":1.50,\"saleMode\":\"UNIT\","
+                                        + "\"quantityUom\":\"UNIT\",\"quantityPrecision\":0,\"openPriceMin\":null,\"openPriceMax\":null,"
+                                        + "\"openPriceRequiresReason\":false,\"lotTrackingEnabled\":false,\"description\":null,"
+                                        + "\"active\":true,\"variants\":[]}],\"page\":0,\"size\":12,\"totalElements\":1,"
+                                        + "\"totalPages\":1,\"hasNext\":false,\"hasPrevious\":false}"
+                        ));
+                    }
+                    if ("/api/sales/carts".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 201, cartJson()));
+                    }
+                    if ("/api/sales/carts/44".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/lines".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/lines/11".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/lines/11".equals(path) && "DELETE".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/recalculate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("cashier", "secret").join();
+        assertEquals(301L, client.lookupProductByBarcode(1L, "775123456").join().productId());
+        assertEquals(1, client.searchProducts(1L, "soda", true, 0, 12).join().items().size());
+        assertEquals(44L, client.createCart(new SaleCartCreateRequest(7L, 1L, 3L, java.time.Instant.parse("2026-02-10T12:00:00Z"))).join().id());
+        assertEquals(44L, client.getCart(44L).join().id());
+        assertEquals(44L, client.addCartLine(44L, new SaleCartAddLineRequest("line-1", 301L, BigDecimal.ONE, null, null)).join().id());
+        assertEquals(44L, client.updateCartLine(44L, 11L, new SaleCartUpdateLineRequest(BigDecimal.ONE, null, null)).join().id());
+        assertEquals(44L, client.removeCartLine(44L, 11L).join().id());
+        assertEquals(44L, client.recalculateCart(44L).join().id());
+
+        HttpRequest lookupRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/lookup")).findFirst().orElseThrow();
+        HttpRequest searchRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/search")).findFirst().orElseThrow();
+        HttpRequest addLineRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/lines")).findFirst().orElseThrow();
+
+        assertTrue(lookupRequest.uri().getRawQuery().contains("merchantId=1"));
+        assertTrue(searchRequest.uri().getRawQuery().contains("q=soda"));
+        assertEquals("Bearer access-123", addLineRequest.headers().firstValue("Authorization").orElseThrow());
+    }
+
+    private static String cartJson() {
+        return "{\"id\":44,\"cashierUserId\":7,\"storeLocationId\":1,\"terminalDeviceId\":3,"
+                + "\"status\":\"ACTIVE\",\"pricingAt\":\"2026-02-10T12:00:00Z\",\"lines\":[],"
+                + "\"subtotalNet\":0.00,\"totalTax\":0.00,\"totalGross\":0.00,"
+                + "\"roundingAdjustment\":0.00,\"totalPayable\":0.00,\"rounding\":null,"
+                + "\"createdAt\":\"2026-02-10T12:00:00Z\",\"updatedAt\":\"2026-02-10T12:00:00Z\"}";
     }
 
     private HttpResponse<String> response(HttpRequest request, int status, String body) {
