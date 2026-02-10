@@ -40,6 +40,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
 - `J3` Gift card issuance and redemption.
+- `J4` Store-credit issuance and redemption.
 - `K1` Offline policy definition.
 - `K2` Idempotent event ingestion.
 - `L1` Sales and returns reports.
@@ -454,6 +455,20 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - every redemption must be linked to exactly one financial context (`saleId` or `saleReturnId`),
   - sale/refund context merchant must match the gift-card merchant.
 
+### Store Credit
+- Store-credit APIs:
+  - `POST /api/store-credits/issue`
+  - `POST /api/store-credits/{accountId}/redeem`
+  - `GET /api/store-credits/{accountId}?merchantId={id}`
+- Store-credit model:
+  - `store_credit_account`
+  - `store_credit_transaction`
+- Enforced rules:
+  - one ledger account per merchant/customer (`merchant_id`, `customer_id`),
+  - issue transactions are linked to a refund context (`saleReturnId`) for the same customer and merchant,
+  - redeem transactions are linked to a sale context (`saleId`) for the same customer and merchant,
+  - store-credit balance cannot go below zero.
+
 ### Offline Policy Definition
 - Offline policy contract API:
   - `GET /api/system/offline-policy`
@@ -778,6 +793,8 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `V38__cash_drawer_integration.sql`
   - `V39__receipt_reprint_and_journal.sql`
   - `V40__fiscal_provider_spi.sql`
+  - `V41__gift_cards.sql`
+  - `V42__store_credit_accounts.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -883,6 +900,7 @@ Key settings include:
 - Integration tests for checkout split-payment allocation validation, persisted payment snapshots, and atomic sale/line/inventory movement persistence.
 - Integration tests for payment lifecycle transitions (`authorize -> capture -> refund`) and invalid transition rejection with persisted transition history audit.
 - Integration tests for gift-card issue/redeem/get API flow, redemption sale-context linkage, and overdraw conflict behavior.
+- Integration tests for store-credit issue/redeem/get API flow, refund/sale context reconciliation, and overdraw conflict behavior.
 - Concurrency integration test for parallel checkout attempts on the same cart (single success + conflict for competing request).
 - Unit tests for cart quantity policy validation by sale mode and precision.
 - Unit tests for tender allocation validation and cash-change calculation.
@@ -901,6 +919,7 @@ Key settings include:
 - Unit tests for default scanner/scale no-op adapters and deterministic unsupported/failure contract behavior.
 - Unit tests for fiscal SPI service behavior (provider enabled/disabled policy and deterministic outcome persistence).
 - Integration tests for invoice-required checkout validation and fiscal outcome persistence when provider is disabled.
+- Permission-matrix integration coverage for store-credit endpoint authorization (`SALES_PROCESS`/`REFUND_PROCESS`/`CONFIGURATION_MANAGE`).
 
 ## Project Planning and Status
 

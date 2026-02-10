@@ -1,6 +1,10 @@
-package com.saulpos.server.giftcard;
+package com.saulpos.server.storecredit;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.saulpos.api.sale.PaymentStatus;
 import com.saulpos.api.sale.SaleCartStatus;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.server.customer.model.CustomerEntity;
 import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.identity.model.MerchantEntity;
@@ -13,10 +17,14 @@ import com.saulpos.server.receipt.model.ReceiptHeaderEntity;
 import com.saulpos.server.receipt.model.ReceiptSeriesEntity;
 import com.saulpos.server.receipt.repository.ReceiptHeaderRepository;
 import com.saulpos.server.receipt.repository.ReceiptSeriesRepository;
+import com.saulpos.server.sale.model.PaymentEntity;
 import com.saulpos.server.sale.model.SaleCartEntity;
 import com.saulpos.server.sale.model.SaleEntity;
+import com.saulpos.server.sale.model.SaleReturnEntity;
+import com.saulpos.server.sale.repository.PaymentRepository;
 import com.saulpos.server.sale.repository.SaleCartRepository;
 import com.saulpos.server.sale.repository.SaleRepository;
+import com.saulpos.server.sale.repository.SaleReturnRepository;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,10 +53,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
-class GiftCardIntegrationTest {
+class StoreCreditIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -80,9 +91,16 @@ class GiftCardIntegrationTest {
     @Autowired
     private SaleRepository saleRepository;
 
+    @Autowired
+    private PaymentRepository paymentRepository;
+
+    @Autowired
+    private SaleReturnRepository saleReturnRepository;
+
     private MerchantEntity merchant;
     private CustomerEntity customer;
     private Long saleId;
+    private Long saleReturnId;
 
     @BeforeEach
     void setUp() {
@@ -100,9 +118,20 @@ class GiftCardIntegrationTest {
         jdbcTemplate.execute("DELETE FROM store_credit_account");
         jdbcTemplate.execute("DELETE FROM gift_card_transaction");
         jdbcTemplate.execute("DELETE FROM gift_card");
+        jdbcTemplate.execute("DELETE FROM receipt_print_event");
+        jdbcTemplate.execute("DELETE FROM no_sale_drawer_event");
+        jdbcTemplate.execute("DELETE FROM inventory_movement_lot");
+        jdbcTemplate.execute("DELETE FROM inventory_lot_balance");
+        jdbcTemplate.execute("DELETE FROM inventory_lot");
+        jdbcTemplate.execute("DELETE FROM inventory_movement");
+        jdbcTemplate.execute("DELETE FROM cash_movement");
+        jdbcTemplate.execute("DELETE FROM cash_shift");
         jdbcTemplate.execute("DELETE FROM sale_return_line");
         jdbcTemplate.execute("DELETE FROM sale_return_refund");
         jdbcTemplate.execute("DELETE FROM sale_return");
+        jdbcTemplate.execute("DELETE FROM payment_transition");
+        jdbcTemplate.execute("DELETE FROM payment_allocation");
+        jdbcTemplate.execute("DELETE FROM payment");
         jdbcTemplate.execute("DELETE FROM sale_line");
         jdbcTemplate.execute("DELETE FROM sale");
         jdbcTemplate.execute("DELETE FROM sale_cart_line");
@@ -128,33 +157,33 @@ class GiftCardIntegrationTest {
 
     private void seedData() {
         merchant = new MerchantEntity();
-        merchant.setCode("MER-GC-INT");
-        merchant.setName("Merchant GiftCard Integration");
+        merchant.setCode("MER-SC-INT");
+        merchant.setName("Merchant StoreCredit Integration");
         merchant.setActive(true);
         merchant = merchantRepository.save(merchant);
 
         StoreLocationEntity storeLocation = new StoreLocationEntity();
         storeLocation.setMerchant(merchant);
-        storeLocation.setCode("STORE-GC-INT");
-        storeLocation.setName("Store GiftCard Integration");
+        storeLocation.setCode("STORE-SC-INT");
+        storeLocation.setName("Store StoreCredit Integration");
         storeLocation.setActive(true);
         storeLocation = storeLocationRepository.save(storeLocation);
 
         TerminalDeviceEntity terminal = new TerminalDeviceEntity();
         terminal.setStoreLocation(storeLocation);
-        terminal.setCode("TERM-GC-INT");
-        terminal.setName("Terminal GiftCard Integration");
+        terminal.setCode("TERM-SC-INT");
+        terminal.setName("Terminal StoreCredit Integration");
         terminal.setActive(true);
         terminal = terminalDeviceRepository.save(terminal);
 
         customer = new CustomerEntity();
         customer.setMerchant(merchant);
-        customer.setDisplayName("Gift Card Customer");
+        customer.setDisplayName("Store Credit Customer");
         customer.setActive(true);
         customer = customerRepository.save(customer);
 
         UserAccountEntity user = new UserAccountEntity();
-        user.setUsername("gift-card-cashier");
+        user.setUsername("store-credit-cashier");
         user.setPasswordHash("hash");
         user.setActive(true);
         user = userAccountRepository.save(user);
@@ -165,17 +194,17 @@ class GiftCardIntegrationTest {
         cart.setTerminalDevice(terminal);
         cart.setStatus(SaleCartStatus.CHECKED_OUT);
         cart.setPricingAt(Instant.now());
-        cart.setSubtotalNet(new BigDecimal("10.00"));
+        cart.setSubtotalNet(new BigDecimal("40.00"));
         cart.setTotalTax(BigDecimal.ZERO);
-        cart.setTotalGross(new BigDecimal("10.00"));
+        cart.setTotalGross(new BigDecimal("40.00"));
         cart.setRoundingAdjustment(BigDecimal.ZERO);
-        cart.setTotalPayable(new BigDecimal("10.00"));
+        cart.setTotalPayable(new BigDecimal("40.00"));
         cart = saleCartRepository.save(cart);
 
         ReceiptSeriesEntity series = new ReceiptSeriesEntity();
         series.setStoreLocation(storeLocation);
         series.setTerminalDevice(terminal);
-        series.setSeriesCode("GCINT");
+        series.setSeriesCode("SCINT");
         series.setActive(true);
         series = receiptSeriesRepository.save(series);
         jdbcTemplate.update("INSERT INTO receipt_sequence(series_id, next_number, version) VALUES (?, ?, ?)",
@@ -186,7 +215,7 @@ class GiftCardIntegrationTest {
         receiptHeader.setStoreLocation(storeLocation);
         receiptHeader.setTerminalDevice(terminal);
         receiptHeader.setNumber(1L);
-        receiptHeader.setReceiptNumber("GCINT-1");
+        receiptHeader.setReceiptNumber("SCINT-1");
         receiptHeader = receiptHeaderRepository.save(receiptHeader);
 
         SaleEntity sale = new SaleEntity();
@@ -196,76 +225,129 @@ class GiftCardIntegrationTest {
         sale.setTerminalDevice(terminal);
         sale.setCustomer(customer);
         sale.setReceiptHeaderId(receiptHeader.getId());
-        sale.setReceiptNumber("GCINT-1");
-        sale.setSubtotalNet(new BigDecimal("10.00"));
+        sale.setReceiptNumber("SCINT-1");
+        sale.setSubtotalNet(new BigDecimal("40.00"));
         sale.setTotalTax(BigDecimal.ZERO);
-        sale.setTotalGross(new BigDecimal("10.00"));
+        sale.setTotalGross(new BigDecimal("40.00"));
         sale.setRoundingAdjustment(BigDecimal.ZERO);
-        sale.setTotalPayable(new BigDecimal("10.00"));
+        sale.setTotalPayable(new BigDecimal("40.00"));
         sale = saleRepository.save(sale);
         saleId = sale.getId();
+
+        PaymentEntity payment = new PaymentEntity();
+        payment.setCart(cart);
+        payment.setTotalPayable(new BigDecimal("40.00"));
+        payment.setTotalAllocated(new BigDecimal("40.00"));
+        payment.setTotalTendered(new BigDecimal("40.00"));
+        payment.setChangeAmount(BigDecimal.ZERO);
+        payment.setStatus(PaymentStatus.CAPTURED);
+        payment = paymentRepository.save(payment);
+
+        SaleReturnEntity saleReturn = new SaleReturnEntity();
+        saleReturn.setSale(sale);
+        saleReturn.setPayment(payment);
+        saleReturn.setReasonCode("DAMAGED");
+        saleReturn.setRefundTenderType(TenderType.CASH);
+        saleReturn.setRefundNote("damaged item");
+        saleReturn.setReturnReference("RET-SC-1");
+        saleReturn.setSubtotalNet(new BigDecimal("18.00"));
+        saleReturn.setTotalTax(BigDecimal.ZERO);
+        saleReturn.setTotalGross(new BigDecimal("18.00"));
+        saleReturn = saleReturnRepository.save(saleReturn);
+        saleReturnId = saleReturn.getId();
     }
 
     @Test
-    void issueAndRedeemGiftCardTracksSaleContextAndPreventsOverdraw() throws Exception {
-        mockMvc.perform(post("/api/gift-cards/issue")
+    void issueAndRedeemStoreCreditTracksRefundAndSaleContexts() throws Exception {
+        MvcResult issueResult = mockMvc.perform(post("/api/store-credits/issue")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "merchantId": %d,
                                   "customerId": %d,
-                                  "cardNumber": "GC-INT-001",
-                                  "issuedAmount": 100.00,
-                                  "note": "initial issue"
+                                  "amount": 18.00,
+                                  "saleReturnId": %d,
+                                  "reference": "RET-%d",
+                                  "note": "refund as credit"
                                 }
-                                """.formatted(merchant.getId(), customer.getId())))
+                                """.formatted(merchant.getId(), customer.getId(), saleReturnId, saleReturnId)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.status").value("ACTIVE"))
-                .andExpect(jsonPath("$.balanceAmount").value(100.00))
+                .andExpect(jsonPath("$.balanceAmount").value(18.00))
                 .andExpect(jsonPath("$.transactions.length()").value(1))
-                .andExpect(jsonPath("$.transactions[0].transactionType").value("ISSUE"));
+                .andExpect(jsonPath("$.transactions[0].transactionType").value("ISSUE"))
+                .andExpect(jsonPath("$.transactions[0].saleReturnId").value(saleReturnId))
+                .andReturn();
 
-        mockMvc.perform(post("/api/gift-cards/{cardNumber}/redeem", "GC-INT-001")
+        JsonNode issuePayload = objectMapper.readTree(issueResult.getResponse().getContentAsString());
+        long accountId = issuePayload.get("id").asLong();
+
+        mockMvc.perform(post("/api/store-credits/{accountId}/redeem", accountId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "merchantId": %d,
-                                  "amount": 35.50,
+                                  "amount": 7.25,
                                   "saleId": %d,
                                   "reference": "SALE-%d",
-                                  "note": "checkout redemption"
+                                  "note": "redeem in new sale"
                                 }
                                 """.formatted(merchant.getId(), saleId, saleId)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.balanceAmount").value(64.50))
+                .andExpect(jsonPath("$.balanceAmount").value(10.75))
                 .andExpect(jsonPath("$.transactions.length()").value(2))
                 .andExpect(jsonPath("$.transactions[1].transactionType").value("REDEEM"))
-                .andExpect(jsonPath("$.transactions[1].saleId").value(saleId))
-                .andExpect(jsonPath("$.transactions[1].saleReturnId").isEmpty());
+                .andExpect(jsonPath("$.transactions[1].saleId").value(saleId));
 
-        mockMvc.perform(post("/api/gift-cards/{cardNumber}/redeem", "GC-INT-001")
+        mockMvc.perform(post("/api/store-credits/{accountId}/redeem", accountId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
                                   "merchantId": %d,
-                                  "amount": 80.00,
+                                  "amount": 20.00,
                                   "saleId": %d
                                 }
                                 """.formatted(merchant.getId(), saleId)))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("POS-4009"));
 
-        MvcResult currentCardResult = mockMvc.perform(get("/api/gift-cards/{cardNumber}", "GC-INT-001")
+        mockMvc.perform(get("/api/store-credits/{accountId}", accountId)
                         .param("merchantId", merchant.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.transactions.length()").value(2))
-                .andReturn();
+                .andExpect(jsonPath("$.balanceAmount").value(10.75));
 
+        Integer issueCount = jdbcTemplate.queryForObject(
+                "SELECT COUNT(*) FROM store_credit_transaction WHERE transaction_type = 'ISSUE' AND sale_return_id = ?",
+                Integer.class,
+                saleReturnId);
         Integer redeemCount = jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM gift_card_transaction WHERE transaction_type = 'REDEEM' AND sale_id = ?",
+                "SELECT COUNT(*) FROM store_credit_transaction WHERE transaction_type = 'REDEEM' AND sale_id = ?",
                 Integer.class,
                 saleId);
+
+        assertThat(issueCount).isEqualTo(1);
         assertThat(redeemCount).isEqualTo(1);
-        assertThat(currentCardResult.getResponse().getContentAsString()).contains("\"balanceAmount\":64.50");
+    }
+
+    @Test
+    void issueRejectsMismatchedSaleReturnCustomerContext() throws Exception {
+        CustomerEntity otherCustomer = new CustomerEntity();
+        otherCustomer.setMerchant(merchant);
+        otherCustomer.setDisplayName("Other Customer");
+        otherCustomer.setActive(true);
+        otherCustomer = customerRepository.save(otherCustomer);
+
+        mockMvc.perform(post("/api/store-credits/issue")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "merchantId": %d,
+                                  "customerId": %d,
+                                  "amount": 18.00,
+                                  "saleReturnId": %d
+                                }
+                                """.formatted(merchant.getId(), otherCustomer.getId(), saleReturnId)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("POS-4009"));
     }
 }

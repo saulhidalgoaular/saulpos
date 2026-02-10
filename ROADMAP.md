@@ -676,7 +676,7 @@ Out of Scope:
 1. Balance cannot go below zero.
 2. All redemptions linked to sale/refund context.
 
-#### Card J4: Store Credit (Optional)
+#### Card J4: Store Credit (Optional) [SOLVED]
 - Goal: Issue credit and redeem in future sales.
 - Dependencies: G3, F1.
 - Data Model: `store_credit_account`, transactions.
@@ -1098,7 +1098,7 @@ Out of Scope:
 | J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
 | J2 | DONE |  |  | Implemented payment lifecycle state machine with migration `V25` (`payment.status`, `payment_transition`), new lifecycle APIs (`GET /api/payments/{id}`, `POST /api/payments/{id}/capture|void|refund`), explicit transition validation with stable conflict errors, and unit/integration + permission-matrix coverage for transition history/auditability |
 | J3 | DONE |  |  | Implemented gift-card issuance/redeem flow with migration `V41` (`gift_card`, `gift_card_transaction`), APIs (`POST /api/gift-cards/issue`, `POST /api/gift-cards/{cardNumber}/redeem`, `GET /api/gift-cards/{cardNumber}`), non-negative balance enforcement, and mandatory sale/refund-linked redemption context with unit/integration coverage |
-| J4 | TODO |  |  |  |
+| J4 | DONE |  |  | Implemented store-credit account ledger with migration `V42` (`store_credit_account`, `store_credit_transaction`), APIs (`POST /api/store-credits/issue`, `POST /api/store-credits/{accountId}/redeem`, `GET /api/store-credits/{accountId}`), refund-linked issuance and sale-linked redemption context validation, non-negative balance enforcement, and integration/security coverage |
 | K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
 | K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
 | L1 | DONE |  |  | Implemented aggregated sales/returns reporting endpoint (`GET /api/reports/sales`, alias `/api/reports/sales-returns`) with date/store/terminal/cashier/category/tax-group filters, day/store/terminal/cashier/category/tax-group breakouts, summary totals including return and discount breakout (`discountGross`), and integration/security coverage |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `J4` Store Credit (Optional).
-2. `O8` Reporting and export UI.
-3. `O9` Hardware interaction UI.
+1. `O8` Reporting and export UI.
+2. `O9` Hardware interaction UI.
+3. `O10` Offline/degraded mode UX.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
