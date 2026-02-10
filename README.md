@@ -53,6 +53,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `M4` Receipt reprint and journal retrieval.
 - `M3` Scanner/scale extension interfaces.
 - `N1` Fiscal provider SPI.
+- `N2` Country fiscal provider module selection.
 - `O1` UI architecture and design system.
 - `O2` Authentication and session UI.
 - `O3` Shift open/close and cash controls UI.
@@ -832,6 +833,14 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - when `app.fiscal.enabled=false`, checkout can still proceed if `app.fiscal.allow-invoice-with-disabled-provider=true`, and a deterministic `SKIPPED` fiscal outcome is recorded.
 - Includes a default stub fiscal provider (`StubFiscalProvider`) so country implementations can be added without changing sales core contracts.
 
+### Country Fiscal Provider Modules (N2)
+- Fiscal country modules can be added by registering `CountryFiscalProviderFactory` beans in `pos-server`.
+- Runtime selection uses `app.fiscal.country-code`:
+  - blank value keeps `StubFiscalProvider`,
+  - matching country code selects that country module provider,
+  - unknown country code or duplicate country registrations fail fast at startup.
+- This keeps the sales core contract unchanged (`FiscalProvider` remains the integration boundary).
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -940,6 +949,7 @@ Key settings include:
 - `app.inventory.expiry-override-enabled`
 - `app.fiscal.enabled`
 - `app.fiscal.allow-invoice-with-disabled-provider`
+- `app.fiscal.country-code`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -1001,6 +1011,7 @@ Key settings include:
 - Unit tests for FEFO lot selection ordering and expired-lot conflict behavior.
 - Unit tests for default scanner/scale no-op adapters and deterministic unsupported/failure contract behavior.
 - Unit tests for fiscal SPI service behavior (provider enabled/disabled policy and deterministic outcome persistence).
+- Unit tests for fiscal country-provider selection and startup validation behavior (`FiscalConfigurationTest`).
 - Integration tests for invoice-required checkout validation and fiscal outcome persistence when provider is disabled.
 - Permission-matrix integration coverage for store-credit endpoint authorization (`SALES_PROCESS`/`REFUND_PROCESS`/`CONFIGURATION_MANAGE`).
 

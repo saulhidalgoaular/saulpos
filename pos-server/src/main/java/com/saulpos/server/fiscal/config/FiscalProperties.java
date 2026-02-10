@@ -11,4 +11,5 @@ public class FiscalProperties {
 
     private boolean enabled = false;
     private boolean allowInvoiceWithDisabledProvider = true;
+    private String countryCode;
 }

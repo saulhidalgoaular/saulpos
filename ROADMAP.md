@@ -812,11 +812,18 @@ Out of Scope:
 1. SPI contract stable and tested with stub provider.
 2. Checkout supports invoice-required toggle + required customer fields.
 
-#### Card N2: Country Providers (Future Track)
+#### Card N2: Country Providers (Future Track) [SOLVED]
 - Goal: Implement country-specific fiscal modules independently.
 - Dependencies: N1.
+- API Contract: no changes to sales core contracts; country modules are selected through fiscal provider factory registration.
+- Business Rules:
+1. Country modules register through provider factories keyed by country code.
+2. `app.fiscal.country-code` selects the active country provider at runtime.
+3. Unknown or duplicate country-provider registrations fail fast during startup.
 - Acceptance Criteria:
 1. Country module can be added without changing sales core contracts.
+- Test Plan:
+1. Unit tests for country-provider selection, missing country-provider handling, and duplicate registration protection.
 
 ### Phase O: UI/UX Delivery (`pos-client`)
 
@@ -1111,7 +1118,7 @@ Out of Scope:
 | M3 | DONE |  |  | Added scanner/scale hardware extension contracts in `pos-core` (`ScannerAdapter`, `ScaleAdapter` + request/result/status types), implemented default no-op stub adapters in `pos-server` (`NoOpScannerAdapter`, `NoOpScaleAdapter`), and added unit coverage for deterministic unsupported/failure behavior |
 | M4 | DONE |  |  | Implemented receipt journal retrieval endpoints (`GET /api/receipts/journal/by-sale/{saleId}`, `GET /api/receipts/journal/by-number/{receiptNumber}`) and reprint endpoint (`POST /api/receipts/reprint`) with migration `V39` (`receipt_print_event` + `RECEIPT_REPRINT` permission), copy-marked receipt rendering with operator/timestamp, and unit/integration coverage for authorization, retrieval, and reprint auditing |
 | N1 | DONE |  |  | Implemented modular fiscal SPI in `pos-core` (`FiscalProvider` with invoice/cancel/credit-note commands), migration `V40` (`fiscal_document`, `fiscal_event`, `sale.invoice_required`), server stub provider + configurable policy (`app.fiscal.enabled`, `app.fiscal.allow-invoice-with-disabled-provider`), checkout invoice-required validation for required customer tax identity, and unit/integration coverage for disabled-provider skip behavior and invoice-required enforcement |
-| N2 | TODO |  |  |  |
+| N2 | DONE |  |  | Implemented fiscal country-provider factory selection (`CountryFiscalProviderFactory`) with `app.fiscal.country-code` routing, fail-fast validation for unknown/duplicate country registrations, and unit coverage proving country-module extensibility without changing `FiscalProvider` sales contracts |
 | O1 | DONE |  |  | Implemented JavaFX client architecture baseline with deterministic screen registry/navigation state, reusable component primitives (`button/input/table/dialog/toast`), centralized theme tokens/CSS, API/state abstraction scaffolding, and unit coverage for screen flow, design-system catalog, accessibility contrast, and session-state transitions |
 | O2 | DONE |  |  | Implemented authentication/session UI flow in `pos-client` with login form + logout control, API-backed auth client contract (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/security/me`), deterministic handling for invalid credentials/locked/disabled accounts, protected-route redirect to login when unauthenticated, visible token-expiry/session-status indicators, and client tests for coordinator behavior + auth HTTP contract mapping |
 | O3 | DONE |  |  | Implemented shift-control UI workflow in `pos-client` with open/load/paid-in/paid-out/close actions mapped to `/api/shifts` contracts, deterministic operator feedback and shift totals/variance visibility, plus client coordinator + HTTP contract tests for shift state transitions |
