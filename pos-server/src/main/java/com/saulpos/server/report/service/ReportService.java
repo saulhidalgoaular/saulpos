@@ -1,10 +1,17 @@
 package com.saulpos.server.report.service;
 
+import com.saulpos.api.report.InventoryLowStockReportResponse;
+import com.saulpos.api.report.InventoryLowStockReportRowResponse;
+import com.saulpos.api.report.InventoryMovementReportResponse;
+import com.saulpos.api.report.InventoryMovementReportRowResponse;
+import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.report.InventoryStockOnHandReportRowResponse;
 import com.saulpos.api.report.SalesReturnsReportBucketResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.report.SalesReturnsReportSummaryResponse;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.report.repository.InventoryReportRepository;
 import com.saulpos.server.sale.repository.SaleOverrideEventRepository;
 import com.saulpos.server.sale.repository.SaleRepository;
 import com.saulpos.server.sale.repository.SaleReturnRepository;
@@ -33,6 +40,7 @@ public class ReportService {
     private final SaleRepository saleRepository;
     private final SaleReturnRepository saleReturnRepository;
     private final SaleOverrideEventRepository saleOverrideEventRepository;
+    private final InventoryReportRepository inventoryReportRepository;
 
     @Transactional(readOnly = true)
     public SalesReturnsReportResponse getSalesReturnsReport(Instant from,
@@ -177,6 +185,119 @@ public class ReportService {
                 toSortedBuckets(byTaxGroup));
     }
 
+    @Transactional(readOnly = true)
+    public InventoryStockOnHandReportResponse getInventoryStockOnHandReport(Long storeLocationId,
+                                                                            Long categoryId,
+                                                                            Long supplierId) {
+        List<InventoryStockOnHandReportRowResponse> rows = inventoryReportRepository.findStockOnHandRows(
+                        storeLocationId,
+                        categoryId,
+                        supplierId)
+                .stream()
+                .map(row -> {
+                    BigDecimal quantityOnHand = toQuantity(row.getQuantityOnHand());
+                    BigDecimal weightedAverageCost = toCost(row.getWeightedAverageCost());
+                    BigDecimal lastCost = toCost(row.getLastCost());
+                    return new InventoryStockOnHandReportRowResponse(
+                            row.getStoreLocationId(),
+                            row.getStoreLocationCode(),
+                            row.getStoreLocationName(),
+                            row.getProductId(),
+                            row.getProductSku(),
+                            row.getProductName(),
+                            row.getCategoryId(),
+                            row.getCategoryCode(),
+                            row.getCategoryName(),
+                            quantityOnHand,
+                            weightedAverageCost,
+                            lastCost,
+                            weightedAverageCost == null
+                                    ? null
+                                    : quantityOnHand.multiply(weightedAverageCost).setScale(2, RoundingMode.HALF_UP));
+                })
+                .toList();
+
+        return new InventoryStockOnHandReportResponse(storeLocationId, categoryId, supplierId, rows);
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryLowStockReportResponse getInventoryLowStockReport(Long storeLocationId,
+                                                                      Long categoryId,
+                                                                      Long supplierId,
+                                                                      BigDecimal minimumQuantity) {
+        BigDecimal normalizedMinimum = requireMinimumQuantity(minimumQuantity);
+        List<InventoryLowStockReportRowResponse> rows = inventoryReportRepository.findLowStockRows(
+                        storeLocationId,
+                        categoryId,
+                        supplierId,
+                        normalizedMinimum)
+                .stream()
+                .map(row -> {
+                    BigDecimal quantityOnHand = toQuantity(row.getQuantityOnHand());
+                    BigDecimal shortageQuantity = normalizedMinimum.subtract(quantityOnHand);
+                    if (shortageQuantity.signum() < 0) {
+                        shortageQuantity = BigDecimal.ZERO;
+                    }
+                    return new InventoryLowStockReportRowResponse(
+                            row.getStoreLocationId(),
+                            row.getStoreLocationCode(),
+                            row.getStoreLocationName(),
+                            row.getProductId(),
+                            row.getProductSku(),
+                            row.getProductName(),
+                            row.getCategoryId(),
+                            row.getCategoryCode(),
+                            row.getCategoryName(),
+                            quantityOnHand,
+                            normalizedMinimum,
+                            shortageQuantity.setScale(3, RoundingMode.HALF_UP));
+                })
+                .toList();
+
+        return new InventoryLowStockReportResponse(
+                storeLocationId,
+                categoryId,
+                supplierId,
+                normalizedMinimum,
+                rows);
+    }
+
+    @Transactional(readOnly = true)
+    public InventoryMovementReportResponse getInventoryMovementReport(Instant from,
+                                                                      Instant to,
+                                                                      Long storeLocationId,
+                                                                      Long categoryId,
+                                                                      Long supplierId) {
+        validateDateRange(from, to);
+
+        List<InventoryMovementReportRowResponse> rows = inventoryReportRepository.findMovementRows(
+                        from,
+                        to,
+                        storeLocationId,
+                        categoryId,
+                        supplierId)
+                .stream()
+                .map(row -> new InventoryMovementReportRowResponse(
+                        row.getMovementId(),
+                        row.getOccurredAt(),
+                        row.getStoreLocationId(),
+                        row.getStoreLocationCode(),
+                        row.getStoreLocationName(),
+                        row.getProductId(),
+                        row.getProductSku(),
+                        row.getProductName(),
+                        row.getCategoryId(),
+                        row.getCategoryCode(),
+                        row.getCategoryName(),
+                        com.saulpos.api.inventory.InventoryMovementType.valueOf(row.getMovementType().name()),
+                        com.saulpos.api.inventory.InventoryReferenceType.valueOf(row.getReferenceType().name()),
+                        row.getReferenceNumber(),
+                        toQuantity(row.getQuantityDelta())))
+                .toList();
+
+        return new InventoryMovementReportResponse(from, to, storeLocationId, categoryId, supplierId, rows);
+    }
+
     private void validateDateRange(Instant from, Instant to) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR, "from must be before or equal to to");
@@ -267,6 +388,31 @@ public class ReportService {
             return ZERO;
         }
         return value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal toQuantity(BigDecimal value) {
+        if (value == null) {
+            return BigDecimal.ZERO.setScale(3, RoundingMode.HALF_UP);
+        }
+        return value.setScale(3, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal toCost(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+        return value.setScale(4, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal requireMinimumQuantity(BigDecimal minimumQuantity) {
+        if (minimumQuantity == null) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "minimumQuantity is required");
+        }
+        BigDecimal normalized = minimumQuantity.setScale(3, RoundingMode.HALF_UP);
+        if (normalized.signum() < 0) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "minimumQuantity must be greater than or equal to zero");
+        }
+        return normalized;
     }
 
     private static final class Aggregates {

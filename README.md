@@ -42,6 +42,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `K1` Offline policy definition.
 - `K2` Idempotent event ingestion.
 - `L1` Sales and returns reports.
+- `L2` Inventory reports.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -275,6 +276,20 @@ Backend source of truth:
   - cash allocations support explicit tendered amount and deterministic change calculation,
   - non-cash allocations must not over/under tender relative to the allocated amount.
 - Checkout payment allocations are persisted as deterministic snapshots per active cart.
+
+### Inventory Reporting
+- Inventory reporting APIs:
+  - `GET /api/reports/inventory/stock-on-hand`
+  - `GET /api/reports/inventory/low-stock`
+  - `GET /api/reports/inventory/movements`
+- Supported filters:
+  - `storeLocationId`, `categoryId`, `supplierId`
+  - movement report also supports `from` and `to`
+  - low-stock report requires `minimumQuantity`
+- Report outputs:
+  - stock-on-hand tabular rows with quantity on hand, cost snapshots, and stock value,
+  - low-stock tabular rows with shortage quantity against requested minimum,
+  - movement tabular rows including movement type, source reference, and timestamp.
 
 ### Payment State Machine
 - Payment lifecycle APIs:

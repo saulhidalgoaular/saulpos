@@ -716,7 +716,7 @@ Out of Scope:
 1. Reports by day/store/terminal/cashier/category/tax group.
 2. Discount and return breakout included.
 
-#### Card L2: Inventory Reports
+#### Card L2: Inventory Reports [SOLVED]
 - Goal: Expose stock health and shrinkage.
 - Dependencies: H1, H2, H3.
 - API Contract: stock-on-hand, low-stock, movement report endpoints.
@@ -1102,7 +1102,7 @@ Out of Scope:
 | K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
 | K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
 | L1 | DONE |  |  | Implemented aggregated sales/returns reporting endpoint (`GET /api/reports/sales`, alias `/api/reports/sales-returns`) with date/store/terminal/cashier/category/tax-group filters, day/store/terminal/cashier/category/tax-group breakouts, summary totals including return and discount breakout (`discountGross`), and integration/security coverage |
-| L2 | TODO |  |  |  |
+| L2 | DONE |  |  | Implemented inventory reporting endpoints (`GET /api/reports/inventory/stock-on-hand`, `GET /api/reports/inventory/low-stock`, `GET /api/reports/inventory/movements`) with store/category/supplier filters (plus `from`/`to` for movement and `minimumQuantity` for low-stock), tabular export-ready row DTOs in `pos-api`, and integration/security coverage for filters, validation, and authorization |
 | L3 | TODO |  |  |  |
 | L4 | TODO |  |  |  |
 | L5 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `L2` Inventory reports.
-2. `L3` Cash and shift reports.
-3. `L4` CSV export.
+1. `L3` Cash and shift reports.
+2. `L4` CSV export.
+3. `L5` Exception and override reports.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

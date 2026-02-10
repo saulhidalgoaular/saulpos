@@ -20,11 +20,17 @@ import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
 import com.saulpos.server.identity.repository.StoreLocationRepository;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.inventory.model.PurchaseOrderEntity;
+import com.saulpos.server.inventory.model.PurchaseOrderLineEntity;
+import com.saulpos.server.inventory.model.PurchaseOrderStatus;
+import com.saulpos.server.inventory.repository.PurchaseOrderRepository;
 import com.saulpos.server.sale.service.SaleCartService;
 import com.saulpos.server.sale.service.SaleCheckoutService;
 import com.saulpos.server.sale.service.SaleReturnService;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.UserAccountRepository;
+import com.saulpos.server.supplier.model.SupplierEntity;
+import com.saulpos.server.supplier.repository.SupplierRepository;
 import com.saulpos.server.tax.model.StoreTaxRuleEntity;
 import com.saulpos.server.tax.model.TaxGroupEntity;
 import com.saulpos.server.tax.repository.StoreTaxRuleRepository;
@@ -93,14 +99,25 @@ class ReportIntegrationTest {
     @Autowired
     private SaleReturnService saleReturnService;
 
+    @Autowired
+    private SupplierRepository supplierRepository;
+
+    @Autowired
+    private PurchaseOrderRepository purchaseOrderRepository;
+
+    private Long merchantId;
     private Long cashierOneId;
     private Long cashierTwoId;
     private Long storeOneId;
     private Long storeTwoId;
     private Long terminalOneId;
     private Long terminalTwoId;
+    private Long categoryOneId;
+    private Long categoryTwoId;
     private Long productOneId;
     private Long productTwoId;
+    private Long supplierOneId;
+    private Long supplierTwoId;
 
     @BeforeEach
     void setUp() {
@@ -192,6 +209,7 @@ class ReportIntegrationTest {
         merchant.setName("Merchant L1");
         merchant.setActive(true);
         merchant = merchantRepository.save(merchant);
+        merchantId = merchant.getId();
 
         StoreLocationEntity storeOne = new StoreLocationEntity();
         storeOne.setMerchant(merchant);
@@ -231,6 +249,7 @@ class ReportIntegrationTest {
         categoryA.setName("Category L1 A");
         categoryA.setActive(true);
         categoryA = categoryRepository.save(categoryA);
+        categoryOneId = categoryA.getId();
 
         CategoryEntity categoryB = new CategoryEntity();
         categoryB.setMerchant(merchant);
@@ -238,6 +257,7 @@ class ReportIntegrationTest {
         categoryB.setName("Category L1 B");
         categoryB.setActive(true);
         categoryB = categoryRepository.save(categoryB);
+        categoryTwoId = categoryB.getId();
 
         TaxGroupEntity vat10 = new TaxGroupEntity();
         vat10.setMerchant(merchant);
@@ -281,6 +301,9 @@ class ReportIntegrationTest {
         productTwo.setActive(true);
         productTwo = productRepository.save(productTwo);
         productTwoId = productTwo.getId();
+
+        supplierOneId = createSupplierForProduct("SUP-L2-A", "Supplier L2 A", storeOneId, productOneId);
+        supplierTwoId = createSupplierForProduct("SUP-L2-B", "Supplier L2 B", storeTwoId, productTwoId);
     }
 
     @Test
@@ -348,9 +371,92 @@ class ReportIntegrationTest {
     }
 
     @Test
+    void inventoryStockOnHandLowStockAndMovementReportsSupportFilters() throws Exception {
+        insertInventoryMovement(
+                storeOneId,
+                productOneId,
+                "ADJUSTMENT",
+                new BigDecimal("12.000"),
+                "PURCHASE_RECEIPT",
+                "PO-L2-1",
+                Instant.parse("2026-02-01T08:00:00Z"));
+        insertInventoryMovement(
+                storeOneId,
+                productOneId,
+                "ADJUSTMENT",
+                new BigDecimal("-4.000"),
+                "STOCK_ADJUSTMENT",
+                "ADJ-L2-1",
+                Instant.parse("2026-02-02T09:30:00Z"));
+        insertInventoryMovement(
+                storeTwoId,
+                productTwoId,
+                "ADJUSTMENT",
+                new BigDecimal("3.000"),
+                "PURCHASE_RECEIPT",
+                "PO-L2-2",
+                Instant.parse("2026-02-03T12:00:00Z"));
+
+        insertInventoryCost(storeOneId, productOneId, new BigDecimal("2.5000"), new BigDecimal("2.7000"));
+        insertInventoryCost(storeTwoId, productTwoId, new BigDecimal("5.0000"), new BigDecimal("5.2000"));
+
+        mockMvc.perform(get("/api/reports/inventory/stock-on-hand"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].storeLocationId").value(storeOneId))
+                .andExpect(jsonPath("$.rows[0].productId").value(productOneId))
+                .andExpect(jsonPath("$.rows[0].quantityOnHand").value(8.000))
+                .andExpect(jsonPath("$.rows[0].weightedAverageCost").value(2.5000))
+                .andExpect(jsonPath("$.rows[0].stockValue").value(20.00));
+
+        mockMvc.perform(get("/api/reports/inventory/stock-on-hand")
+                        .param("supplierId", supplierOneId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].productId").value(productOneId));
+
+        mockMvc.perform(get("/api/reports/inventory/low-stock")
+                        .param("minimumQuantity", "5.000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].productId").value(productTwoId))
+                .andExpect(jsonPath("$.rows[0].quantityOnHand").value(3.000))
+                .andExpect(jsonPath("$.rows[0].minimumQuantity").value(5.000))
+                .andExpect(jsonPath("$.rows[0].shortageQuantity").value(2.000));
+
+        mockMvc.perform(get("/api/reports/inventory/movements")
+                        .param("from", "2026-02-02T00:00:00Z")
+                        .param("to", "2026-02-04T00:00:00Z")
+                        .param("categoryId", categoryTwoId.toString())
+                        .param("supplierId", supplierTwoId.toString()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].productId").value(productTwoId))
+                .andExpect(jsonPath("$.rows[0].referenceNumber").value("PO-L2-2"));
+    }
+
+    @Test
+    void inventoryReportsRejectInvalidInputs() throws Exception {
+        mockMvc.perform(get("/api/reports/inventory/movements")
+                        .param("from", "2026-02-05T00:00:00Z")
+                        .param("to", "2026-02-01T00:00:00Z"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+
+        mockMvc.perform(get("/api/reports/inventory/low-stock")
+                        .param("minimumQuantity", "-1.000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
+    @Test
     @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
     void salesAndReturnsReportRequiresReportPermission() throws Exception {
         mockMvc.perform(get("/api/reports/sales"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/inventory/stock-on-hand"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
     }
@@ -416,6 +522,85 @@ class ReportIntegrationTest {
                 new BigDecimal("6.00"),
                 new BigDecimal("5.00"),
                 Timestamp.from(timestamp));
+    }
+
+    private void insertInventoryMovement(Long storeLocationId,
+                                         Long productId,
+                                         String movementType,
+                                         BigDecimal quantityDelta,
+                                         String referenceType,
+                                         String referenceNumber,
+                                         Instant createdAt) {
+        jdbcTemplate.update(
+                """
+                INSERT INTO inventory_movement (
+                    store_location_id,
+                    product_id,
+                    movement_type,
+                    quantity_delta,
+                    reference_type,
+                    reference_number,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                """,
+                storeLocationId,
+                productId,
+                movementType,
+                quantityDelta,
+                referenceType,
+                referenceNumber,
+                Timestamp.from(createdAt));
+    }
+
+    private void insertInventoryCost(Long storeLocationId,
+                                     Long productId,
+                                     BigDecimal weightedAverageCost,
+                                     BigDecimal lastCost) {
+        jdbcTemplate.update(
+                """
+                INSERT INTO inventory_product_cost (
+                    store_location_id,
+                    product_id,
+                    weighted_average_cost,
+                    last_cost,
+                    updated_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                storeLocationId,
+                productId,
+                weightedAverageCost,
+                lastCost,
+                Timestamp.from(Instant.parse("2026-02-04T00:00:00Z")));
+    }
+
+    private Long createSupplierForProduct(String code, String name, Long storeLocationId, Long productId) {
+        SupplierEntity supplier = new SupplierEntity();
+        supplier.setMerchant(merchantRepository.findById(merchantId).orElseThrow());
+        supplier.setCode(code);
+        supplier.setName(name);
+        supplier.setActive(true);
+        supplier = supplierRepository.save(supplier);
+
+        PurchaseOrderEntity purchaseOrder = new PurchaseOrderEntity();
+        purchaseOrder.setSupplier(supplier);
+        purchaseOrder.setStoreLocation(storeLocationRepository.findById(storeLocationId).orElseThrow());
+        purchaseOrder.setStatus(PurchaseOrderStatus.RECEIVED);
+        purchaseOrder.setReferenceNumber("PO-REF-" + code);
+        purchaseOrder.setCreatedBy("report-seed");
+        purchaseOrder.setCreatedAt(Instant.parse("2026-02-01T00:00:00Z"));
+        purchaseOrder.setApprovedBy("report-seed");
+        purchaseOrder.setApprovedAt(Instant.parse("2026-02-01T00:05:00Z"));
+        purchaseOrder.setLastReceivedBy("report-seed");
+        purchaseOrder.setLastReceivedAt(Instant.parse("2026-02-01T00:10:00Z"));
+
+        PurchaseOrderLineEntity line = new PurchaseOrderLineEntity();
+        line.setProduct(productRepository.findById(productId).orElseThrow());
+        line.setOrderedQuantity(new BigDecimal("100.000"));
+        line.setReceivedQuantity(new BigDecimal("100.000"));
+        purchaseOrder.addLine(line);
+
+        purchaseOrderRepository.save(purchaseOrder);
+        return supplier.getId();
     }
 
     private record CheckoutSeed(Long cartId, Long cartLineId, Long saleId, String receiptNumber) {
