@@ -3,6 +3,10 @@ package com.saulpos.server.inventory.web;
 import com.saulpos.api.inventory.InventoryMovementCreateRequest;
 import com.saulpos.api.inventory.InventoryMovementResponse;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
+import com.saulpos.api.inventory.PurchaseOrderApproveRequest;
+import com.saulpos.api.inventory.PurchaseOrderCreateRequest;
+import com.saulpos.api.inventory.PurchaseOrderReceiveRequest;
+import com.saulpos.api.inventory.PurchaseOrderResponse;
 import com.saulpos.api.inventory.StockAdjustmentApproveRequest;
 import com.saulpos.api.inventory.StockAdjustmentCreateRequest;
 import com.saulpos.api.inventory.StockAdjustmentPostRequest;
@@ -16,6 +20,7 @@ import com.saulpos.api.inventory.StocktakeFinalizeRequest;
 import com.saulpos.api.inventory.StocktakeSessionResponse;
 import com.saulpos.api.inventory.StocktakeVarianceReportResponse;
 import com.saulpos.server.inventory.service.InventoryLedgerService;
+import com.saulpos.server.inventory.service.PurchaseOrderService;
 import com.saulpos.server.inventory.service.StockAdjustmentService;
 import com.saulpos.server.inventory.service.StockTransferService;
 import com.saulpos.server.inventory.service.StocktakeService;
@@ -45,6 +50,30 @@ public class InventoryController {
     private final StockAdjustmentService stockAdjustmentService;
     private final StocktakeService stocktakeService;
     private final StockTransferService stockTransferService;
+    private final PurchaseOrderService purchaseOrderService;
+
+    @PostMapping("/purchase-orders")
+    @ResponseStatus(HttpStatus.CREATED)
+    public PurchaseOrderResponse createPurchaseOrder(@Valid @RequestBody PurchaseOrderCreateRequest request) {
+        return purchaseOrderService.createPurchaseOrder(request);
+    }
+
+    @GetMapping("/purchase-orders/{purchaseOrderId}")
+    public PurchaseOrderResponse getPurchaseOrder(@PathVariable("purchaseOrderId") Long purchaseOrderId) {
+        return purchaseOrderService.getPurchaseOrder(purchaseOrderId);
+    }
+
+    @PostMapping("/purchase-orders/{purchaseOrderId}/approve")
+    public PurchaseOrderResponse approvePurchaseOrder(@PathVariable("purchaseOrderId") Long purchaseOrderId,
+                                                      @Valid @RequestBody(required = false) PurchaseOrderApproveRequest request) {
+        return purchaseOrderService.approvePurchaseOrder(purchaseOrderId, request);
+    }
+
+    @PostMapping("/purchase-orders/{purchaseOrderId}/receive")
+    public PurchaseOrderResponse receivePurchaseOrder(@PathVariable("purchaseOrderId") Long purchaseOrderId,
+                                                      @Valid @RequestBody PurchaseOrderReceiveRequest request) {
+        return purchaseOrderService.receivePurchaseOrder(purchaseOrderId, request);
+    }
 
     @PostMapping("/adjustments")
     @ResponseStatus(HttpStatus.CREATED)

@@ -596,7 +596,7 @@ Out of Scope:
 - Acceptance Criteria:
 1. Supplier status and unique identifiers enforced.
 
-#### Card I2: Purchase Orders and Receiving
+#### Card I2: Purchase Orders and Receiving [SOLVED]
 - Goal: Convert purchase intent into stock increases.
 - Dependencies: I1, H1.
 - Data Model:
@@ -1092,7 +1092,7 @@ Out of Scope:
 | H4 | DONE |  |  | Implemented transfer workflow with migration `V31` (`stock_transfer`, `stock_transfer_line`), transfer APIs (`POST /api/inventory/transfers`, `GET /api/inventory/transfers/{id}`, `POST /api/inventory/transfers/{id}/ship`, `POST /api/inventory/transfers/{id}/receive`), and paired inventory movement traceability via `STOCK_TRANSFER_OUT`/`STOCK_TRANSFER_IN` with integration coverage for partial receive and completion |
 | H5 | TODO |  |  |  |
 | I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
-| I2 | TODO |  |  |  |
+| I2 | DONE |  |  | Implemented purchase-order receiving flow with migration `V32` (`purchase_order`, `purchase_order_line`, `goods_receipt`), APIs (`POST /api/inventory/purchase-orders`, `GET /api/inventory/purchase-orders/{id}`, `POST /api/inventory/purchase-orders/{id}/approve`, `POST /api/inventory/purchase-orders/{id}/receive`), and inventory posting integration via `PURCHASE_RECEIPT` reference movements with integration coverage for partial/full receiving and lifecycle validation |
 | I3 | TODO |  |  |  |
 | I4 | TODO |  |  |  |
 | J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `I2` Purchase orders and receiving.
-2. `H5` Lot and expiry tracking (after `I2` dependency).
-3. `I3` Costing v1.
+1. `H5` Lot and expiry tracking.
+2. `I3` Costing v1.
+3. `I4` Supplier returns.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

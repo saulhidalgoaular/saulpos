@@ -34,6 +34,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `F2` Customer groups and pricing hooks.
 - `F3` Customer history.
 - `I1` Supplier master.
+- `I2` Purchase orders and receiving.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
 - `G1` Cart lifecycle service.
@@ -149,6 +150,22 @@ Backend source of truth:
   - `supplier_contact`
   - `supplier_terms`
 - Enforced rules include merchant-scoped uniqueness for supplier code and normalized tax identifier, plus explicit active/inactive lifecycle control.
+
+### Purchase Orders and Receiving
+- Purchase order APIs:
+  - `POST /api/inventory/purchase-orders`
+  - `GET /api/inventory/purchase-orders/{id}`
+  - `POST /api/inventory/purchase-orders/{id}/approve`
+  - `POST /api/inventory/purchase-orders/{id}/receive`
+- Purchase model:
+  - `purchase_order`
+  - `purchase_order_line`
+  - `goods_receipt`
+- Enforced rules:
+  - purchase order lifecycle is explicit (`DRAFT` -> `APPROVED` -> `PARTIALLY_RECEIVED`/`RECEIVED`),
+  - partial receiving is cumulative by line and cannot exceed ordered quantity,
+  - supplier/store/product merchant consistency is enforced before receiving,
+  - receiving posts immutable positive inventory movements with `PURCHASE_RECEIPT` reference type.
 
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`
@@ -460,6 +477,7 @@ Backend source of truth:
   - `V29__stock_adjustments.sql`
   - `V30__stocktake.sql`
   - `V31__transfer_orders.sql`
+  - `V32__purchase_orders_and_receiving.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
