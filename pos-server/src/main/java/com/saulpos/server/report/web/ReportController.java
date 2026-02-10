@@ -3,6 +3,8 @@ package com.saulpos.server.report.web;
 import com.saulpos.api.report.InventoryLowStockReportResponse;
 import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.report.CashShiftReportResponse;
+import com.saulpos.api.report.EndOfDayCashReportResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.server.report.service.ReportService;
 import lombok.RequiredArgsConstructor;
@@ -72,5 +74,29 @@ public class ReportController {
             @RequestParam(value = "categoryId", required = false) Long categoryId,
             @RequestParam(value = "supplierId", required = false) Long supplierId) {
         return reportService.getInventoryMovementReport(from, to, storeLocationId, categoryId, supplierId);
+    }
+
+    @GetMapping("/cash/shifts")
+    public CashShiftReportResponse getCashShiftReport(
+            @RequestParam(value = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "storeLocationId", required = false) Long storeLocationId,
+            @RequestParam(value = "terminalDeviceId", required = false) Long terminalDeviceId,
+            @RequestParam(value = "cashierUserId", required = false) Long cashierUserId) {
+        return reportService.getCashShiftReport(from, to, storeLocationId, terminalDeviceId, cashierUserId);
+    }
+
+    @GetMapping("/cash/end-of-day")
+    public EndOfDayCashReportResponse getEndOfDayCashReport(
+            @RequestParam(value = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "storeLocationId", required = false) Long storeLocationId,
+            @RequestParam(value = "terminalDeviceId", required = false) Long terminalDeviceId,
+            @RequestParam(value = "cashierUserId", required = false) Long cashierUserId) {
+        return reportService.getEndOfDayCashReport(from, to, storeLocationId, terminalDeviceId, cashierUserId);
     }
 }

@@ -43,6 +43,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `K2` Idempotent event ingestion.
 - `L1` Sales and returns reports.
 - `L2` Inventory reports.
+- `L3` Cash and shift reports.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -290,6 +291,17 @@ Backend source of truth:
   - stock-on-hand tabular rows with quantity on hand, cost snapshots, and stock value,
   - low-stock tabular rows with shortage quantity against requested minimum,
   - movement tabular rows including movement type, source reference, and timestamp.
+
+### Cash and Shift Reporting
+- Cash reporting APIs:
+  - `GET /api/reports/cash/shifts`
+  - `GET /api/reports/cash/end-of-day`
+- Supported filters:
+  - `from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`
+- Report outputs:
+  - shift-level rows with opening/paid-in/paid-out totals plus expected close cash, counted close cash, variance amount, and variance reason,
+  - shift summary totals across the filtered dataset,
+  - end-of-day store buckets with shift count, expected/counted totals, net variance, and aggregated variance reason counts.
 
 ### Payment State Machine
 - Payment lifecycle APIs:

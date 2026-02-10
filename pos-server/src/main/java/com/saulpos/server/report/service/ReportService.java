@@ -6,15 +6,24 @@ import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryMovementReportRowResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportRowResponse;
+import com.saulpos.api.report.CashShiftReportResponse;
+import com.saulpos.api.report.CashShiftReportRowResponse;
+import com.saulpos.api.report.CashShiftReportSummaryResponse;
+import com.saulpos.api.report.EndOfDayCashReportResponse;
+import com.saulpos.api.report.EndOfDayCashReportRowResponse;
+import com.saulpos.api.report.EndOfDayCashVarianceReasonResponse;
 import com.saulpos.api.report.SalesReturnsReportBucketResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.report.SalesReturnsReportSummaryResponse;
+import com.saulpos.server.report.repository.CashReportRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.report.repository.InventoryReportRepository;
 import com.saulpos.server.sale.repository.SaleOverrideEventRepository;
 import com.saulpos.server.sale.repository.SaleRepository;
 import com.saulpos.server.sale.repository.SaleReturnRepository;
+import com.saulpos.server.shift.model.CashMovementType;
+import com.saulpos.server.shift.model.CashShiftStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +50,7 @@ public class ReportService {
     private final SaleReturnRepository saleReturnRepository;
     private final SaleOverrideEventRepository saleOverrideEventRepository;
     private final InventoryReportRepository inventoryReportRepository;
+    private final CashReportRepository cashReportRepository;
 
     @Transactional(readOnly = true)
     public SalesReturnsReportResponse getSalesReturnsReport(Instant from,
@@ -298,6 +308,112 @@ public class ReportService {
         return new InventoryMovementReportResponse(from, to, storeLocationId, categoryId, supplierId, rows);
     }
 
+    @Transactional(readOnly = true)
+    public CashShiftReportResponse getCashShiftReport(Instant from,
+                                                      Instant to,
+                                                      Long storeLocationId,
+                                                      Long terminalDeviceId,
+                                                      Long cashierUserId) {
+        validateDateRange(from, to);
+
+        List<CashShiftReportRowResponse> rows = cashReportRepository.findCashShiftRows(
+                        from,
+                        to,
+                        storeLocationId,
+                        terminalDeviceId,
+                        cashierUserId,
+                        CashMovementType.CLOSE)
+                .stream()
+                .map(row -> new CashShiftReportRowResponse(
+                        row.getShiftId(),
+                        row.getStoreLocationId(),
+                        row.getStoreLocationCode(),
+                        row.getStoreLocationName(),
+                        row.getTerminalDeviceId(),
+                        row.getTerminalDeviceCode(),
+                        row.getTerminalDeviceName(),
+                        row.getCashierUserId(),
+                        row.getCashierUsername(),
+                        com.saulpos.api.shift.CashShiftStatus.valueOf(row.getStatus().name()),
+                        toMoney(row.getOpeningCash()),
+                        toMoney(row.getTotalPaidIn()),
+                        toMoney(row.getTotalPaidOut()),
+                        toMoney(row.getExpectedCloseCash()),
+                        toMoney(row.getCountedCloseCash()),
+                        toMoney(row.getVarianceCash()),
+                        normalizeReason(row.getVarianceReason()),
+                        row.getOpenedAt(),
+                        row.getClosedAt()))
+                .toList();
+
+        long shiftCount = rows.size();
+        long closedShiftCount = rows.stream().filter(row -> row.status() == com.saulpos.api.shift.CashShiftStatus.CLOSED).count();
+        long openShiftCount = shiftCount - closedShiftCount;
+
+        CashShiftReportSummaryResponse summary = new CashShiftReportSummaryResponse(
+                shiftCount,
+                closedShiftCount,
+                openShiftCount,
+                rows.stream().map(CashShiftReportRowResponse::openingCash).reduce(ZERO, BigDecimal::add),
+                rows.stream().map(CashShiftReportRowResponse::totalPaidIn).reduce(ZERO, BigDecimal::add),
+                rows.stream().map(CashShiftReportRowResponse::totalPaidOut).reduce(ZERO, BigDecimal::add),
+                rows.stream().map(CashShiftReportRowResponse::expectedCloseCash).reduce(ZERO, BigDecimal::add),
+                rows.stream().map(CashShiftReportRowResponse::countedCloseCash).reduce(ZERO, BigDecimal::add),
+                rows.stream().map(CashShiftReportRowResponse::varianceCash).reduce(ZERO, BigDecimal::add));
+
+        return new CashShiftReportResponse(from, to, storeLocationId, terminalDeviceId, cashierUserId, summary, rows);
+    }
+
+    @Transactional(readOnly = true)
+    public EndOfDayCashReportResponse getEndOfDayCashReport(Instant from,
+                                                            Instant to,
+                                                            Long storeLocationId,
+                                                            Long terminalDeviceId,
+                                                            Long cashierUserId) {
+        validateDateRange(from, to);
+
+        List<CashReportRepository.EndOfDayVarianceReasonProjection> reasonRows =
+                cashReportRepository.findEndOfDayVarianceReasons(
+                        from,
+                        to,
+                        storeLocationId,
+                        terminalDeviceId,
+                        cashierUserId,
+                        CashShiftStatus.CLOSED,
+                        CashMovementType.CLOSE);
+        Map<String, List<EndOfDayCashVarianceReasonResponse>> reasonMap = new LinkedHashMap<>();
+        for (CashReportRepository.EndOfDayVarianceReasonProjection row : reasonRows) {
+            String key = row.getBusinessDate() + "|" + row.getStoreLocationId();
+            reasonMap.computeIfAbsent(key, ignored -> new ArrayList<>())
+                    .add(new EndOfDayCashVarianceReasonResponse(normalizeReason(row.getReason()), row.getReasonCount()));
+        }
+
+        List<EndOfDayCashReportRowResponse> rows = cashReportRepository.findEndOfDayRows(
+                        from,
+                        to,
+                        storeLocationId,
+                        terminalDeviceId,
+                        cashierUserId,
+                        CashShiftStatus.CLOSED)
+                .stream()
+                .map(row -> {
+                    String key = row.getBusinessDate() + "|" + row.getStoreLocationId();
+                    return new EndOfDayCashReportRowResponse(
+                            row.getBusinessDate(),
+                            row.getStoreLocationId(),
+                            row.getStoreLocationCode(),
+                            row.getStoreLocationName(),
+                            row.getShiftCount(),
+                            toMoney(row.getExpectedCloseCash()),
+                            toMoney(row.getCountedCloseCash()),
+                            toMoney(row.getVarianceCash()),
+                            reasonMap.getOrDefault(key, List.of()));
+                })
+                .toList();
+
+        return new EndOfDayCashReportResponse(from, to, storeLocationId, terminalDeviceId, cashierUserId, rows);
+    }
+
     private void validateDateRange(Instant from, Instant to) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR, "from must be before or equal to to");
@@ -388,6 +504,14 @@ public class ReportService {
             return ZERO;
         }
         return value.setScale(2, RoundingMode.HALF_UP);
+    }
+
+    private String normalizeReason(String reason) {
+        if (reason == null) {
+            return "UNSPECIFIED";
+        }
+        String normalized = reason.trim();
+        return normalized.isEmpty() ? "UNSPECIFIED" : normalized;
     }
 
     private BigDecimal toQuantity(BigDecimal value) {

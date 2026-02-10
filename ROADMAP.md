@@ -724,7 +724,7 @@ Out of Scope:
 1. Filters by store/category/supplier.
 2. Export-ready tabular shape.
 
-#### Card L3: Cash and Shift Reports
+#### Card L3: Cash and Shift Reports [SOLVED]
 - Goal: Reconcile cash operations reliably.
 - Dependencies: B3, J1.
 - API Contract: end-of-day and shift-level cash reports.
@@ -1103,7 +1103,7 @@ Out of Scope:
 | K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
 | L1 | DONE |  |  | Implemented aggregated sales/returns reporting endpoint (`GET /api/reports/sales`, alias `/api/reports/sales-returns`) with date/store/terminal/cashier/category/tax-group filters, day/store/terminal/cashier/category/tax-group breakouts, summary totals including return and discount breakout (`discountGross`), and integration/security coverage |
 | L2 | DONE |  |  | Implemented inventory reporting endpoints (`GET /api/reports/inventory/stock-on-hand`, `GET /api/reports/inventory/low-stock`, `GET /api/reports/inventory/movements`) with store/category/supplier filters (plus `from`/`to` for movement and `minimumQuantity` for low-stock), tabular export-ready row DTOs in `pos-api`, and integration/security coverage for filters, validation, and authorization |
-| L3 | TODO |  |  |  |
+| L3 | DONE |  |  | Implemented cash reporting endpoints (`GET /api/reports/cash/shifts`, `GET /api/reports/cash/end-of-day`) with store/terminal/cashier/date filters, shift-level expected-vs-counted variance visibility, and end-of-day variance reason aggregation by business date/store with integration/security coverage |
 | L4 | TODO |  |  |  |
 | L5 | TODO |  |  |  |
 | M1 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `L3` Cash and shift reports.
-2. `L4` CSV export.
-3. `L5` Exception and override reports.
+1. `L4` CSV export.
+2. `L5` Exception and override reports.
+3. `M1` Printer abstraction and templates.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

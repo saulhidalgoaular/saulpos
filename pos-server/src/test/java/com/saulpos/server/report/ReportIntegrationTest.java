@@ -8,6 +8,9 @@ import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCheckoutPaymentRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.shift.CashMovementRequest;
+import com.saulpos.api.shift.CashShiftCloseRequest;
+import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.tax.TaxMode;
 import com.saulpos.api.tax.TenderType;
 import com.saulpos.server.catalog.model.CategoryEntity;
@@ -35,6 +38,7 @@ import com.saulpos.server.tax.model.StoreTaxRuleEntity;
 import com.saulpos.server.tax.model.TaxGroupEntity;
 import com.saulpos.server.tax.repository.StoreTaxRuleRepository;
 import com.saulpos.server.tax.repository.TaxGroupRepository;
+import com.saulpos.server.shift.service.ShiftService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -98,6 +102,9 @@ class ReportIntegrationTest {
 
     @Autowired
     private SaleReturnService saleReturnService;
+
+    @Autowired
+    private ShiftService shiftService;
 
     @Autowired
     private SupplierRepository supplierRepository;
@@ -450,6 +457,76 @@ class ReportIntegrationTest {
     }
 
     @Test
+    void cashShiftAndEndOfDayReportsReturnExpectedVsCountedAndVarianceReasons() throws Exception {
+        Long shiftOneId = shiftService.openShift(new CashShiftOpenRequest(cashierOneId, terminalOneId, new BigDecimal("100.00"))).id();
+        shiftService.addCashMovement(shiftOneId, new CashMovementRequest(
+                com.saulpos.api.shift.CashMovementType.PAID_IN,
+                new BigDecimal("20.00"),
+                "Safe drop replenishment"));
+        shiftService.addCashMovement(shiftOneId, new CashMovementRequest(
+                com.saulpos.api.shift.CashMovementType.PAID_OUT,
+                new BigDecimal("5.00"),
+                "Petty cash"));
+        shiftService.closeShift(shiftOneId, new CashShiftCloseRequest(new BigDecimal("118.00"), "REGISTER_OVER"));
+        setShiftTimestamps(shiftOneId, Instant.parse("2026-02-04T07:00:00Z"), Instant.parse("2026-02-04T16:00:00Z"));
+
+        Long shiftTwoId = shiftService.openShift(new CashShiftOpenRequest(cashierTwoId, terminalTwoId, new BigDecimal("80.00"))).id();
+        shiftService.closeShift(shiftTwoId, new CashShiftCloseRequest(new BigDecimal("75.00"), "REGISTER_SHORT"));
+        setShiftTimestamps(shiftTwoId, Instant.parse("2026-02-05T07:00:00Z"), Instant.parse("2026-02-05T15:30:00Z"));
+
+        mockMvc.perform(get("/api/reports/cash/shifts")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-06T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.summary.shiftCount").value(2))
+                .andExpect(jsonPath("$.summary.closedShiftCount").value(2))
+                .andExpect(jsonPath("$.summary.openShiftCount").value(0))
+                .andExpect(jsonPath("$.summary.expectedCloseCash").value(195.00))
+                .andExpect(jsonPath("$.summary.countedCloseCash").value(193.00))
+                .andExpect(jsonPath("$.summary.varianceCash").value(-2.00))
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].varianceReason").value("REGISTER_SHORT"))
+                .andExpect(jsonPath("$.rows[1].varianceReason").value("REGISTER_OVER"));
+
+        mockMvc.perform(get("/api/reports/cash/end-of-day")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-06T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(2))
+                .andExpect(jsonPath("$.rows[0].businessDate").value("2026-02-04"))
+                .andExpect(jsonPath("$.rows[0].storeLocationId").value(storeOneId))
+                .andExpect(jsonPath("$.rows[0].shiftCount").value(1))
+                .andExpect(jsonPath("$.rows[0].expectedCloseCash").value(115.00))
+                .andExpect(jsonPath("$.rows[0].countedCloseCash").value(118.00))
+                .andExpect(jsonPath("$.rows[0].varianceCash").value(3.00))
+                .andExpect(jsonPath("$.rows[0].varianceReasons[0].reason").value("REGISTER_OVER"))
+                .andExpect(jsonPath("$.rows[0].varianceReasons[0].count").value(1))
+                .andExpect(jsonPath("$.rows[1].businessDate").value("2026-02-05"))
+                .andExpect(jsonPath("$.rows[1].storeLocationId").value(storeTwoId))
+                .andExpect(jsonPath("$.rows[1].shiftCount").value(1))
+                .andExpect(jsonPath("$.rows[1].expectedCloseCash").value(80.00))
+                .andExpect(jsonPath("$.rows[1].countedCloseCash").value(75.00))
+                .andExpect(jsonPath("$.rows[1].varianceCash").value(-5.00))
+                .andExpect(jsonPath("$.rows[1].varianceReasons[0].reason").value("REGISTER_SHORT"))
+                .andExpect(jsonPath("$.rows[1].varianceReasons[0].count").value(1));
+    }
+
+    @Test
+    void cashReportsRejectInvalidDateRange() throws Exception {
+        mockMvc.perform(get("/api/reports/cash/shifts")
+                        .param("from", "2026-02-06T00:00:00Z")
+                        .param("to", "2026-02-01T00:00:00Z"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+
+        mockMvc.perform(get("/api/reports/cash/end-of-day")
+                        .param("from", "2026-02-06T00:00:00Z")
+                        .param("to", "2026-02-01T00:00:00Z"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
+    @Test
     @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
     void salesAndReturnsReportRequiresReportPermission() throws Exception {
         mockMvc.perform(get("/api/reports/sales"))
@@ -457,6 +534,14 @@ class ReportIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(get("/api/reports/inventory/stock-on-hand"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/cash/shifts"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/cash/end-of-day"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
     }
@@ -500,6 +585,28 @@ class ReportIntegrationTest {
         Timestamp ts = Timestamp.from(timestamp);
         jdbcTemplate.update("UPDATE sale_return SET created_at = ?, updated_at = ? WHERE id = ?", ts, ts, saleReturnId);
         jdbcTemplate.update("UPDATE sale_return_line SET created_at = ?, updated_at = ? WHERE sale_return_id = ?", ts, ts, saleReturnId);
+    }
+
+    private void setShiftTimestamps(Long shiftId, Instant openedAt, Instant closedAt) {
+        jdbcTemplate.update(
+                "UPDATE cash_shift SET opened_at = ?, closed_at = ?, created_at = ?, updated_at = ? WHERE id = ?",
+                Timestamp.from(openedAt),
+                Timestamp.from(closedAt),
+                Timestamp.from(openedAt),
+                Timestamp.from(closedAt),
+                shiftId);
+        jdbcTemplate.update(
+                "UPDATE cash_movement SET occurred_at = ?, created_at = ?, updated_at = ? WHERE shift_id = ? AND movement_type = 'OPEN'",
+                Timestamp.from(openedAt),
+                Timestamp.from(openedAt),
+                Timestamp.from(openedAt),
+                shiftId);
+        jdbcTemplate.update(
+                "UPDATE cash_movement SET occurred_at = ?, created_at = ?, updated_at = ? WHERE shift_id = ? AND movement_type = 'CLOSE'",
+                Timestamp.from(closedAt),
+                Timestamp.from(closedAt),
+                Timestamp.from(closedAt),
+                shiftId);
     }
 
     private void insertPriceOverrideEvent(Long saleId, Long lineId, Instant timestamp) {
