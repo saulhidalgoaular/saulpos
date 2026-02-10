@@ -18,10 +18,10 @@ public interface SaleRepository extends JpaRepository<SaleEntity, Long> {
     Optional<SaleEntity> findByCartId(Long cartId);
 
     @Override
-    @EntityGraph(attributePaths = {"storeLocation", "terminalDevice", "lines", "lines.product", "cart"})
+    @EntityGraph(attributePaths = {"storeLocation", "terminalDevice", "cashierUser", "lines", "lines.product", "cart"})
     Optional<SaleEntity> findById(Long id);
 
-    @EntityGraph(attributePaths = {"storeLocation", "terminalDevice", "lines", "lines.product", "cart"})
+    @EntityGraph(attributePaths = {"storeLocation", "terminalDevice", "cashierUser", "lines", "lines.product", "cart"})
     Optional<SaleEntity> findByReceiptNumberIgnoreCase(String receiptNumber);
 
     @Query("""

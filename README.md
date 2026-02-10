@@ -46,6 +46,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L3` Cash and shift reports.
 - `L4` CSV export.
 - `L5` Exception and override reports.
+- `M1` Printer abstraction and templates.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -528,6 +529,14 @@ Backend source of truth:
 - Allocates immutable receipt numbers per terminal-backed series with explicit policy metadata (`GAPLESS`/`GAPPED`).
 - Concurrency-safe sequence allocation with unique constraints on `(series_id, number)` and `receipt_number`.
 - Allocation endpoint is permission-protected (`SALES_PROCESS`) and returns both numeric and formatted receipt identifiers.
+
+### Receipt Printing (M1)
+- Receipt print API:
+  - `POST /api/receipts/print`
+- Printer abstraction introduced in `pos-core` (`PrinterAdapter`, `PrintJob`, `PrintResult`) so rendering/dispatch is decoupled from hardware transport.
+- Server-side receipt template rendering is deterministic and includes store/terminal/cashier context, line details, totals, and optional `COPY` marker.
+- Default ESC/POS adapter is implemented behind the abstraction and returns explicit status (`SUCCESS`/`FAILED`) with retryability metadata.
+- Print endpoint is permission-protected (`SALES_PROCESS`) and never mutates checkout/sale financial state.
 
 ### Discount Primitives
 - Discount APIs:

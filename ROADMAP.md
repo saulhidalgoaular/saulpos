@@ -751,7 +751,7 @@ Out of Scope:
 
 ### Phase M: Hardware Integration Layer
 
-#### Card M1: Printer Abstraction and Templates
+#### Card M1: Printer Abstraction and Templates [SOLVED]
 - Goal: Decouple receipt generation from hardware adapters.
 - Dependencies: G2.
 - Impacted Modules: `pos-core`, `pos-server`.
@@ -1106,7 +1106,7 @@ Out of Scope:
 | L3 | DONE |  |  | Implemented cash reporting endpoints (`GET /api/reports/cash/shifts`, `GET /api/reports/cash/end-of-day`) with store/terminal/cashier/date filters, shift-level expected-vs-counted variance visibility, and end-of-day variance reason aggregation by business date/store with integration/security coverage |
 | L4 | DONE |  |  | Implemented CSV export endpoints for sales, inventory, and cash reports with deterministic UTF-8 headers/column order (`/api/reports/sales/export`, `/api/reports/inventory/*/export`, `/api/reports/cash/*/export`) and integration coverage for content type, file disposition, and authorization |
 | L5 | DONE |  |  | Implemented exception reporting endpoints (`GET /api/reports/exceptions`, `/api/reports/exceptions/export`) with filters (`from`/`to`/store/terminal/cashier/reason/eventType), reconciliation-ready rows including actor/approver/terminal/correlation/reference, migration `V37` (`no_sale_drawer_event`), and integration/security coverage for filter combinations, invalid range validation, and authorization |
-| M1 | TODO |  |  |  |
+| M1 | DONE |  |  | Implemented printer abstraction in `pos-core` (`PrinterAdapter`, `PrintJob`, `PrintResult`), server-side receipt template rendering and ESC/POS adapter in `pos-server`, plus `POST /api/receipts/print` with explicit success/failure + retryable status and authorization/integration/unit coverage |
 | M2 | TODO |  |  |  |
 | M3 | TODO |  |  |  |
 | M4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `M1` Printer abstraction and templates.
-2. `M2` Cash drawer integration.
-3. `M3` Scanner/Scale extension interfaces.
+1. `M2` Cash drawer integration.
+2. `M3` Scanner/Scale extension interfaces.
+3. `M4` Receipt reprint and journal retrieval.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -80,6 +80,8 @@ public class SecurityConfiguration {
                                 SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers(HttpMethod.POST, "/api/receipts/allocate")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.POST, "/api/receipts/print")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers("/api/discounts/**")
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
