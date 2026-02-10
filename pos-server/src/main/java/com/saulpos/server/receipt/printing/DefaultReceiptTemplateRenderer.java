@@ -21,6 +21,14 @@ public class DefaultReceiptTemplateRenderer implements ReceiptTemplateRenderer {
         builder.append("Date ").append(DATE_TIME_FORMATTER.format(payload.soldAt())).append(" UTC").append('\n');
         if (payload.copy()) {
             builder.append("*** COPY ***").append('\n');
+            if (payload.copyOperator() != null && payload.copyPrintedAt() != null) {
+                builder.append("Reprinted by ")
+                        .append(payload.copyOperator())
+                        .append(" at ")
+                        .append(DATE_TIME_FORMATTER.format(payload.copyPrintedAt()))
+                        .append(" UTC")
+                        .append('\n');
+            }
         }
         builder.append("--------------------------------").append('\n');
 

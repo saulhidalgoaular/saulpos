@@ -2,6 +2,7 @@ package com.saulpos.server.receipt.service;
 
 import com.saulpos.api.receipt.ReceiptAllocationRequest;
 import com.saulpos.api.receipt.ReceiptAllocationResponse;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptNumberPolicy;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
@@ -14,6 +15,8 @@ import com.saulpos.server.receipt.model.ReceiptSeriesEntity;
 import com.saulpos.server.receipt.repository.ReceiptHeaderRepository;
 import com.saulpos.server.receipt.repository.ReceiptSequenceRepository;
 import com.saulpos.server.receipt.repository.ReceiptSeriesRepository;
+import com.saulpos.server.sale.model.SaleEntity;
+import com.saulpos.server.sale.repository.SaleRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +37,7 @@ public class ReceiptService {
     private final ReceiptSeriesRepository receiptSeriesRepository;
     private final ReceiptSequenceRepository receiptSequenceRepository;
     private final ReceiptHeaderRepository receiptHeaderRepository;
+    private final SaleRepository saleRepository;
 
     private final ConcurrentMap<Long, ReentrantLock> seriesInitLocks = new ConcurrentHashMap<>();
     private final ConcurrentMap<Long, ReentrantLock> sequenceInitLocks = new ConcurrentHashMap<>();
@@ -72,6 +76,37 @@ public class ReceiptService {
                 savedHeader.getNumber(),
                 savedHeader.getReceiptNumber(),
                 savedHeader.getIssuedAt());
+    }
+
+    @Transactional(readOnly = true)
+    public ReceiptJournalResponse getJournalBySaleId(Long saleId) {
+        SaleEntity sale = saleRepository.findById(saleId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "sale not found: " + saleId));
+        return toJournalResponse(sale);
+    }
+
+    @Transactional(readOnly = true)
+    public ReceiptJournalResponse getJournalByReceiptNumber(String receiptNumber) {
+        SaleEntity sale = saleRepository.findByReceiptNumberIgnoreCase(normalizeReceiptNumber(receiptNumber))
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
+                        "sale not found for receiptNumber: " + receiptNumber));
+        return toJournalResponse(sale);
+    }
+
+    private ReceiptJournalResponse toJournalResponse(SaleEntity sale) {
+        return new ReceiptJournalResponse(
+                sale.getId(),
+                sale.getReceiptHeaderId(),
+                sale.getReceiptNumber(),
+                sale.getStoreLocation().getId(),
+                sale.getStoreLocation().getCode(),
+                sale.getTerminalDevice().getId(),
+                sale.getTerminalDevice().getCode(),
+                sale.getCashierUser().getId(),
+                sale.getCashierUser().getUsername(),
+                sale.getTotalPayable(),
+                sale.getCreatedAt());
     }
 
     private ReceiptSeriesEntity findOrCreateSeries(TerminalDeviceEntity terminalDevice) {
@@ -170,5 +205,12 @@ public class ReceiptService {
 
     private String formatReceiptNumber(String seriesCode, long number) {
         return ("%s-%0" + RECEIPT_NUMBER_PADDING + "d").formatted(seriesCode, number);
+    }
+
+    private String normalizeReceiptNumber(String receiptNumber) {
+        if (receiptNumber == null || receiptNumber.isBlank()) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR, "receiptNumber is required");
+        }
+        return receiptNumber.trim();
     }
 }

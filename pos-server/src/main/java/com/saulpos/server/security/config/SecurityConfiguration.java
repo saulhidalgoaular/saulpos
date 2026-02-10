@@ -82,6 +82,15 @@ public class SecurityConfiguration {
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers(HttpMethod.POST, "/api/receipts/print")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.POST, "/api/receipts/reprint")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.RECEIPT_REPRINT),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers(HttpMethod.GET, "/api/receipts/journal/**")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.RECEIPT_REPRINT),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers(HttpMethod.POST, "/api/receipts/drawer/open")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.CASH_DRAWER_OPEN))
                         .requestMatchers("/api/discounts/**")

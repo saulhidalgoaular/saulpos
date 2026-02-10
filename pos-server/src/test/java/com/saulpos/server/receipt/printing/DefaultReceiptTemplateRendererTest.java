@@ -30,13 +30,16 @@ class DefaultReceiptTemplateRendererTest {
                 new BigDecimal("2.70"),
                 new BigDecimal("0.30"),
                 new BigDecimal("3.00"),
-                true);
+                true,
+                "manager",
+                Instant.parse("2026-02-10T12:05:30Z"));
 
         String rendered = renderer.render(payload);
 
         assertThat(rendered).contains("Main Store");
         assertThat(rendered).contains("Receipt RCPT-TERM-00000001");
         assertThat(rendered).contains("*** COPY ***");
+        assertThat(rendered).contains("Reprinted by manager at 2026-02-10 12:05:30 UTC");
         assertThat(rendered).contains("Subtotal: 2.70");
         assertThat(rendered).contains("Tax:      0.30");
         assertThat(rendered).contains("Total:    3.00");

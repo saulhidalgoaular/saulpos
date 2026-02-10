@@ -53,6 +53,34 @@ class ReceiptPrintIntegrationTest {
 
     @Test
     @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
+    void reprintRequiresReceiptReprintPermission() throws Exception {
+        mockMvc.perform(post("/api/receipts/reprint")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "receiptNumber": "RCPT-ANY"
+                                }
+                                """))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+    }
+
+    @Test
+    @WithMockUser(username = "manager", authorities = {"PERM_RECEIPT_REPRINT"})
+    void reprintReturnsNotFoundWhenReceiptDoesNotExist() throws Exception {
+        mockMvc.perform(post("/api/receipts/reprint")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "receiptNumber": "RCPT-NOT-FOUND"
+                                }
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("POS-4004"));
+    }
+
+    @Test
+    @WithMockUser(username = "cashier", authorities = {"PERM_SALES_PROCESS"})
     void printValidatesRequestPayload() throws Exception {
         mockMvc.perform(post("/api/receipts/print")
                         .contentType(MediaType.APPLICATION_JSON)

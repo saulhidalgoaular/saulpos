@@ -15,7 +15,9 @@ public record ReceiptPrintPayload(
         BigDecimal subtotal,
         BigDecimal tax,
         BigDecimal total,
-        boolean copy
+        boolean copy,
+        String copyOperator,
+        Instant copyPrintedAt
 ) {
 
     public record Line(

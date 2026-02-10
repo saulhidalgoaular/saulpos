@@ -48,6 +48,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L5` Exception and override reports.
 - `M1` Printer abstraction and templates.
 - `M2` Cash drawer integration.
+- `M4` Receipt reprint and journal retrieval.
 - `M3` Scanner/scale extension interfaces.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
@@ -546,6 +547,16 @@ Backend source of truth:
 - Drawer-open requests dispatch an ESC/POS pulse command through the same printer abstraction used by receipt printing.
 - Access is permission-protected with `CASH_DRAWER_OPEN`.
 - Every drawer-open request is audited in `no_sale_drawer_event` with terminal/store context, actor username, reason code, note/reference, and correlation ID for exception reporting reconciliation.
+
+### Receipt Reprint and Journal Retrieval (M4)
+- Receipt journal APIs:
+  - `GET /api/receipts/journal/by-sale/{saleId}`
+  - `GET /api/receipts/journal/by-number/{receiptNumber}`
+- Receipt reprint API:
+  - `POST /api/receipts/reprint`
+- Reprint operations are role-controlled with explicit `RECEIPT_REPRINT` permission.
+- Reprinted receipts are marked as `COPY` and include the reprint operator and timestamp in the rendered template.
+- Every copy reprint attempt (success/failure) is audited in `receipt_print_event` with sale/receipt context, actor, adapter status, retryability, and correlation ID.
 
 ### Scanner and Scale Extension Interfaces (M3)
 - Hardware extension contracts introduced in `pos-core`:

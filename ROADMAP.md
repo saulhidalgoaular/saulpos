@@ -775,7 +775,7 @@ Out of Scope:
 - Acceptance Criteria:
 1. Interfaces documented and stubs available.
 
-#### Card M4: Receipt Reprint and Journal Retrieval
+#### Card M4: Receipt Reprint and Journal Retrieval [SOLVED]
 - Goal: Support common receipt recovery workflows without mutating financial history.
 - Dependencies: M1, G2, B2.
 - Data Model: optional `receipt_print_event`.
@@ -1109,7 +1109,7 @@ Out of Scope:
 | M1 | DONE |  |  | Implemented printer abstraction in `pos-core` (`PrinterAdapter`, `PrintJob`, `PrintResult`), server-side receipt template rendering and ESC/POS adapter in `pos-server`, plus `POST /api/receipts/print` with explicit success/failure + retryable status and authorization/integration/unit coverage |
 | M2 | DONE |  |  | Implemented cash drawer open flow (`POST /api/receipts/drawer/open`) with explicit `CASH_DRAWER_OPEN` permission enforcement, ESC/POS pulse dispatch through printer abstraction, and persisted no-sale audit trail in `no_sale_drawer_event` including actor/correlation/reason metadata plus integration coverage |
 | M3 | DONE |  |  | Added scanner/scale hardware extension contracts in `pos-core` (`ScannerAdapter`, `ScaleAdapter` + request/result/status types), implemented default no-op stub adapters in `pos-server` (`NoOpScannerAdapter`, `NoOpScaleAdapter`), and added unit coverage for deterministic unsupported/failure behavior |
-| M4 | TODO |  |  |  |
+| M4 | DONE |  |  | Implemented receipt journal retrieval endpoints (`GET /api/receipts/journal/by-sale/{saleId}`, `GET /api/receipts/journal/by-number/{receiptNumber}`) and reprint endpoint (`POST /api/receipts/reprint`) with migration `V39` (`receipt_print_event` + `RECEIPT_REPRINT` permission), copy-marked receipt rendering with operator/timestamp, and unit/integration coverage for authorization, retrieval, and reprint auditing |
 | N1 | TODO |  |  |  |
 | N2 | TODO |  |  |  |
 | O1 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `M4` Receipt reprint and journal retrieval.
-2. `N1` Fiscal provider SPI.
-3. `O1` UI architecture and design system.
+1. `N1` Fiscal provider SPI.
+2. `O1` UI architecture and design system.
+3. `O2` Authentication and session UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
