@@ -66,6 +66,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O10` Offline/degraded mode UX.
 - `O11` Suspended sales and override UX.
 - `O12` Lot/expiry and supplier return UX.
+- `O13` Receipt reprint and exception monitoring UX.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -83,7 +84,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers/lot-expiry/supplier-returns, reporting/export actions, hardware actions, and degraded-mode connectivity guidance (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9` + `O10` + `O11` + `O12`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers/lot-expiry/supplier-returns, reporting/export actions, hardware actions, receipt recovery/exception monitoring workflows, and degraded-mode connectivity guidance (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9` + `O10` + `O11` + `O12` + `O13`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -252,6 +253,23 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP contract mapping for inventory balances and supplier return lifecycle endpoints,
   - backoffice coordinator state/message behavior for lot-balance load and supplier-return create/approve/post flows.
+
+### Client Receipt Reprint and Exception Monitoring UX (`O13`)
+- Hardware screen now supports:
+  - historical receipt journal lookup by receipt number or sale ID,
+  - permission-aware receipt reprint action (gated by `RECEIPT_REPRINT`),
+  - operator feedback that combines lookup/reprint status with receipt context.
+- Reporting exception preview now includes drill-down context fields:
+  - actor, approver, cashier, reason, terminal, reference, and correlation identifiers.
+- Client receipt and exception operations consume server contracts:
+  - `GET /api/receipts/journal/by-number/{receiptNumber}`
+  - `GET /api/receipts/journal/by-sale/{saleId}`
+  - `POST /api/receipts/reprint`
+  - `GET /api/reports/exceptions`
+- Tests now cover:
+  - HTTP contract mapping for receipt journal/reprint endpoints,
+  - hardware coordinator permission + journal lookup + reprint flows,
+  - reporting coordinator exception drill-down preview rendering.
 
 ## Implemented Domain Capabilities
 

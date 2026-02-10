@@ -3,9 +3,11 @@ package com.saulpos.client.state;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.CashDrawerOpenStatus;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.receipt.ReceiptPrintStatus;
+import com.saulpos.api.receipt.ReceiptReprintRequest;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import javafx.application.Platform;
@@ -24,14 +26,17 @@ import java.util.function.Consumer;
 public final class HardwareCoordinator {
 
     private static final String DRAWER_PERMISSION = "CASH_DRAWER_OPEN";
+    private static final String RECEIPT_REPRINT_PERMISSION = "RECEIPT_REPRINT";
 
     private final PosApiClient apiClient;
     private final Consumer<Runnable> uiDispatcher;
     private final ObjectProperty<HardwareActionStatus> printStatus = new SimpleObjectProperty<>(HardwareActionStatus.IDLE);
     private final ObjectProperty<HardwareActionStatus> drawerStatus = new SimpleObjectProperty<>(HardwareActionStatus.IDLE);
     private final ObjectProperty<ReceiptPrintResponse> printResponse = new SimpleObjectProperty<>();
+    private final ObjectProperty<ReceiptJournalResponse> receiptJournal = new SimpleObjectProperty<>();
     private final ObjectProperty<CashDrawerOpenResponse> drawerResponse = new SimpleObjectProperty<>();
     private final BooleanProperty drawerAuthorized = new SimpleBooleanProperty(false);
+    private final BooleanProperty reprintAuthorized = new SimpleBooleanProperty(false);
     private final StringProperty hardwareMessage =
             new SimpleStringProperty("Hardware ready: use receipt print and drawer controls.");
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
@@ -57,12 +62,20 @@ public final class HardwareCoordinator {
         return printResponse;
     }
 
+    public ObjectProperty<ReceiptJournalResponse> receiptJournalProperty() {
+        return receiptJournal;
+    }
+
     public ObjectProperty<CashDrawerOpenResponse> drawerResponseProperty() {
         return drawerResponse;
     }
 
     public BooleanProperty drawerAuthorizedProperty() {
         return drawerAuthorized;
+    }
+
+    public BooleanProperty reprintAuthorizedProperty() {
+        return reprintAuthorized;
     }
 
     public StringProperty hardwareMessageProperty() {
@@ -77,16 +90,23 @@ public final class HardwareCoordinator {
         dispatch(() -> busy.set(true));
         return apiClient.currentUserPermissions()
                 .thenAccept(response -> dispatch(() -> {
-                    boolean allowed = response.permissions() != null && response.permissions().contains(DRAWER_PERMISSION);
-                    drawerAuthorized.set(allowed);
-                    hardwareMessage.set(allowed
-                            ? "Hardware permissions loaded. Drawer controls are enabled."
-                            : "Hardware permissions loaded. Drawer controls are restricted for this user.");
+                    boolean drawerAllowed = response.permissions() != null
+                            && response.permissions().contains(DRAWER_PERMISSION);
+                    boolean reprintAllowed = response.permissions() != null
+                            && response.permissions().contains(RECEIPT_REPRINT_PERMISSION);
+                    drawerAuthorized.set(drawerAllowed);
+                    reprintAuthorized.set(reprintAllowed);
+                    hardwareMessage.set("Hardware permissions loaded. Drawer="
+                            + (drawerAllowed ? "enabled" : "restricted")
+                            + ", receipt reprint="
+                            + (reprintAllowed ? "enabled" : "restricted")
+                            + ".");
                 }))
                 .whenComplete((ignored, throwable) -> {
                     if (throwable != null) {
                         dispatch(() -> {
                             drawerAuthorized.set(false);
+                            reprintAuthorized.set(false);
                             hardwareMessage.set(mapError("permission refresh", throwable));
                         });
                     }
@@ -117,6 +137,70 @@ public final class HardwareCoordinator {
                             : response.message());
                 }))
                 .whenComplete((ignored, throwable) -> finishAction("print", printStatus, throwable));
+    }
+
+    public CompletableFuture<Void> reprintReceipt(String receiptNumber) {
+        if (!reprintAuthorized.get()) {
+            dispatch(() -> hardwareMessage.set("Receipt reprint requires RECEIPT_REPRINT permission."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (receiptNumber == null || receiptNumber.isBlank()) {
+            dispatch(() -> hardwareMessage.set("Receipt number is required for reprint."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> {
+            busy.set(true);
+            printStatus.set(HardwareActionStatus.QUEUED);
+            hardwareMessage.set("Receipt reprint queued for " + receiptNumber.trim() + ".");
+        });
+
+        return apiClient.reprintReceipt(new ReceiptReprintRequest(receiptNumber.trim()))
+                .thenAccept(response -> dispatch(() -> {
+                    printResponse.set(response);
+                    printStatus.set(response.status() == ReceiptPrintStatus.SUCCESS
+                            ? HardwareActionStatus.SUCCESS
+                            : HardwareActionStatus.FAILED);
+                    hardwareMessage.set(response.message() == null || response.message().isBlank()
+                            ? "Receipt reprint request completed."
+                            : response.message());
+                }))
+                .whenComplete((ignored, throwable) -> finishAction("reprint", printStatus, throwable));
+    }
+
+    public CompletableFuture<Void> lookupReceiptJournalByNumber(String receiptNumber) {
+        if (receiptNumber == null || receiptNumber.isBlank()) {
+            dispatch(() -> hardwareMessage.set("Receipt number is required for journal lookup."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> {
+            busy.set(true);
+            hardwareMessage.set("Loading receipt journal for " + receiptNumber.trim() + ".");
+        });
+        return apiClient.getReceiptJournalByNumber(receiptNumber.trim())
+                .thenAccept(journal -> dispatch(() -> {
+                    receiptJournal.set(journal);
+                    hardwareMessage.set("Receipt journal loaded for " + journal.receiptNumber() + ".");
+                }))
+                .whenComplete((ignored, throwable) -> finishLookup("journal lookup", throwable));
+    }
+
+    public CompletableFuture<Void> lookupReceiptJournalBySaleId(Long saleId) {
+        if (saleId == null) {
+            dispatch(() -> hardwareMessage.set("Sale ID is required for journal lookup."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> {
+            busy.set(true);
+            hardwareMessage.set("Loading receipt journal for sale " + saleId + ".");
+        });
+        return apiClient.getReceiptJournalBySaleId(saleId)
+                .thenAccept(journal -> dispatch(() -> {
+                    receiptJournal.set(journal);
+                    hardwareMessage.set("Receipt journal loaded for sale " + journal.saleId() + ".");
+                }))
+                .whenComplete((ignored, throwable) -> finishLookup("journal lookup", throwable));
     }
 
     public CompletableFuture<Void> openDrawer(Long terminalDeviceId,
@@ -167,6 +251,13 @@ public final class HardwareCoordinator {
                 status.set(HardwareActionStatus.FAILED);
                 hardwareMessage.set(mapError(operation, throwable));
             });
+        }
+        dispatch(() -> busy.set(false));
+    }
+
+    private void finishLookup(String operation, Throwable throwable) {
+        if (throwable != null) {
+            dispatch(() -> hardwareMessage.set(mapError(operation, throwable)));
         }
         dispatch(() -> busy.set(false));
     }

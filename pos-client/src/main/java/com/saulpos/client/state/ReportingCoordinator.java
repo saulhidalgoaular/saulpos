@@ -222,9 +222,14 @@ public final class ReportingCoordinator {
         if (report.rows() != null) {
             report.rows().forEach(row -> rows.add(row.occurredAt()
                     + " | " + row.eventType()
-                    + " | " + row.storeLocationCode()
-                    + " | actor=" + row.actorUsername()
-                    + " | reason=" + row.reasonCode()));
+                    + " | store=" + safeText(row.storeLocationCode())
+                    + " | terminal=" + safeText(row.terminalDeviceCode())
+                    + " | actor=" + safeText(row.actorUsername())
+                    + " | approver=" + safeText(row.approverUsername())
+                    + " | cashier=" + safeText(row.cashierUsername())
+                    + " | reason=" + safeText(row.reasonCode())
+                    + " | ref=" + safeText(row.referenceNumber())
+                    + " | correlation=" + safeText(row.correlationId())));
         }
         dispatch(() -> {
             tableRows.set(trimToPreview(rows));
@@ -270,6 +275,10 @@ public final class ReportingCoordinator {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static String safeText(String value) {
+        return value == null || value.isBlank() ? "-" : value;
     }
 
     private void dispatch(Runnable runnable) {

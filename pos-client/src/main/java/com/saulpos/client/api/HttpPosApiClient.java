@@ -28,8 +28,10 @@ import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
+import com.saulpos.api.receipt.ReceiptReprintRequest;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
@@ -456,6 +458,27 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<ReceiptPrintResponse> reprintReceipt(ReceiptReprintRequest request) {
+        return postJson("/api/receipts/reprint", request, ReceiptPrintResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ReceiptJournalResponse> getReceiptJournalBySaleId(Long saleId) {
+        HttpRequest request = baseRequest("/api/receipts/journal/by-sale/" + saleId)
+                .GET()
+                .build();
+        return send(request, ReceiptJournalResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ReceiptJournalResponse> getReceiptJournalByNumber(String receiptNumber) {
+        HttpRequest request = baseRequest("/api/receipts/journal/by-number/" + encodePathSegment(receiptNumber))
+                .GET()
+                .build();
+        return send(request, ReceiptJournalResponse.class);
+    }
+
+    @Override
     public CompletableFuture<CashDrawerOpenResponse> openCashDrawer(CashDrawerOpenRequest request) {
         return postJson("/api/receipts/drawer/open", request, CashDrawerOpenResponse.class);
     }
@@ -857,6 +880,10 @@ public final class HttpPosApiClient implements PosApiClient {
 
     private String encodeQueryParam(String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
+    }
+
+    private String encodePathSegment(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     private boolean appendParam(StringBuilder path, String name, Object value, boolean hasParam) {

@@ -16,6 +16,7 @@ import com.saulpos.api.report.CashShiftReportResponse;
 import com.saulpos.api.report.CashShiftReportRowResponse;
 import com.saulpos.api.report.CashShiftReportSummaryResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
+import com.saulpos.api.report.ExceptionReportRowResponse;
 import com.saulpos.api.report.ExceptionReportResponse;
 import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.SalesReturnsReportBucketResponse;
@@ -85,6 +86,21 @@ class ReportingCoordinatorTest {
                 .join();
 
         assertEquals("Forbidden report access", coordinator.reportingMessageProperty().get());
+    }
+
+    @Test
+    void loadExceptions_shouldIncludeDrillDownContextInPreviewRows() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        ReportingCoordinator coordinator = new ReportingCoordinator(apiClient, Runnable::run);
+
+        coordinator.loadExceptions(null, null, 1L, 2L, 3L, "VOID", ExceptionReportEventType.LINE_VOID).join();
+
+        String row = coordinator.tableRowsProperty().get().get(0);
+        assertTrue(row.contains("terminal=TERM-2"));
+        assertTrue(row.contains("actor=manager"));
+        assertTrue(row.contains("approver=supervisor"));
+        assertTrue(row.contains("reason=VOID"));
+        assertTrue(row.contains("correlation=corr-001"));
     }
 
     private static final class FakePosApiClient implements PosApiClient {
@@ -356,7 +372,25 @@ class ReportingCoordinatorTest {
                     cashierUserId,
                     reasonCode,
                     eventType,
-                    List.of()
+                    List.of(new ExceptionReportRowResponse(
+                            11L,
+                            Instant.parse("2026-02-10T12:00:00Z"),
+                            eventType == null ? ExceptionReportEventType.LINE_VOID : eventType,
+                            storeLocationId == null ? 1L : storeLocationId,
+                            "S-1",
+                            "Store 1",
+                            terminalDeviceId == null ? 2L : terminalDeviceId,
+                            "TERM-2",
+                            "Terminal 2",
+                            cashierUserId == null ? 3L : cashierUserId,
+                            "cashier",
+                            "manager",
+                            "supervisor",
+                            reasonCode == null ? "VOID" : reasonCode,
+                            "manual override",
+                            "corr-001",
+                            "REF-100"
+                    ))
             ));
         }
 

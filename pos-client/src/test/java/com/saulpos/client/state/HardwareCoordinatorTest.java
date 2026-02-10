@@ -12,9 +12,11 @@ import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.CashDrawerOpenStatus;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.receipt.ReceiptPrintStatus;
+import com.saulpos.api.receipt.ReceiptReprintRequest;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -52,7 +54,7 @@ class HardwareCoordinatorTest {
                 7L,
                 "cashier",
                 Set.of("CASHIER"),
-                Set.of("SALES_PROCESS", "CASH_DRAWER_OPEN")
+                Set.of("SALES_PROCESS", "CASH_DRAWER_OPEN", "RECEIPT_REPRINT")
         );
         apiClient.printResponse = new ReceiptPrintResponse(
                 "R-0000501",
@@ -68,8 +70,37 @@ class HardwareCoordinatorTest {
         coordinator.printReceipt("R-0000501", false).join();
 
         assertTrue(coordinator.drawerAuthorizedProperty().get());
+        assertTrue(coordinator.reprintAuthorizedProperty().get());
         assertEquals(HardwareActionStatus.SUCCESS, coordinator.printStatusProperty().get());
         assertEquals("R-0000501", apiClient.printRequest.receiptNumber());
+    }
+
+    @Test
+    void lookupReceiptJournalAndReprint_shouldPopulateJournalAndInvokeReprintContract() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.permissionsResponse = new CurrentUserPermissionsResponse(
+                7L,
+                "cashier",
+                Set.of("MANAGER"),
+                Set.of("SALES_PROCESS", "RECEIPT_REPRINT")
+        );
+        apiClient.printResponse = new ReceiptPrintResponse(
+                "R-0000701",
+                ReceiptPrintStatus.SUCCESS,
+                "escpos",
+                false,
+                "Reprint completed",
+                Instant.parse("2026-02-10T13:06:00Z")
+        );
+        HardwareCoordinator coordinator = new HardwareCoordinator(apiClient, Runnable::run);
+
+        coordinator.refreshPermissions().join();
+        coordinator.lookupReceiptJournalByNumber("R-0000701").join();
+        coordinator.reprintReceipt("R-0000701").join();
+
+        assertEquals("R-0000701", coordinator.receiptJournalProperty().get().receiptNumber());
+        assertEquals("R-0000701", apiClient.reprintRequest.receiptNumber());
+        assertEquals(HardwareActionStatus.SUCCESS, coordinator.printStatusProperty().get());
     }
 
     @Test
@@ -127,6 +158,7 @@ class HardwareCoordinatorTest {
                 Instant.parse("2026-02-10T12:07:00Z")
         );
         private ReceiptPrintRequest printRequest;
+        private ReceiptReprintRequest reprintRequest;
         private CashDrawerOpenRequest drawerRequest;
         private RuntimeException drawerFailure;
 
@@ -283,6 +315,46 @@ class HardwareCoordinatorTest {
         public CompletableFuture<ReceiptPrintResponse> printReceipt(ReceiptPrintRequest request) {
             this.printRequest = request;
             return CompletableFuture.completedFuture(printResponse);
+        }
+
+        @Override
+        public CompletableFuture<ReceiptPrintResponse> reprintReceipt(ReceiptReprintRequest request) {
+            this.reprintRequest = request;
+            return CompletableFuture.completedFuture(printResponse);
+        }
+
+        @Override
+        public CompletableFuture<ReceiptJournalResponse> getReceiptJournalBySaleId(Long saleId) {
+            return CompletableFuture.completedFuture(new ReceiptJournalResponse(
+                    saleId,
+                    201L,
+                    "R-0000701",
+                    1L,
+                    "STORE-1",
+                    3L,
+                    "TERM-3",
+                    7L,
+                    "cashier",
+                    java.math.BigDecimal.valueOf(25.40),
+                    Instant.parse("2026-02-10T13:00:00Z")
+            ));
+        }
+
+        @Override
+        public CompletableFuture<ReceiptJournalResponse> getReceiptJournalByNumber(String receiptNumber) {
+            return CompletableFuture.completedFuture(new ReceiptJournalResponse(
+                    701L,
+                    201L,
+                    receiptNumber,
+                    1L,
+                    "STORE-1",
+                    3L,
+                    "TERM-3",
+                    7L,
+                    "cashier",
+                    java.math.BigDecimal.valueOf(25.40),
+                    Instant.parse("2026-02-10T13:00:00Z")
+            ));
         }
 
         @Override

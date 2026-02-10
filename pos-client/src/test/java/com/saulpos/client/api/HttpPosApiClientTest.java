@@ -17,6 +17,7 @@ import com.saulpos.api.inventory.SupplierReturnCreateRequest;
 import com.saulpos.api.inventory.SupplierReturnPostRequest;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
+import com.saulpos.api.receipt.ReceiptReprintRequest;
 import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.report.ExceptionReportEventType;
@@ -774,7 +775,7 @@ class HttpPosApiClientTest {
                                 request,
                                 200,
                                 "{\"userId\":7,\"username\":\"manager\",\"roles\":[\"MANAGER\"],"
-                                        + "\"permissions\":[\"SALES_PROCESS\",\"CASH_DRAWER_OPEN\"]}"
+                                        + "\"permissions\":[\"SALES_PROCESS\",\"CASH_DRAWER_OPEN\",\"RECEIPT_REPRINT\"]}"
                         ));
                     }
                     if ("/api/receipts/print".equals(path) && "POST".equals(request.method())) {
@@ -794,6 +795,36 @@ class HttpPosApiClientTest {
                                         + "\"message\":\"Drawer pulse sent\",\"openedAt\":\"2026-02-10T12:07:00Z\"}"
                         ));
                     }
+                    if ("/api/receipts/reprint".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"receiptNumber\":\"R-0000501\",\"status\":\"SUCCESS\",\"adapter\":\"escpos\","
+                                        + "\"retryable\":false,\"message\":\"Reprinted\",\"printedAt\":\"2026-02-10T12:08:00Z\"}"
+                        ));
+                    }
+                    if ("/api/receipts/journal/by-number/R-0000501".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"saleId\":501,\"receiptHeaderId\":801,\"receiptNumber\":\"R-0000501\","
+                                        + "\"storeLocationId\":1,\"storeLocationCode\":\"STORE-1\","
+                                        + "\"terminalDeviceId\":3,\"terminalCode\":\"TERM-3\","
+                                        + "\"cashierUserId\":7,\"cashierUsername\":\"manager\","
+                                        + "\"totalPayable\":19.99,\"soldAt\":\"2026-02-10T12:00:00Z\"}"
+                        ));
+                    }
+                    if ("/api/receipts/journal/by-sale/501".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"saleId\":501,\"receiptHeaderId\":801,\"receiptNumber\":\"R-0000501\","
+                                        + "\"storeLocationId\":1,\"storeLocationCode\":\"STORE-1\","
+                                        + "\"terminalDeviceId\":3,\"terminalCode\":\"TERM-3\","
+                                        + "\"cashierUserId\":7,\"cashierUsername\":\"manager\","
+                                        + "\"totalPayable\":19.99,\"soldAt\":\"2026-02-10T12:00:00Z\"}"
+                        ));
+                    }
                     return CompletableFuture.completedFuture(response(request, 404, ""));
                 }
         );
@@ -801,7 +832,10 @@ class HttpPosApiClientTest {
         client.login("manager", "secret").join();
         assertTrue(client.currentUserPermissions().join().permissions().contains("CASH_DRAWER_OPEN"));
         assertEquals("SUCCESS", client.printReceipt(new ReceiptPrintRequest("R-0000501", false)).join().status().name());
+        assertEquals("SUCCESS", client.reprintReceipt(new ReceiptReprintRequest("R-0000501")).join().status().name());
         assertEquals("SUCCESS", client.openCashDrawer(new CashDrawerOpenRequest(3L, "NO_SALE", null, null)).join().status().name());
+        assertEquals(501L, client.getReceiptJournalByNumber("R-0000501").join().saleId());
+        assertEquals("R-0000501", client.getReceiptJournalBySaleId(501L).join().receiptNumber());
 
         HttpRequest permissionsRequest = requests.stream()
                 .filter(req -> req.uri().getPath().equals("/api/security/permissions/current"))
@@ -811,6 +845,18 @@ class HttpPosApiClientTest {
                 .filter(req -> req.uri().getPath().equals("/api/receipts/print"))
                 .findFirst()
                 .orElseThrow();
+        HttpRequest reprintRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/receipts/reprint"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest journalByNumberRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/receipts/journal/by-number/R-0000501"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest journalBySaleRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/receipts/journal/by-sale/501"))
+                .findFirst()
+                .orElseThrow();
         HttpRequest drawerRequest = requests.stream()
                 .filter(req -> req.uri().getPath().equals("/api/receipts/drawer/open"))
                 .findFirst()
@@ -818,6 +864,9 @@ class HttpPosApiClientTest {
 
         assertEquals("Bearer access-123", permissionsRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", printRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", reprintRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", journalByNumberRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", journalBySaleRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", drawerRequest.headers().firstValue("Authorization").orElseThrow());
     }
 

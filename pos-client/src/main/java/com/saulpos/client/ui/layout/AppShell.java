@@ -10,6 +10,7 @@ import com.saulpos.api.inventory.InventoryStockBalanceResponse;
 import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartLineResponse;
@@ -1368,6 +1369,12 @@ public final class AppShell {
                 hardwareCoordinator.drawerResponseProperty()
         ));
 
+        Label journalSummary = new Label();
+        journalSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toReceiptJournalSummary(hardwareCoordinator.receiptJournalProperty().get()),
+                hardwareCoordinator.receiptJournalProperty()
+        ));
+
         PosButton refreshPermissions = PosButton.accent("Refresh Hardware Access");
         refreshPermissions.disableProperty().bind(hardwareCoordinator.busyProperty());
         refreshPermissions.setOnAction(event -> hardwareCoordinator.refreshPermissions());
@@ -1377,6 +1384,28 @@ public final class AppShell {
         PosButton printReceipt = PosButton.primary("Print Receipt");
         printReceipt.disableProperty().bind(hardwareCoordinator.busyProperty());
         printReceipt.setOnAction(event -> hardwareCoordinator.printReceipt(receiptNumber.getText(), copy.isSelected()));
+
+        PosTextField journalReceiptNumber = new PosTextField("Journal lookup receipt number");
+        PosTextField journalSaleId = new PosTextField("Journal lookup sale ID");
+        PosButton lookupByReceipt = PosButton.accent("Lookup by Receipt");
+        lookupByReceipt.disableProperty().bind(hardwareCoordinator.busyProperty());
+        lookupByReceipt.setOnAction(event -> hardwareCoordinator.lookupReceiptJournalByNumber(journalReceiptNumber.getText()));
+        PosButton lookupBySale = PosButton.accent("Lookup by Sale");
+        lookupBySale.disableProperty().bind(hardwareCoordinator.busyProperty());
+        lookupBySale.setOnAction(event -> hardwareCoordinator.lookupReceiptJournalBySaleId(parseLong(journalSaleId.getText())));
+
+        PosButton reprintReceipt = PosButton.primary("Reprint Receipt");
+        reprintReceipt.disableProperty().bind(Bindings.or(
+                hardwareCoordinator.busyProperty(),
+                Bindings.not(hardwareCoordinator.reprintAuthorizedProperty())
+        ));
+        reprintReceipt.visibleProperty().bind(hardwareCoordinator.reprintAuthorizedProperty());
+        reprintReceipt.managedProperty().bind(reprintReceipt.visibleProperty());
+        reprintReceipt.setOnAction(event -> hardwareCoordinator.reprintReceipt(journalReceiptNumber.getText()));
+
+        Label reprintHiddenHint = new Label("Receipt reprint is hidden because this user is not authorized.");
+        reprintHiddenHint.visibleProperty().bind(Bindings.not(hardwareCoordinator.reprintAuthorizedProperty()));
+        reprintHiddenHint.managedProperty().bind(reprintHiddenHint.visibleProperty());
 
         PosTextField terminalDeviceId = new PosTextField("Terminal device ID");
         PosTextField reasonCode = new PosTextField("Reason code");
@@ -1409,6 +1438,13 @@ public final class AppShell {
                 copy,
                 printReceipt,
                 printStatus,
+                new Label("Receipt journal + reprint"),
+                journalReceiptNumber,
+                journalSaleId,
+                new HBox(8, lookupByReceipt, lookupBySale),
+                reprintReceipt,
+                reprintHiddenHint,
+                journalSummary,
                 new Label("Cash drawer"),
                 terminalDeviceId,
                 reasonCode,
@@ -1509,6 +1545,19 @@ public final class AppShell {
                 + " | status=" + response.status()
                 + " | lines=" + lineCount
                 + " | totalCost=" + defaultMoney(response.totalCost());
+    }
+
+    private static String toReceiptJournalSummary(ReceiptJournalResponse response) {
+        if (response == null) {
+            return "No receipt journal lookup loaded.";
+        }
+        return "Sale #" + response.saleId()
+                + " | receipt=" + defaultText(response.receiptNumber())
+                + " | store=" + defaultText(response.storeLocationCode())
+                + " | terminal=" + defaultText(response.terminalCode())
+                + " | cashier=" + defaultText(response.cashierUsername())
+                + " | soldAt=" + response.soldAt()
+                + " | payable=" + defaultMoney(response.totalPayable());
     }
 
     private static String toPrintSummary(HardwareActionStatus status, ReceiptPrintResponse response) {

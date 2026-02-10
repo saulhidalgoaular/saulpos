@@ -26,8 +26,10 @@ import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
 import com.saulpos.api.receipt.CashDrawerOpenRequest;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptJournalResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
+import com.saulpos.api.receipt.ReceiptReprintRequest;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
@@ -145,6 +147,18 @@ public interface PosApiClient {
     }
 
     default CompletableFuture<ReceiptPrintResponse> printReceipt(ReceiptPrintRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<ReceiptPrintResponse> reprintReceipt(ReceiptReprintRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<ReceiptJournalResponse> getReceiptJournalBySaleId(Long saleId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<ReceiptJournalResponse> getReceiptJournalByNumber(String receiptNumber) {
         return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
     }
 
