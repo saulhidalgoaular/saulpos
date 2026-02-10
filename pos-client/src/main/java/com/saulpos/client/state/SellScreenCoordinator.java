@@ -3,11 +3,16 @@ package com.saulpos.client.state;
 import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutPaymentRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
@@ -27,6 +32,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -34,6 +40,8 @@ import java.util.function.Consumer;
 public final class SellScreenCoordinator {
 
     private static final int DEFAULT_PAGE_SIZE = 12;
+    private static final String SALES_PROCESS_PERMISSION = "SALES_PROCESS";
+    private static final String DISCOUNT_OVERRIDE_PERMISSION = "DISCOUNT_OVERRIDE";
 
     private final PosApiClient apiClient;
     private final ConnectivityCoordinator connectivityCoordinator;
@@ -41,9 +49,12 @@ public final class SellScreenCoordinator {
     private final Consumer<Runnable> uiDispatcher;
     private final ObjectProperty<SaleCartResponse> cartState = new SimpleObjectProperty<>();
     private final ObjectProperty<ProductSearchResponse> searchState = new SimpleObjectProperty<>();
+    private final ObjectProperty<List<ParkedSaleCartSummaryResponse>> parkedCartsState = new SimpleObjectProperty<>(List.of());
     private final ObjectProperty<SaleCheckoutResponse> checkoutState = new SimpleObjectProperty<>();
     private final StringProperty sellMessage = new SimpleStringProperty("Create or load a cart to begin selling.");
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
+    private final BooleanProperty parkAuthorized = new SimpleBooleanProperty(false);
+    private final BooleanProperty overrideAuthorized = new SimpleBooleanProperty(false);
 
     public SellScreenCoordinator(PosApiClient apiClient) {
         this(apiClient, null, Clock.systemUTC(), Platform::runLater);
@@ -83,6 +94,10 @@ public final class SellScreenCoordinator {
         return checkoutState;
     }
 
+    public ObjectProperty<List<ParkedSaleCartSummaryResponse>> parkedCartsStateProperty() {
+        return parkedCartsState;
+    }
+
     public SaleCheckoutResponse checkoutState() {
         return checkoutState.get();
     }
@@ -93,6 +108,40 @@ public final class SellScreenCoordinator {
 
     public BooleanProperty busyProperty() {
         return busy;
+    }
+
+    public BooleanProperty parkAuthorizedProperty() {
+        return parkAuthorized;
+    }
+
+    public BooleanProperty overrideAuthorizedProperty() {
+        return overrideAuthorized;
+    }
+
+    public CompletableFuture<Void> refreshPermissions() {
+        dispatch(() -> busy.set(true));
+        return apiClient.currentUserPermissions()
+                .thenAccept(response -> dispatch(() -> {
+                    boolean salesProcessAllowed = response.permissions() != null
+                            && response.permissions().contains(SALES_PROCESS_PERMISSION);
+                    boolean discountOverrideAllowed = response.permissions() != null
+                            && response.permissions().contains(DISCOUNT_OVERRIDE_PERMISSION);
+                    parkAuthorized.set(salesProcessAllowed);
+                    overrideAuthorized.set(salesProcessAllowed || discountOverrideAllowed);
+                    sellMessage.set(salesProcessAllowed
+                            ? "Sell permissions loaded. Park and override controls are available."
+                            : "Sell permissions loaded. Park and override controls are restricted for this user.");
+                }))
+                .whenComplete((ignored, throwable) -> {
+                    if (throwable != null) {
+                        dispatch(() -> {
+                            parkAuthorized.set(false);
+                            overrideAuthorized.set(false);
+                            sellMessage.set(mapErrorMessage(throwable));
+                        });
+                    }
+                    dispatch(() -> busy.set(false));
+                });
     }
 
     public CompletableFuture<Void> createCart(Long cashierUserId, Long storeLocationId, Long terminalDeviceId) {
@@ -243,6 +292,147 @@ public final class SellScreenCoordinator {
                 .whenComplete((ignored, throwable) -> finish(throwable));
     }
 
+    public CompletableFuture<Void> parkCurrentCart(Long cashierUserId, Long terminalDeviceId, String note) {
+        if (!parkAuthorized.get()) {
+            dispatch(() -> sellMessage.set("Parking carts requires SALES_PROCESS permission."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
+        if (!hasActiveCart()) {
+            dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before parking."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (cashierUserId == null || terminalDeviceId == null) {
+            dispatch(() -> sellMessage.set("Cashier and terminal are required to park cart."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.parkCart(requireCartId(), new SaleCartParkRequest(cashierUserId, terminalDeviceId, normalizeReference(note)))
+                .thenAccept(cart -> acceptCart(cart, "Cart parked successfully."))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> listParkedCarts(Long storeLocationId, Long terminalDeviceId) {
+        if (!parkAuthorized.get()) {
+            dispatch(() -> sellMessage.set("Listing parked carts requires SALES_PROCESS permission."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (storeLocationId == null) {
+            dispatch(() -> sellMessage.set("Store location ID is required to list parked carts."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.listParkedCarts(storeLocationId, terminalDeviceId)
+                .thenAccept(items -> dispatch(() -> {
+                    parkedCartsState.set(items == null ? List.of() : items);
+                    sellMessage.set("Loaded " + parkedCartsState.get().size() + " parked carts.");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> resumeParkedCart(Long cartId, Long cashierUserId, Long terminalDeviceId) {
+        if (!parkAuthorized.get()) {
+            dispatch(() -> sellMessage.set("Resuming parked carts requires SALES_PROCESS permission."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
+        if (cartId == null || cashierUserId == null || terminalDeviceId == null) {
+            dispatch(() -> sellMessage.set("Cart ID, cashier, and terminal are required to resume parked cart."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.resumeCart(cartId, new SaleCartResumeRequest(cashierUserId, terminalDeviceId))
+                .thenAccept(cart -> acceptCart(cart, "Parked cart resumed and active."))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> voidLine(Long lineId,
+                                            Long cashierUserId,
+                                            Long terminalDeviceId,
+                                            String reasonCode,
+                                            String note) {
+        if (!overrideAuthorized.get()) {
+            dispatch(() -> sellMessage.set("Line void requires override authorization."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
+        if (!hasActiveCart()) {
+            dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before line void."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (lineId == null || cashierUserId == null || terminalDeviceId == null) {
+            dispatch(() -> sellMessage.set("Line ID, cashier, and terminal are required for line void."));
+            return CompletableFuture.completedFuture(null);
+        }
+        String normalizedReason = normalizeReason(reasonCode);
+        if (normalizedReason == null) {
+            dispatch(() -> sellMessage.set("Void reason code is required."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.voidCartLine(requireCartId(), lineId,
+                        new SaleCartVoidLineRequest(cashierUserId, terminalDeviceId, normalizedReason, normalizeReference(note)))
+                .thenAccept(cart -> acceptCart(cart, "Cart line voided."))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> overrideLinePrice(Long lineId,
+                                                     Long cashierUserId,
+                                                     Long terminalDeviceId,
+                                                     BigDecimal unitPrice,
+                                                     String reasonCode,
+                                                     String note) {
+        if (!overrideAuthorized.get()) {
+            dispatch(() -> sellMessage.set("Price override requires override authorization."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
+        if (!hasActiveCart()) {
+            dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before price override."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (lineId == null || cashierUserId == null || terminalDeviceId == null) {
+            dispatch(() -> sellMessage.set("Line ID, cashier, and terminal are required for price override."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (unitPrice == null || unitPrice.compareTo(BigDecimal.ZERO) < 0) {
+            dispatch(() -> sellMessage.set("Override unit price must be non-negative."));
+            return CompletableFuture.completedFuture(null);
+        }
+        String normalizedReason = normalizeReason(reasonCode);
+        if (normalizedReason == null) {
+            dispatch(() -> sellMessage.set("Override reason code is required."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.overrideCartLinePrice(requireCartId(), lineId,
+                        new SaleCartPriceOverrideRequest(
+                                cashierUserId,
+                                terminalDeviceId,
+                                unitPrice,
+                                normalizedReason,
+                                normalizeReference(note)))
+                .thenAccept(cart -> acceptCart(cart, "Cart line price overridden."))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
     public CompletableFuture<Void> checkout(Long cashierUserId,
                                             Long terminalDeviceId,
                                             BigDecimal cashAmount,
@@ -369,5 +559,10 @@ public final class SellScreenCoordinator {
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    private static String normalizeReason(String value) {
+        String trimmed = normalizeReference(value);
+        return trimmed == null ? null : trimmed.toUpperCase(Locale.ROOT);
     }
 }

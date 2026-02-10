@@ -63,6 +63,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O8` Reporting and export UI.
 - `O9` Hardware interaction UI.
 - `O10` Offline/degraded mode UX.
+- `O11` Suspended sales and override UX.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -217,6 +218,22 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - HTTP offline-policy contract mapping,
   - connectivity coordinator online/offline transitions and policy-message behavior,
   - auth and sell coordinator blocking behavior while offline.
+
+### Client Suspended Sales and Override UX (`O11`)
+- Sell screen now supports:
+  - parked-cart controls to park active carts, list parked carts by store/terminal, and resume selected parked carts,
+  - sensitive line actions for line void and line price override with mandatory reason-code capture,
+  - permission-aware action gating so restricted operators see controls disabled unless `SALES_PROCESS`/override permissions are available.
+- Client sell operations consume server contracts:
+  - `POST /api/sales/carts/{id}/park`
+  - `GET /api/sales/carts/parked?storeLocationId={id}&terminalDeviceId={id}`
+  - `POST /api/sales/carts/{id}/resume`
+  - `POST /api/sales/carts/{id}/lines/{lineId}/void`
+  - `POST /api/sales/carts/{id}/lines/{lineId}/price-override`
+  - `GET /api/security/permissions/current` (sell permission refresh/gating)
+- Tests now cover:
+  - HTTP sell contract mapping for parked-cart and sensitive-line endpoints,
+  - sell coordinator permission refresh plus park/list/resume/void/override success and unauthorized-blocking flows.
 
 ## Implemented Domain Capabilities
 

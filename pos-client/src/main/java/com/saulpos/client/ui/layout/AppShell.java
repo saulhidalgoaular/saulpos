@@ -9,6 +9,7 @@ import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
@@ -540,6 +541,105 @@ public final class AppShell {
         recalculate.disableProperty().bind(sellScreenCoordinator.busyProperty());
         recalculate.setOnAction(event -> sellScreenCoordinator.recalculate());
 
+        PosButton loadSellPermissions = PosButton.accent("Load Sell Permissions");
+        loadSellPermissions.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        loadSellPermissions.setOnAction(event -> sellScreenCoordinator.refreshPermissions());
+
+        PosTextField parkNote = new PosTextField("Park note (optional)");
+        PosButton parkCart = PosButton.accent("Park Cart");
+        parkCart.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get() || !sellScreenCoordinator.parkAuthorizedProperty().get(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.parkAuthorizedProperty()
+        ));
+        parkCart.setOnAction(event -> sellScreenCoordinator.parkCurrentCart(
+                parseLong(cashierUserId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parkNote.getText()
+        ));
+
+        PosButton listParked = PosButton.accent("List Parked");
+        listParked.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get() || !sellScreenCoordinator.parkAuthorizedProperty().get(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.parkAuthorizedProperty()
+        ));
+        listParked.setOnAction(event -> sellScreenCoordinator.listParkedCarts(
+                parseLong(storeLocationId.getText()),
+                parseLong(terminalDeviceId.getText())
+        ));
+
+        ListView<ParkedSaleCartSummaryResponse> parkedCarts = new ListView<>();
+        parkedCarts.setPrefHeight(140);
+        sellScreenCoordinator.parkedCartsStateProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                parkedCarts.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            parkedCarts.setItems(FXCollections.observableArrayList(newValue));
+        });
+        parkedCarts.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(ParkedSaleCartSummaryResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText(item.cartId()
+                        + " | ref=" + item.referenceCode()
+                        + " | total=" + defaultMoney(item.totalPayable())
+                        + " | parkedAt=" + item.parkedAt());
+            }
+        });
+
+        PosTextField resumeCartId = new PosTextField("Parked cart ID");
+        PosButton resumeParked = PosButton.primary("Resume Parked");
+        resumeParked.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get() || !sellScreenCoordinator.parkAuthorizedProperty().get(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.parkAuthorizedProperty()
+        ));
+        resumeParked.setOnAction(event -> sellScreenCoordinator.resumeParkedCart(
+                parseLong(resumeCartId.getText()),
+                parseLong(cashierUserId.getText()),
+                parseLong(terminalDeviceId.getText())
+        ));
+
+        PosTextField overrideLineId = new PosTextField("Line ID for void/override");
+        PosTextField overrideReasonCode = new PosTextField("Override reason code");
+        PosTextField overrideNote = new PosTextField("Override note (optional)");
+        PosTextField overrideUnitPrice = new PosTextField("Override unit price");
+
+        PosButton voidLine = PosButton.accent("Void Line");
+        voidLine.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get() || !sellScreenCoordinator.overrideAuthorizedProperty().get(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.overrideAuthorizedProperty()
+        ));
+        voidLine.setOnAction(event -> sellScreenCoordinator.voidLine(
+                parseLong(overrideLineId.getText()),
+                parseLong(cashierUserId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                overrideReasonCode.getText(),
+                overrideNote.getText()
+        ));
+
+        PosButton priceOverride = PosButton.accent("Override Price");
+        priceOverride.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get() || !sellScreenCoordinator.overrideAuthorizedProperty().get(),
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.overrideAuthorizedProperty()
+        ));
+        priceOverride.setOnAction(event -> sellScreenCoordinator.overrideLinePrice(
+                parseLong(overrideLineId.getText()),
+                parseLong(cashierUserId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseDecimal(overrideUnitPrice.getText()),
+                overrideReasonCode.getText(),
+                overrideNote.getText()
+        ));
+
         PosButton continueToCheckout = PosButton.accent("Go To Checkout");
         continueToCheckout.disableProperty().bind(Bindings.createBooleanBinding(
                 () -> sellScreenCoordinator.cartState() == null
@@ -583,6 +683,18 @@ public final class AppShell {
                 updateLine,
                 new Label("Remove line"),
                 removeLineId,
+                new Label("Suspended sales"),
+                new HBox(8, loadSellPermissions, parkCart, listParked),
+                parkNote,
+                parkedCarts,
+                resumeCartId,
+                resumeParked,
+                new Label("Sensitive line controls"),
+                overrideLineId,
+                overrideReasonCode,
+                overrideNote,
+                overrideUnitPrice,
+                new HBox(8, voidLine, priceOverride),
                 new HBox(8, removeLine, recalculate, continueToCheckout)
         );
     }

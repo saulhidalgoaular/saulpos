@@ -24,10 +24,15 @@ import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.security.CurrentUserPermissionsResponse;
@@ -89,6 +94,28 @@ public interface PosApiClient {
     CompletableFuture<SaleCartResponse> removeCartLine(Long cartId, Long lineId);
 
     CompletableFuture<SaleCartResponse> recalculateCart(Long cartId);
+
+    default CompletableFuture<SaleCartResponse> parkCart(Long cartId, SaleCartParkRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<ParkedSaleCartSummaryResponse>> listParkedCarts(Long storeLocationId, Long terminalDeviceId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SaleCartResponse> resumeCart(Long cartId, SaleCartResumeRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SaleCartResponse> voidCartLine(Long cartId, Long lineId, SaleCartVoidLineRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<SaleCartResponse> overrideCartLinePrice(Long cartId,
+                                                                      Long lineId,
+                                                                      SaleCartPriceOverrideRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
 
     CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request);
 

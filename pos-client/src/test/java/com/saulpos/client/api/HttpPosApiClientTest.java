@@ -18,7 +18,11 @@ import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.report.ExceptionReportEventType;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
+import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutPaymentRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.shift.CashMovementRequest;
@@ -287,6 +291,29 @@ class HttpPosApiClientTest {
                     if ("/api/sales/carts/44/recalculate".equals(path) && "POST".equals(request.method())) {
                         return CompletableFuture.completedFuture(response(request, 200, cartJson()));
                     }
+                    if ("/api/sales/carts/44/park".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/parked".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"cartId\":44,\"referenceCode\":\"PARK-0044\",\"cashierUserId\":7,"
+                                        + "\"storeLocationId\":1,\"terminalDeviceId\":3,"
+                                        + "\"pricingAt\":\"2026-02-10T12:00:00Z\",\"totalPayable\":10.00,"
+                                        + "\"parkedAt\":\"2026-02-10T12:06:00Z\",\"expiresAt\":\"2026-02-10T12:36:00Z\","
+                                        + "\"updatedAt\":\"2026-02-10T12:06:00Z\"}]"
+                        ));
+                    }
+                    if ("/api/sales/carts/44/resume".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/lines/11/void".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
+                    if ("/api/sales/carts/44/lines/11/price-override".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(request, 200, cartJson()));
+                    }
                     if ("/api/sales/checkout".equals(path) && "POST".equals(request.method())) {
                         return CompletableFuture.completedFuture(response(
                                 request,
@@ -312,6 +339,15 @@ class HttpPosApiClientTest {
         assertEquals(44L, client.updateCartLine(44L, 11L, new SaleCartUpdateLineRequest(BigDecimal.ONE, null, null)).join().id());
         assertEquals(44L, client.removeCartLine(44L, 11L).join().id());
         assertEquals(44L, client.recalculateCart(44L).join().id());
+        assertEquals(44L, client.parkCart(44L, new SaleCartParkRequest(7L, 3L, "busy lane")).join().id());
+        assertEquals(1, client.listParkedCarts(1L, 3L).join().size());
+        assertEquals(44L, client.resumeCart(44L, new SaleCartResumeRequest(7L, 3L)).join().id());
+        assertEquals(44L, client.voidCartLine(44L, 11L, new SaleCartVoidLineRequest(7L, 3L, "VOID_REASON", null)).join().id());
+        assertEquals(44L, client.overrideCartLinePrice(
+                44L,
+                11L,
+                new SaleCartPriceOverrideRequest(7L, 3L, new BigDecimal("9.99"), "OVERRIDE_REASON", "manager ok")
+        ).join().id());
         assertEquals("R-0000501", client.checkout(new SaleCheckoutRequest(
                 44L,
                 7L,
@@ -322,11 +358,22 @@ class HttpPosApiClientTest {
         HttpRequest lookupRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/lookup")).findFirst().orElseThrow();
         HttpRequest searchRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/search")).findFirst().orElseThrow();
         HttpRequest addLineRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/lines")).findFirst().orElseThrow();
+        HttpRequest parkRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/park")).findFirst().orElseThrow();
+        HttpRequest listParkedRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/parked")).findFirst().orElseThrow();
+        HttpRequest resumeRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/resume")).findFirst().orElseThrow();
+        HttpRequest voidRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/lines/11/void")).findFirst().orElseThrow();
+        HttpRequest priceOverrideRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/lines/11/price-override")).findFirst().orElseThrow();
         HttpRequest checkoutRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/checkout")).findFirst().orElseThrow();
 
         assertTrue(lookupRequest.uri().getRawQuery().contains("merchantId=1"));
         assertTrue(searchRequest.uri().getRawQuery().contains("q=soda"));
         assertEquals("Bearer access-123", addLineRequest.headers().firstValue("Authorization").orElseThrow());
+        assertTrue(listParkedRequest.uri().getRawQuery().contains("storeLocationId=1"));
+        assertTrue(listParkedRequest.uri().getRawQuery().contains("terminalDeviceId=3"));
+        assertEquals("Bearer access-123", parkRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", resumeRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", voidRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", priceOverrideRequest.headers().firstValue("Authorization").orElseThrow());
         assertTrue(checkoutRequest.headers().firstValue("Idempotency-Key").orElseThrow().startsWith("pos-client-"));
     }
 

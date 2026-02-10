@@ -26,10 +26,15 @@ import com.saulpos.api.receipt.CashDrawerOpenResponse;
 import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
+import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.security.CurrentUserPermissionsResponse;
@@ -309,6 +314,40 @@ public final class HttpPosApiClient implements PosApiClient {
                 .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         return send(request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> parkCart(Long cartId, SaleCartParkRequest request) {
+        return postJson("/api/sales/carts/" + cartId + "/park", request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<ParkedSaleCartSummaryResponse>> listParkedCarts(Long storeLocationId, Long terminalDeviceId) {
+        StringBuilder path = new StringBuilder("/api/sales/carts/parked?storeLocationId=").append(storeLocationId);
+        if (terminalDeviceId != null) {
+            path.append("&terminalDeviceId=").append(terminalDeviceId);
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return sendList(request, ParkedSaleCartSummaryResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> resumeCart(Long cartId, SaleCartResumeRequest request) {
+        return postJson("/api/sales/carts/" + cartId + "/resume", request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> voidCartLine(Long cartId, Long lineId, SaleCartVoidLineRequest request) {
+        return postJson("/api/sales/carts/" + cartId + "/lines/" + lineId + "/void", request, SaleCartResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<SaleCartResponse> overrideCartLinePrice(Long cartId,
+                                                                     Long lineId,
+                                                                     SaleCartPriceOverrideRequest request) {
+        return postJson("/api/sales/carts/" + cartId + "/lines/" + lineId + "/price-override", request, SaleCartResponse.class);
     }
 
     @Override

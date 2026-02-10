@@ -14,16 +14,22 @@ import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
+import com.saulpos.api.sale.ParkedSaleCartSummaryResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartLineResponse;
+import com.saulpos.api.sale.SaleCartParkRequest;
+import com.saulpos.api.sale.SaleCartPriceOverrideRequest;
 import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartResumeRequest;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.sale.PaymentStatus;
+import com.saulpos.api.security.CurrentUserPermissionsResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -266,6 +272,84 @@ class SellScreenCoordinatorTest {
         assertNull(apiClient.checkoutRequest);
     }
 
+    @Test
+    void parkResumeAndOverrideFlow_shouldUseApiAndUpdateMessages() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of(
+                new SaleCartLineResponse(
+                        12L,
+                        "line-12",
+                        300L,
+                        "SODA-350",
+                        "Soda 350ml",
+                        ProductSaleMode.UNIT,
+                        BigDecimal.ONE,
+                        new BigDecimal("1.50"),
+                        new BigDecimal("1.50"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("1.50"),
+                        null
+                )
+        ));
+        apiClient.permissionsResponse = new CurrentUserPermissionsResponse(
+                10L,
+                "cashier",
+                Set.of("CASHIER"),
+                Set.of("SALES_PROCESS", "DISCOUNT_OVERRIDE")
+        );
+        apiClient.parkedCarts = List.of(new ParkedSaleCartSummaryResponse(
+                99L,
+                "PARK-0099",
+                10L,
+                20L,
+                30L,
+                NOW,
+                new BigDecimal("1.50"),
+                NOW,
+                NOW.plusSeconds(1800),
+                NOW
+        ));
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+
+        coordinator.refreshPermissions().join();
+        coordinator.loadCart(99L).join();
+        coordinator.parkCurrentCart(10L, 30L, "lane swap").join();
+        coordinator.listParkedCarts(20L, 30L).join();
+        coordinator.resumeParkedCart(99L, 10L, 30L).join();
+        coordinator.voidLine(12L, 10L, 30L, "void_reason", "damaged").join();
+        coordinator.overrideLinePrice(12L, 10L, 30L, new BigDecimal("1.20"), "override_reason", "promo adj").join();
+
+        assertEquals("Cart line price overridden.", coordinator.sellMessageProperty().get());
+        assertEquals(1, coordinator.parkedCartsStateProperty().get().size());
+        assertEquals("lane swap", apiClient.parkRequest.note());
+        assertEquals("VOID_REASON", apiClient.voidLineRequest.reasonCode());
+        assertEquals("OVERRIDE_REASON", apiClient.overrideRequest.reasonCode());
+    }
+
+    @Test
+    void parkAndOverrideWithoutPermissions_shouldBlockCalls() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of());
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+        coordinator.loadCart(99L).join();
+
+        coordinator.parkCurrentCart(10L, 30L, null).join();
+        assertEquals("Parking carts requires SALES_PROCESS permission.", coordinator.sellMessageProperty().get());
+
+        coordinator.voidLine(1L, 10L, 30L, "VOID", null).join();
+        assertEquals("Line void requires override authorization.", coordinator.sellMessageProperty().get());
+        assertNull(apiClient.parkRequest);
+        assertNull(apiClient.voidLineRequest);
+    }
+
     private static ProductResponse product(Long id, String sku, String name, boolean active) {
         return new ProductResponse(
                 id,
@@ -316,6 +400,13 @@ class SellScreenCoordinatorTest {
         private RuntimeException updateFailure;
         private SaleCheckoutResponse checkoutResponse;
         private SaleCheckoutRequest checkoutRequest;
+        private SaleCartParkRequest parkRequest;
+        private SaleCartResumeRequest resumeRequest;
+        private SaleCartVoidLineRequest voidLineRequest;
+        private SaleCartPriceOverrideRequest overrideRequest;
+        private List<ParkedSaleCartSummaryResponse> parkedCarts = List.of();
+        private CurrentUserPermissionsResponse permissionsResponse =
+                new CurrentUserPermissionsResponse(10L, "cashier", Set.of("CASHIER"), Set.of());
         private boolean reachable = true;
         private OfflinePolicyResponse policy = new OfflinePolicyResponse("K1-v1", "", List.of());
 
@@ -441,6 +532,42 @@ class SellScreenCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleCartResponse> recalculateCart(Long cartId) {
+            return CompletableFuture.completedFuture(cart);
+        }
+
+        @Override
+        public CompletableFuture<CurrentUserPermissionsResponse> currentUserPermissions() {
+            return CompletableFuture.completedFuture(permissionsResponse);
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> parkCart(Long cartId, SaleCartParkRequest request) {
+            this.parkRequest = request;
+            return CompletableFuture.completedFuture(cart);
+        }
+
+        @Override
+        public CompletableFuture<List<ParkedSaleCartSummaryResponse>> listParkedCarts(Long storeLocationId, Long terminalDeviceId) {
+            return CompletableFuture.completedFuture(parkedCarts);
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> resumeCart(Long cartId, SaleCartResumeRequest request) {
+            this.resumeRequest = request;
+            return CompletableFuture.completedFuture(cart);
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> voidCartLine(Long cartId, Long lineId, SaleCartVoidLineRequest request) {
+            this.voidLineRequest = request;
+            return CompletableFuture.completedFuture(cart);
+        }
+
+        @Override
+        public CompletableFuture<SaleCartResponse> overrideCartLinePrice(Long cartId,
+                                                                         Long lineId,
+                                                                         SaleCartPriceOverrideRequest request) {
+            this.overrideRequest = request;
             return CompletableFuture.completedFuture(cart);
         }
 

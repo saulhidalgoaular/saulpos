@@ -931,7 +931,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests with simulated API outages and recoveries.
 
-#### Card O11: Suspended Sales and Override UX
+#### Card O11: Suspended Sales and Override UX [SOLVED]
 - Goal: Deliver cashier-friendly controls for parked carts and sensitive line operations.
 - Dependencies: G4, G5, O4.
 - Acceptance Criteria:
@@ -1122,7 +1122,7 @@ Out of Scope:
 | O8 | DONE |  |  | Implemented reporting UI workflow in `pos-client` with shared filters (date/store/terminal/cashier + contextual category/supplier/reason/event-type), report-load actions for sales/returns, inventory movements, cash shifts, and exceptions, streaming row preview strategy (bounded client-side window), and CSV export actions with deterministic operator feedback; added API contract tests and reporting coordinator coverage for filter/export behavior |
 | O9 | DONE |  |  | Implemented hardware UI workflow in `pos-client` with receipt print action/status visibility (`queued`/`success`/`failure`), role-gated drawer open action backed by current-permissions introspection (`/api/security/permissions/current`), and API/coordinator coverage for print/drawer contracts and authorization behavior |
 | O10 | DONE |  |  | Implemented connectivity/degraded-mode UX in `pos-client` with top-bar online/offline visibility + retry action, policy-aware operation blocking for `AUTH_LOGIN`/`CART_MUTATION`/`CHECKOUT` using `/api/system/offline-policy`, and client API/coordinator coverage for offline blocking and recovery messaging |
-| O11 | TODO |  |  |  |
+| O11 | DONE |  |  | Implemented sell-screen parked-cart workflow (`park`, `list`, `resume`) and sensitive line controls (`void`, `price-override`) with mandatory reason capture, permission-aware UI gating via `GET /api/security/permissions/current`, and client API/coordinator test coverage for contract mapping plus authorized/unauthorized behavior |
 | O12 | TODO |  |  |  |
 | O13 | TODO |  |  |  |
 | P1 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O11` Suspended sales and override UX.
-2. `O12` Lot/expiry and supplier return UX.
-3. `O13` Receipt reprint and exception monitoring UX.
+1. `O12` Lot/expiry and supplier return UX.
+2. `O13` Receipt reprint and exception monitoring UX.
+3. `P1` End-to-end UAT scenarios.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.
