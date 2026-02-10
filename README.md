@@ -45,6 +45,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L2` Inventory reports.
 - `L3` Cash and shift reports.
 - `L4` CSV export.
+- `L5` Exception and override reports.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -313,6 +314,20 @@ Backend source of truth:
   - shift-level rows with opening/paid-in/paid-out totals plus expected close cash, counted close cash, variance amount, and variance reason,
   - shift summary totals across the filtered dataset,
   - end-of-day store buckets with shift count, expected/counted totals, net variance, and aggregated variance reason counts.
+
+### Exception and Override Reporting
+- Exception reporting APIs:
+  - `GET /api/reports/exceptions`
+- CSV export API:
+  - `GET /api/reports/exceptions/export`
+- Supported filters:
+  - `from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`, `reasonCode`, `eventType`
+- Event coverage:
+  - `LINE_VOID`, `CART_VOID`, `PRICE_OVERRIDE`
+  - `NO_SALE` (drawer-open events from `no_sale_drawer_event`)
+  - `REFUND_EXCEPTION` (refund payment transitions)
+- Report outputs:
+  - rows include actor, approver (when available), terminal context, reason code, note, correlation ID, and source reference number.
 
 ### Payment State Machine
 - Payment lifecycle APIs:

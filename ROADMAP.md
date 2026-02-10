@@ -738,7 +738,7 @@ Out of Scope:
 - Acceptance Criteria:
 1. CSV includes headers, deterministic column order, UTF-8 output.
 
-#### Card L5: Exception and Override Reports
+#### Card L5: Exception and Override Reports [SOLVED]
 - Goal: Provide operational oversight for sensitive POS actions.
 - Dependencies: G5, B3, J2.
 - API Contract: endpoints for void/override/no-sale/refund-exception reporting.
@@ -1105,7 +1105,7 @@ Out of Scope:
 | L2 | DONE |  |  | Implemented inventory reporting endpoints (`GET /api/reports/inventory/stock-on-hand`, `GET /api/reports/inventory/low-stock`, `GET /api/reports/inventory/movements`) with store/category/supplier filters (plus `from`/`to` for movement and `minimumQuantity` for low-stock), tabular export-ready row DTOs in `pos-api`, and integration/security coverage for filters, validation, and authorization |
 | L3 | DONE |  |  | Implemented cash reporting endpoints (`GET /api/reports/cash/shifts`, `GET /api/reports/cash/end-of-day`) with store/terminal/cashier/date filters, shift-level expected-vs-counted variance visibility, and end-of-day variance reason aggregation by business date/store with integration/security coverage |
 | L4 | DONE |  |  | Implemented CSV export endpoints for sales, inventory, and cash reports with deterministic UTF-8 headers/column order (`/api/reports/sales/export`, `/api/reports/inventory/*/export`, `/api/reports/cash/*/export`) and integration coverage for content type, file disposition, and authorization |
-| L5 | TODO |  |  |  |
+| L5 | DONE |  |  | Implemented exception reporting endpoints (`GET /api/reports/exceptions`, `/api/reports/exceptions/export`) with filters (`from`/`to`/store/terminal/cashier/reason/eventType), reconciliation-ready rows including actor/approver/terminal/correlation/reference, migration `V37` (`no_sale_drawer_event`), and integration/security coverage for filter combinations, invalid range validation, and authorization |
 | M1 | TODO |  |  |  |
 | M2 | TODO |  |  |  |
 | M3 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `L5` Exception and override reports.
-2. `M1` Printer abstraction and templates.
-3. `M2` Cash drawer integration.
+1. `M1` Printer abstraction and templates.
+2. `M2` Cash drawer integration.
+3. `M3` Scanner/Scale extension interfaces.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

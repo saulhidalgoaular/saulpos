@@ -145,6 +145,7 @@ class ReportIntegrationTest {
         jdbcTemplate.execute("DELETE FROM sale_line");
         jdbcTemplate.execute("DELETE FROM sale");
         jdbcTemplate.execute("DELETE FROM sale_override_event");
+        jdbcTemplate.execute("DELETE FROM no_sale_drawer_event");
         jdbcTemplate.execute("DELETE FROM void_reason_code");
         jdbcTemplate.execute("DELETE FROM sale_cart_event");
         jdbcTemplate.execute("DELETE FROM parked_cart_reference");
@@ -529,6 +530,83 @@ class ReportIntegrationTest {
     }
 
     @Test
+    void exceptionReportSupportsRequiredFiltersAndReconcilesWithSourceEvents() throws Exception {
+        CheckoutSeed sale = checkout(cashierOneId, storeOneId, terminalOneId, productOneId, new BigDecimal("1.000"));
+        setSaleTimestamp(sale.saleId(), Instant.parse("2026-02-01T10:00:00Z"));
+
+        insertPriceOverrideEvent(sale.saleId(), sale.cartLineId(), Instant.parse("2026-02-01T09:59:00Z"));
+        insertLineVoidEvent(sale.saleId(), sale.cartLineId(), Instant.parse("2026-02-01T10:30:00Z"));
+        insertNoSaleDrawerEvent(
+                storeOneId,
+                terminalOneId,
+                cashierOneId,
+                "NO_SALE_TEST",
+                "drawer open without sale",
+                "corr-nosale-1",
+                Instant.parse("2026-02-02T08:00:00Z"));
+        insertRefundTransition(
+                sale.saleId(),
+                cashierOneId,
+                "manager refund override",
+                "corr-refund-1",
+                Instant.parse("2026-02-03T12:00:00Z"));
+
+        mockMvc.perform(get("/api/reports/exceptions")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-04T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(4))
+                .andExpect(jsonPath("$.rows[0].eventType").value("REFUND_EXCEPTION"))
+                .andExpect(jsonPath("$.rows[0].reasonCode").value("REFUND_EXCEPTION"))
+                .andExpect(jsonPath("$.rows[0].terminalDeviceId").value(terminalOneId))
+                .andExpect(jsonPath("$.rows[0].cashierUserId").value(cashierOneId))
+                .andExpect(jsonPath("$.rows[0].correlationId").value("corr-refund-1"))
+                .andExpect(jsonPath("$.rows[1].eventType").value("NO_SALE"))
+                .andExpect(jsonPath("$.rows[1].reasonCode").value("NO_SALE_TEST"))
+                .andExpect(jsonPath("$.rows[1].terminalDeviceId").value(terminalOneId))
+                .andExpect(jsonPath("$.rows[1].actorUsername").value("cashier-report-1"))
+                .andExpect(jsonPath("$.rows[1].approverUsername").value("manager-report"))
+                .andExpect(jsonPath("$.rows[1].correlationId").value("corr-nosale-1"))
+                .andExpect(jsonPath("$.rows[2].eventType").value("LINE_VOID"))
+                .andExpect(jsonPath("$.rows[2].reasonCode").value("CUSTOMER_REQUEST"))
+                .andExpect(jsonPath("$.rows[2].actorUsername").value("cashier-report-1"))
+                .andExpect(jsonPath("$.rows[2].approverUsername").value("manager-report"))
+                .andExpect(jsonPath("$.rows[3].eventType").value("PRICE_OVERRIDE"))
+                .andExpect(jsonPath("$.rows[3].reasonCode").value("PRICE_MATCH"));
+
+        mockMvc.perform(get("/api/reports/exceptions")
+                        .param("eventType", "NO_SALE")
+                        .param("storeLocationId", storeOneId.toString())
+                        .param("terminalDeviceId", terminalOneId.toString())
+                        .param("cashierUserId", cashierOneId.toString())
+                        .param("reasonCode", "NO_SALE_TEST")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-04T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].eventType").value("NO_SALE"))
+                .andExpect(jsonPath("$.rows[0].reasonCode").value("NO_SALE_TEST"));
+
+        mockMvc.perform(get("/api/reports/exceptions")
+                        .param("eventType", "REFUND_EXCEPTION")
+                        .param("reasonCode", "REFUND_EXCEPTION")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-04T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rows.length()").value(1))
+                .andExpect(jsonPath("$.rows[0].eventType").value("REFUND_EXCEPTION"));
+    }
+
+    @Test
+    void exceptionReportRejectsInvalidDateRange() throws Exception {
+        mockMvc.perform(get("/api/reports/exceptions")
+                        .param("from", "2026-02-06T00:00:00Z")
+                        .param("to", "2026-02-01T00:00:00Z"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("POS-4001"));
+    }
+
+    @Test
     void csvExportEndpointsReturnDeterministicHeadersAndUtf8() throws Exception {
         CheckoutSeed saleOne = checkout(cashierOneId, storeOneId, terminalOneId, productOneId, new BigDecimal("2.000"));
         setSaleTimestamp(saleOne.saleId(), Instant.parse("2026-02-01T10:00:00Z"));
@@ -586,6 +664,28 @@ class ReportIntegrationTest {
         assertThat(cashBody)
                 .startsWith("businessDate,storeLocationId,storeLocationCode,storeLocationName,shiftCount,expectedCloseCash,countedCloseCash,varianceCash,varianceReasons\n")
                 .contains("REGISTER_SHORT:1");
+
+        insertNoSaleDrawerEvent(
+                storeOneId,
+                terminalOneId,
+                cashierOneId,
+                "NO_SALE_TEST",
+                "drawer open without sale",
+                "corr-nosale-2",
+                Instant.parse("2026-02-01T16:00:00Z"));
+
+        var exceptionResponse = mockMvc.perform(get("/api/reports/exceptions/export")
+                        .param("from", "2026-02-01T00:00:00Z")
+                        .param("to", "2026-02-03T23:59:59Z"))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse();
+        assertThat(exceptionResponse.getContentType()).isEqualTo("text/csv;charset=UTF-8");
+        assertThat(exceptionResponse.getHeader("Content-Disposition")).contains("exceptions-report.csv");
+        String exceptionBody = new String(exceptionResponse.getContentAsByteArray(), StandardCharsets.UTF_8);
+        assertThat(exceptionBody)
+                .startsWith("eventId,occurredAt,eventType,storeLocationId,storeLocationCode,storeLocationName,terminalDeviceId,terminalDeviceCode,terminalDeviceName,cashierUserId,cashierUsername,actorUsername,approverUsername,reasonCode,note,correlationId,referenceNumber\n")
+                .contains("NO_SALE_TEST");
     }
 
     @Test
@@ -616,6 +716,14 @@ class ReportIntegrationTest {
                 .andExpect(jsonPath("$.code").value("POS-4030"));
 
         mockMvc.perform(get("/api/reports/cash/end-of-day/export"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/exceptions"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code").value("POS-4030"));
+
+        mockMvc.perform(get("/api/reports/exceptions/export"))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.code").value("POS-4030"));
     }
@@ -703,6 +811,108 @@ class ReportIntegrationTest {
                 new BigDecimal("6.00"),
                 new BigDecimal("5.00"),
                 Timestamp.from(timestamp));
+    }
+
+    private void insertLineVoidEvent(Long saleId, Long lineId, Instant timestamp) {
+        Long cartId = jdbcTemplate.queryForObject("SELECT cart_id FROM sale WHERE id = ?", Long.class, saleId);
+        jdbcTemplate.update(
+                """
+                INSERT INTO sale_override_event (
+                    cart_id,
+                    line_id,
+                    event_type,
+                    reason_code,
+                    note,
+                    approval_required,
+                    approved_by_username,
+                    actor_user_id,
+                    actor_username,
+                    terminal_device_id,
+                    correlation_id,
+                    created_at
+                ) VALUES (?, ?, 'LINE_VOID', 'CUSTOMER_REQUEST', ?, TRUE, ?, ?, ?, ?, ?, ?)
+                """,
+                cartId,
+                lineId,
+                "line void by manager approval",
+                "manager-report",
+                cashierOneId,
+                "cashier-report-1",
+                terminalOneId,
+                "corr-void-1",
+                Timestamp.from(timestamp));
+    }
+
+    private void insertNoSaleDrawerEvent(Long storeLocationId,
+                                         Long terminalDeviceId,
+                                         Long cashierUserId,
+                                         String reasonCode,
+                                         String note,
+                                         String correlationId,
+                                         Instant createdAt) {
+        jdbcTemplate.update(
+                """
+                INSERT INTO no_sale_drawer_event (
+                    store_location_id,
+                    terminal_device_id,
+                    cashier_user_id,
+                    actor_user_id,
+                    actor_username,
+                    approved_by_username,
+                    reason_code,
+                    note,
+                    correlation_id,
+                    reference_number,
+                    created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                cashierUserId,
+                "cashier-report-1",
+                "manager-report",
+                reasonCode,
+                note,
+                correlationId,
+                "NS-1",
+                Timestamp.from(createdAt));
+    }
+
+    private void insertRefundTransition(Long saleId,
+                                        Long actorUserId,
+                                        String note,
+                                        String correlationId,
+                                        Instant createdAt) {
+        Long paymentId = jdbcTemplate.queryForObject(
+                """
+                SELECT p.id
+                FROM payment p
+                JOIN sale s ON s.cart_id = p.cart_id
+                WHERE s.id = ?
+                """,
+                Long.class,
+                saleId);
+        jdbcTemplate.update(
+                """
+                INSERT INTO payment_transition (
+                    payment_id,
+                    action,
+                    from_status,
+                    to_status,
+                    actor_user_id,
+                    actor_username,
+                    note,
+                    correlation_id,
+                    created_at
+                ) VALUES (?, 'REFUND', 'CAPTURED', 'REFUNDED', ?, ?, ?, ?, ?)
+                """,
+                paymentId,
+                actorUserId,
+                "cashier-report-1",
+                note,
+                correlationId,
+                Timestamp.from(createdAt));
     }
 
     private void insertInventoryMovement(Long storeLocationId,

@@ -6,6 +6,9 @@ import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryMovementReportRowResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportRowResponse;
+import com.saulpos.api.report.ExceptionReportEventType;
+import com.saulpos.api.report.ExceptionReportResponse;
+import com.saulpos.api.report.ExceptionReportRowResponse;
 import com.saulpos.api.report.CashShiftReportResponse;
 import com.saulpos.api.report.CashShiftReportRowResponse;
 import com.saulpos.api.report.CashShiftReportSummaryResponse;
@@ -18,6 +21,7 @@ import com.saulpos.api.report.SalesReturnsReportSummaryResponse;
 import com.saulpos.server.report.repository.CashReportRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.report.repository.ExceptionReportRepository;
 import com.saulpos.server.report.repository.InventoryReportRepository;
 import com.saulpos.server.sale.repository.SaleOverrideEventRepository;
 import com.saulpos.server.sale.repository.SaleRepository;
@@ -38,6 +42,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Locale;
 import java.util.Set;
 import java.util.StringJoiner;
 
@@ -46,12 +51,14 @@ import java.util.StringJoiner;
 public class ReportService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+    private static final String REFUND_EXCEPTION_REASON = "REFUND_EXCEPTION";
 
     private final SaleRepository saleRepository;
     private final SaleReturnRepository saleReturnRepository;
     private final SaleOverrideEventRepository saleOverrideEventRepository;
     private final InventoryReportRepository inventoryReportRepository;
     private final CashReportRepository cashReportRepository;
+    private final ExceptionReportRepository exceptionReportRepository;
 
     @Transactional(readOnly = true)
     public SalesReturnsReportResponse getSalesReturnsReport(Instant from,
@@ -416,6 +423,127 @@ public class ReportService {
     }
 
     @Transactional(readOnly = true)
+    public ExceptionReportResponse getExceptionReport(Instant from,
+                                                      Instant to,
+                                                      Long storeLocationId,
+                                                      Long terminalDeviceId,
+                                                      Long cashierUserId,
+                                                      String reasonCode,
+                                                      ExceptionReportEventType eventType) {
+        validateDateRange(from, to);
+        String normalizedReasonCode = normalizeReasonCodeFilter(reasonCode);
+
+        List<ExceptionReportRowResponse> rows = new ArrayList<>();
+
+        if (eventType == null || eventType == ExceptionReportEventType.LINE_VOID
+                || eventType == ExceptionReportEventType.CART_VOID
+                || eventType == ExceptionReportEventType.PRICE_OVERRIDE) {
+            exceptionReportRepository.findOverrideRows(
+                            from,
+                            to,
+                            storeLocationId,
+                            terminalDeviceId,
+                            cashierUserId,
+                            normalizedReasonCode)
+                    .stream()
+                    .filter(row -> eventType == null || eventType.name().equals(row.getEventType().name()))
+                    .map(row -> new ExceptionReportRowResponse(
+                            row.getEventId(),
+                            row.getOccurredAt(),
+                            ExceptionReportEventType.valueOf(row.getEventType().name()),
+                            row.getStoreLocationId(),
+                            row.getStoreLocationCode(),
+                            row.getStoreLocationName(),
+                            row.getTerminalDeviceId(),
+                            row.getTerminalDeviceCode(),
+                            row.getTerminalDeviceName(),
+                            row.getCashierUserId(),
+                            row.getCashierUsername(),
+                            normalizeOptionalText(row.getActorUsername()),
+                            normalizeOptionalText(row.getApproverUsername()),
+                            normalizeReason(row.getReasonCode()),
+                            normalizeOptionalText(row.getNote()),
+                            normalizeOptionalText(row.getCorrelationId()),
+                            normalizeOptionalText(row.getReferenceNumber())))
+                    .forEach(rows::add);
+        }
+
+        if (eventType == null || eventType == ExceptionReportEventType.NO_SALE) {
+            exceptionReportRepository.findNoSaleRows(
+                            from,
+                            to,
+                            storeLocationId,
+                            terminalDeviceId,
+                            cashierUserId,
+                            normalizedReasonCode)
+                    .stream()
+                    .map(row -> new ExceptionReportRowResponse(
+                            row.getEventId(),
+                            row.getOccurredAt(),
+                            ExceptionReportEventType.NO_SALE,
+                            row.getStoreLocationId(),
+                            row.getStoreLocationCode(),
+                            row.getStoreLocationName(),
+                            row.getTerminalDeviceId(),
+                            row.getTerminalDeviceCode(),
+                            row.getTerminalDeviceName(),
+                            row.getCashierUserId(),
+                            row.getCashierUsername(),
+                            normalizeOptionalText(row.getActorUsername()),
+                            normalizeOptionalText(row.getApproverUsername()),
+                            normalizeReason(row.getReasonCode()),
+                            normalizeOptionalText(row.getNote()),
+                            normalizeOptionalText(row.getCorrelationId()),
+                            normalizeOptionalText(row.getReferenceNumber())))
+                    .forEach(rows::add);
+        }
+
+        if (eventType == null || eventType == ExceptionReportEventType.REFUND_EXCEPTION) {
+            if (normalizedReasonCode == null || REFUND_EXCEPTION_REASON.equals(normalizedReasonCode)) {
+                exceptionReportRepository.findRefundRows(
+                                from,
+                                to,
+                                storeLocationId,
+                                terminalDeviceId,
+                                cashierUserId)
+                        .stream()
+                        .map(row -> new ExceptionReportRowResponse(
+                                row.getEventId(),
+                                row.getOccurredAt(),
+                                ExceptionReportEventType.REFUND_EXCEPTION,
+                                row.getStoreLocationId(),
+                                row.getStoreLocationCode(),
+                                row.getStoreLocationName(),
+                                row.getTerminalDeviceId(),
+                                row.getTerminalDeviceCode(),
+                                row.getTerminalDeviceName(),
+                                row.getCashierUserId(),
+                                row.getCashierUsername(),
+                                normalizeOptionalText(row.getActorUsername()),
+                                null,
+                                REFUND_EXCEPTION_REASON,
+                                normalizeOptionalText(row.getNote()),
+                                normalizeOptionalText(row.getCorrelationId()),
+                                normalizeOptionalText(row.getReferenceNumber())))
+                        .forEach(rows::add);
+            }
+        }
+
+        rows.sort(Comparator.comparing(ExceptionReportRowResponse::occurredAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(ExceptionReportRowResponse::eventId, Comparator.nullsLast(Comparator.reverseOrder())));
+
+        return new ExceptionReportResponse(
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                normalizedReasonCode,
+                eventType,
+                rows);
+    }
+
+    @Transactional(readOnly = true)
     public String exportSalesReturnsReportCsv(Instant from,
                                               Instant to,
                                               Long storeLocationId,
@@ -667,6 +795,64 @@ public class ReportService {
                 rows);
     }
 
+    @Transactional(readOnly = true)
+    public String exportExceptionReportCsv(Instant from,
+                                           Instant to,
+                                           Long storeLocationId,
+                                           Long terminalDeviceId,
+                                           Long cashierUserId,
+                                           String reasonCode,
+                                           ExceptionReportEventType eventType) {
+        ExceptionReportResponse report = getExceptionReport(
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                reasonCode,
+                eventType);
+        List<List<String>> rows = report.rows().stream()
+                .map(row -> List.of(
+                        stringValue(row.eventId()),
+                        stringValue(row.occurredAt()),
+                        stringValue(row.eventType()),
+                        stringValue(row.storeLocationId()),
+                        stringValue(row.storeLocationCode()),
+                        stringValue(row.storeLocationName()),
+                        stringValue(row.terminalDeviceId()),
+                        stringValue(row.terminalDeviceCode()),
+                        stringValue(row.terminalDeviceName()),
+                        stringValue(row.cashierUserId()),
+                        stringValue(row.cashierUsername()),
+                        stringValue(row.actorUsername()),
+                        stringValue(row.approverUsername()),
+                        stringValue(row.reasonCode()),
+                        stringValue(row.note()),
+                        stringValue(row.correlationId()),
+                        stringValue(row.referenceNumber())))
+                .toList();
+        return renderCsv(
+                List.of(
+                        "eventId",
+                        "occurredAt",
+                        "eventType",
+                        "storeLocationId",
+                        "storeLocationCode",
+                        "storeLocationName",
+                        "terminalDeviceId",
+                        "terminalDeviceCode",
+                        "terminalDeviceName",
+                        "cashierUserId",
+                        "cashierUsername",
+                        "actorUsername",
+                        "approverUsername",
+                        "reasonCode",
+                        "note",
+                        "correlationId",
+                        "referenceNumber"),
+                rows);
+    }
+
     private void validateDateRange(Instant from, Instant to) {
         if (from != null && to != null && from.isAfter(to)) {
             throw new BaseException(ErrorCode.VALIDATION_ERROR, "from must be before or equal to to");
@@ -831,6 +1017,25 @@ public class ReportService {
         }
         String normalized = reason.trim();
         return normalized.isEmpty() ? "UNSPECIFIED" : normalized;
+    }
+
+    private String normalizeReasonCodeFilter(String reasonCode) {
+        if (reasonCode == null) {
+            return null;
+        }
+        String normalized = reasonCode.trim();
+        if (normalized.isEmpty()) {
+            return null;
+        }
+        return normalized.toUpperCase(Locale.ROOT);
+    }
+
+    private String normalizeOptionalText(String value) {
+        if (value == null) {
+            return null;
+        }
+        String normalized = value.trim();
+        return normalized.isEmpty() ? null : normalized;
     }
 
     private BigDecimal toQuantity(BigDecimal value) {

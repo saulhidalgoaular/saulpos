@@ -3,6 +3,8 @@ package com.saulpos.server.report.web;
 import com.saulpos.api.report.InventoryLowStockReportResponse;
 import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.report.ExceptionReportEventType;
+import com.saulpos.api.report.ExceptionReportResponse;
 import com.saulpos.api.report.CashShiftReportResponse;
 import com.saulpos.api.report.EndOfDayCashReportResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
@@ -183,6 +185,49 @@ public class ReportController {
             @RequestParam(value = "cashierUserId", required = false) Long cashierUserId) {
         String csv = reportService.exportEndOfDayCashReportCsv(from, to, storeLocationId, terminalDeviceId, cashierUserId);
         return csvResponse("cash-end-of-day-report.csv", csv);
+    }
+
+    @GetMapping("/exceptions")
+    public ExceptionReportResponse getExceptionReport(
+            @RequestParam(value = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "storeLocationId", required = false) Long storeLocationId,
+            @RequestParam(value = "terminalDeviceId", required = false) Long terminalDeviceId,
+            @RequestParam(value = "cashierUserId", required = false) Long cashierUserId,
+            @RequestParam(value = "reasonCode", required = false) String reasonCode,
+            @RequestParam(value = "eventType", required = false) ExceptionReportEventType eventType) {
+        return reportService.getExceptionReport(
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                reasonCode,
+                eventType);
+    }
+
+    @GetMapping(value = "/exceptions/export", produces = "text/csv;charset=UTF-8")
+    public ResponseEntity<byte[]> exportExceptionReport(
+            @RequestParam(value = "from", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+            @RequestParam(value = "to", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+            @RequestParam(value = "storeLocationId", required = false) Long storeLocationId,
+            @RequestParam(value = "terminalDeviceId", required = false) Long terminalDeviceId,
+            @RequestParam(value = "cashierUserId", required = false) Long cashierUserId,
+            @RequestParam(value = "reasonCode", required = false) String reasonCode,
+            @RequestParam(value = "eventType", required = false) ExceptionReportEventType eventType) {
+        String csv = reportService.exportExceptionReportCsv(
+                from,
+                to,
+                storeLocationId,
+                terminalDeviceId,
+                cashierUserId,
+                reasonCode,
+                eventType);
+        return csvResponse("exceptions-report.csv", csv);
     }
 
     private ResponseEntity<byte[]> csvResponse(String fileName, String csv) {
