@@ -10,6 +10,8 @@ import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutRequest;
+import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -26,6 +28,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
@@ -212,6 +215,11 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
+        return postJsonWithIdempotency("/api/sales/checkout", request, SaleCheckoutResponse.class);
+    }
+
+    @Override
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -226,6 +234,22 @@ public final class HttpPosApiClient implements PosApiClient {
 
         HttpRequest request = baseRequest(path)
                 .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(request, responseType);
+    }
+
+    private <T> CompletableFuture<T> postJsonWithIdempotency(String path, Object requestBody, Class<T> responseType) {
+        final String body;
+        try {
+            body = objectMapper.writeValueAsString(requestBody);
+        } catch (IOException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+
+        HttpRequest request = baseRequest(path)
+                .header("Content-Type", "application/json")
+                .header("Idempotency-Key", "pos-client-" + UUID.randomUUID())
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
         return send(request, responseType);

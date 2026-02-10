@@ -55,6 +55,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O2` Authentication and session UI.
 - `O3` Shift open/close and cash controls UI.
 - `O4` Product search and cart screen.
+- `O5` Checkout and payments UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -118,6 +119,18 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `DELETE /api/sales/carts/{id}/lines/{lineId}`
   - `POST /api/sales/carts/{id}/recalculate`
 - Tests cover API contract mapping and sell coordinator success/error paths for scan/search/add/update/remove/recalculate flows.
+
+### Client Checkout and Payments UI (`O5`)
+- Checkout screen now supports:
+  - tender capture for cash/card and split combinations,
+  - payable/allocation/due/change visibility before submission,
+  - checkout commit with receipt feedback and payment status summary after completion,
+  - recoverable validation feedback for mismatched split tenders and invalid cash tendered amounts.
+- Client checkout operation consumes server contract:
+  - `POST /api/sales/checkout` (with generated `Idempotency-Key` header per request)
+- Tests now cover:
+  - HTTP checkout contract mapping and idempotency header propagation,
+  - sell coordinator checkout success path and split/insufficient-tender validation failures.
 
 ## Implemented Domain Capabilities
 

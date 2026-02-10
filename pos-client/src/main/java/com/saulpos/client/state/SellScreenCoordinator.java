@@ -8,6 +8,10 @@ import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutPaymentRequest;
+import com.saulpos.api.sale.SaleCheckoutRequest;
+import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import javafx.application.Platform;
@@ -21,6 +25,8 @@ import javafx.beans.property.StringProperty;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
@@ -34,6 +40,7 @@ public final class SellScreenCoordinator {
     private final Consumer<Runnable> uiDispatcher;
     private final ObjectProperty<SaleCartResponse> cartState = new SimpleObjectProperty<>();
     private final ObjectProperty<ProductSearchResponse> searchState = new SimpleObjectProperty<>();
+    private final ObjectProperty<SaleCheckoutResponse> checkoutState = new SimpleObjectProperty<>();
     private final StringProperty sellMessage = new SimpleStringProperty("Create or load a cart to begin selling.");
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
@@ -57,6 +64,14 @@ public final class SellScreenCoordinator {
 
     public ObjectProperty<ProductSearchResponse> searchStateProperty() {
         return searchState;
+    }
+
+    public ObjectProperty<SaleCheckoutResponse> checkoutStateProperty() {
+        return checkoutState;
+    }
+
+    public SaleCheckoutResponse checkoutState() {
+        return checkoutState.get();
     }
 
     public StringProperty sellMessageProperty() {
@@ -191,6 +206,55 @@ public final class SellScreenCoordinator {
                 .whenComplete((ignored, throwable) -> finish(throwable));
     }
 
+    public CompletableFuture<Void> checkout(Long cashierUserId,
+                                            Long terminalDeviceId,
+                                            BigDecimal cashAmount,
+                                            BigDecimal cashTenderedAmount,
+                                            BigDecimal cardAmount,
+                                            String cardReference) {
+        if (!hasActiveCart()) {
+            dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before checkout."));
+            return CompletableFuture.completedFuture(null);
+        }
+        if (cashierUserId == null || terminalDeviceId == null) {
+            dispatch(() -> sellMessage.set("Cashier and terminal are required for checkout."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        BigDecimal normalizedCashAmount = normalizeAmount(cashAmount);
+        BigDecimal normalizedCardAmount = normalizeAmount(cardAmount);
+        if (normalizedCashAmount.compareTo(BigDecimal.ZERO) <= 0 && normalizedCardAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            dispatch(() -> sellMessage.set("Enter cash and/or card amount greater than zero."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        BigDecimal expectedPayable = normalizeAmount(cartState.get().totalPayable());
+        BigDecimal allocatedAmount = normalizedCashAmount.add(normalizedCardAmount);
+        if (allocatedAmount.compareTo(expectedPayable) != 0) {
+            dispatch(() -> sellMessage.set("Tender allocation must match cart payable total."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        BigDecimal normalizedTendered = cashTenderedAmount == null ? normalizedCashAmount : normalizeAmount(cashTenderedAmount);
+        if (normalizedCashAmount.compareTo(BigDecimal.ZERO) > 0 && normalizedTendered.compareTo(normalizedCashAmount) < 0) {
+            dispatch(() -> sellMessage.set("Tendered cash must be greater than or equal to allocated cash."));
+            return CompletableFuture.completedFuture(null);
+        }
+
+        List<SaleCheckoutPaymentRequest> payments = new ArrayList<>();
+        if (normalizedCashAmount.compareTo(BigDecimal.ZERO) > 0) {
+            payments.add(new SaleCheckoutPaymentRequest(TenderType.CASH, normalizedCashAmount, normalizedTendered, null));
+        }
+        if (normalizedCardAmount.compareTo(BigDecimal.ZERO) > 0) {
+            payments.add(new SaleCheckoutPaymentRequest(TenderType.CARD, normalizedCardAmount, null, normalizeReference(cardReference)));
+        }
+
+        dispatch(() -> busy.set(true));
+        return apiClient.checkout(new SaleCheckoutRequest(requireCartId(), cashierUserId, terminalDeviceId, payments))
+                .thenAccept(this::acceptCheckout)
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
     private SaleCartAddLineRequest toAddLineRequest(ProductLookupResponse product, BigDecimal quantity) {
         String lineKey = "scan-" + product.productId() + "-" + System.nanoTime();
         return new SaleCartAddLineRequest(lineKey, product.productId(), quantity, null, null);
@@ -207,7 +271,15 @@ public final class SellScreenCoordinator {
     private void acceptCart(SaleCartResponse cart, String message) {
         dispatch(() -> {
             cartState.set(cart);
+            checkoutState.set(null);
             sellMessage.set(message);
+        });
+    }
+
+    private void acceptCheckout(SaleCheckoutResponse checkout) {
+        dispatch(() -> {
+            checkoutState.set(checkout);
+            sellMessage.set("Checkout completed. Receipt " + checkout.receiptNumber() + " generated.");
         });
     }
 
@@ -236,5 +308,17 @@ public final class SellScreenCoordinator {
 
     private void dispatch(Runnable runnable) {
         uiDispatcher.accept(runnable);
+    }
+
+    private static BigDecimal normalizeAmount(BigDecimal value) {
+        return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private static String normalizeReference(String value) {
+        if (value == null) {
+            return null;
+        }
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

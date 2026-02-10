@@ -8,6 +8,8 @@ import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutRequest;
+import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashMovementType;
@@ -198,6 +200,11 @@ class ShiftControlCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleCartResponse> recalculateCart(Long cartId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
             return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 

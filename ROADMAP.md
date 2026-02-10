@@ -870,7 +870,7 @@ Out of Scope:
 1. UI integration tests for scan/search/add/edit/remove paths.
 2. Performance smoke tests for large catalogs.
 
-#### Card O5: Checkout and Payments UI
+#### Card O5: Checkout and Payments UI [SOLVED]
 - Goal: Complete payment capture and sale completion UX.
 - Dependencies: D2, G2, J1, O4.
 - Acceptance Criteria:
@@ -1116,7 +1116,7 @@ Out of Scope:
 | O2 | DONE |  |  | Implemented authentication/session UI flow in `pos-client` with login form + logout control, API-backed auth client contract (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/security/me`), deterministic handling for invalid credentials/locked/disabled accounts, protected-route redirect to login when unauthenticated, visible token-expiry/session-status indicators, and client tests for coordinator behavior + auth HTTP contract mapping |
 | O3 | DONE |  |  | Implemented shift-control UI workflow in `pos-client` with open/load/paid-in/paid-out/close actions mapped to `/api/shifts` contracts, deterministic operator feedback and shift totals/variance visibility, plus client coordinator + HTTP contract tests for shift state transitions |
 | O4 | DONE |  |  | Implemented Sell screen workflow in `pos-client` with cart create/load, barcode lookup add-line path, paginated product search, quick-add, cart line quantity update/remove, totals recalculation feedback, and client API/coordinator tests covering success and error handling |
-| O5 | TODO |  |  |  |
+| O5 | DONE |  |  | Implemented checkout UI workflow in `pos-client` with tender capture (`cash`/`card`/split), allocation-vs-payable and due/change visibility, checkout commit integration (`POST /api/sales/checkout`) including `Idempotency-Key` propagation, receipt/payment summary feedback, and client API/coordinator coverage for successful and failed validation paths |
 | O6 | TODO |  |  |  |
 | O7 | TODO |  |  |  |
 | O8 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O5` Checkout and payments UI.
-2. `O6` Returns and refunds UI.
-3. `O7` Backoffice UI (catalog, pricing, customers).
+1. `O6` Returns and refunds UI.
+2. `O7` Backoffice UI (catalog, pricing, customers).
+3. `O8` Reporting and export UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

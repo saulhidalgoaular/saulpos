@@ -6,6 +6,8 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
+import com.saulpos.api.sale.SaleCartStatus;
+import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
@@ -166,6 +168,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.SELL) {
             renderSell(screenBody, sellScreenCoordinator, shiftControlCoordinator, navigationState);
+            return;
+        }
+
+        if (target == NavigationTarget.CHECKOUT) {
+            renderCheckout(screenBody, sellScreenCoordinator, shiftControlCoordinator, navigationState);
             return;
         }
 
@@ -516,6 +523,103 @@ public final class AppShell {
         );
     }
 
+    private static void renderCheckout(VBox screenBody,
+                                       SellScreenCoordinator sellScreenCoordinator,
+                                       ShiftControlCoordinator shiftControlCoordinator,
+                                       NavigationState navigationState) {
+        Label cartSummary = new Label();
+        cartSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toCartSummary(sellScreenCoordinator.cartState()),
+                sellScreenCoordinator.cartStateProperty()
+        ));
+
+        Label checkoutSummary = new Label();
+        checkoutSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toCheckoutSummary(sellScreenCoordinator.checkoutState()),
+                sellScreenCoordinator.checkoutStateProperty()
+        ));
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(sellScreenCoordinator.sellMessageProperty());
+
+        PosTextField cashierUserId = new PosTextField("Cashier user ID");
+        PosTextField terminalDeviceId = new PosTextField("Terminal device ID");
+        PosTextField cashAmount = new PosTextField("Cash amount");
+        PosTextField cashTendered = new PosTextField("Cash tendered");
+        PosTextField cardAmount = new PosTextField("Card amount");
+        PosTextField cardReference = new PosTextField("Card reference");
+
+        Label tenderPreview = new Label();
+        tenderPreview.textProperty().bind(Bindings.createStringBinding(() -> {
+                    SaleCartResponse cart = sellScreenCoordinator.cartState();
+                    if (cart == null) {
+                        return "No cart loaded.";
+                    }
+                    BigDecimal payable = cart.totalPayable() == null ? BigDecimal.ZERO : cart.totalPayable();
+                    BigDecimal cash = parseMoney(cashAmount.getText());
+                    BigDecimal card = parseMoney(cardAmount.getText());
+                    BigDecimal tendered = parseMoney(cashTendered.getText());
+                    BigDecimal allocated = (cash == null ? BigDecimal.ZERO : cash).add(card == null ? BigDecimal.ZERO : card);
+                    BigDecimal due = payable.subtract(allocated);
+                    BigDecimal changeEstimate = (tendered == null ? BigDecimal.ZERO : tendered).subtract(cash == null ? BigDecimal.ZERO : cash);
+                    return "Payable=" + defaultMoney(payable)
+                            + " | Allocated=" + defaultMoney(allocated)
+                            + " | Due=" + defaultMoney(due)
+                            + " | Est. Change=" + defaultMoney(changeEstimate.max(BigDecimal.ZERO));
+                },
+                sellScreenCoordinator.cartStateProperty(),
+                cashAmount.textProperty(),
+                cardAmount.textProperty(),
+                cashTendered.textProperty()
+        ));
+
+        PosButton submitCheckout = PosButton.primary("Complete Checkout");
+        submitCheckout.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> sellScreenCoordinator.busyProperty().get()
+                        || sellScreenCoordinator.cartState() == null
+                        || sellScreenCoordinator.cartState().status() != SaleCartStatus.ACTIVE,
+                sellScreenCoordinator.busyProperty(),
+                sellScreenCoordinator.cartStateProperty()
+        ));
+        submitCheckout.setOnAction(event -> sellScreenCoordinator.checkout(
+                parseLong(cashierUserId.getText()),
+                parseLong(terminalDeviceId.getText()),
+                parseMoney(cashAmount.getText()),
+                parseMoney(cashTendered.getText()),
+                parseMoney(cardAmount.getText()),
+                cardReference.getText()
+        ));
+
+        PosButton backToSell = PosButton.accent("Back To Sell");
+        backToSell.disableProperty().bind(sellScreenCoordinator.busyProperty());
+        backToSell.setOnAction(event -> navigationState.navigate(NavigationTarget.SELL));
+
+        if (shiftControlCoordinator.shiftState() != null) {
+            cashierUserId.setText(Long.toString(shiftControlCoordinator.shiftState().cashierUserId()));
+            terminalDeviceId.setText(Long.toString(shiftControlCoordinator.shiftState().terminalDeviceId()));
+        } else if (sellScreenCoordinator.cartState() != null) {
+            cashierUserId.setText(Long.toString(sellScreenCoordinator.cartState().cashierUserId()));
+            terminalDeviceId.setText(Long.toString(sellScreenCoordinator.cartState().terminalDeviceId()));
+        }
+
+        screenBody.getChildren().addAll(
+                new Label("Checkout workstation: capture tenders, verify due/change, and commit sale"),
+                cartSummary,
+                checkoutSummary,
+                feedback,
+                new Label("Checkout context"),
+                cashierUserId,
+                terminalDeviceId,
+                new Label("Tenders"),
+                cashAmount,
+                cashTendered,
+                cardAmount,
+                cardReference,
+                tenderPreview,
+                new HBox(8, submitCheckout, backToSell)
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
     }
@@ -546,6 +650,19 @@ public final class AppShell {
                 + " | expectedClose=" + defaultMoney(shift.expectedCloseCash())
                 + " | counted=" + defaultMoney(shift.countedCloseCash())
                 + " | variance=" + defaultMoney(shift.varianceCash());
+    }
+
+    private static String toCheckoutSummary(SaleCheckoutResponse checkout) {
+        if (checkout == null) {
+            return "No completed checkout yet.";
+        }
+        return "Sale #" + checkout.saleId()
+                + " | receipt=" + checkout.receiptNumber()
+                + " | status=" + checkout.paymentStatus()
+                + " | payable=" + defaultMoney(checkout.totalPayable())
+                + " | allocated=" + defaultMoney(checkout.totalAllocated())
+                + " | tendered=" + defaultMoney(checkout.totalTendered())
+                + " | change=" + defaultMoney(checkout.changeAmount());
     }
 
     private static String defaultMoney(BigDecimal value) {

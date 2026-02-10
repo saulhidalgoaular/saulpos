@@ -5,10 +5,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutPaymentRequest;
+import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementType;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
+import com.saulpos.api.tax.TenderType;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -241,6 +244,18 @@ class HttpPosApiClientTest {
                     if ("/api/sales/carts/44/recalculate".equals(path) && "POST".equals(request.method())) {
                         return CompletableFuture.completedFuture(response(request, 200, cartJson()));
                     }
+                    if ("/api/sales/checkout".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"cartId\":44,\"saleId\":501,\"receiptNumber\":\"R-0000501\",\"paymentId\":88,"
+                                        + "\"paymentStatus\":\"CAPTURED\",\"totalPayable\":10.00,\"totalAllocated\":10.00,"
+                                        + "\"totalTendered\":10.00,\"changeAmount\":0.00,\"payments\":["
+                                        + "{\"sequenceNumber\":1,\"tenderType\":\"CASH\",\"amount\":10.00,"
+                                        + "\"tenderedAmount\":10.00,\"changeAmount\":0.00,\"reference\":null}],"
+                                        + "\"capturedAt\":\"2026-02-10T12:05:00Z\"}"
+                        ));
+                    }
                     return CompletableFuture.completedFuture(response(request, 404, ""));
                 }
         );
@@ -254,14 +269,22 @@ class HttpPosApiClientTest {
         assertEquals(44L, client.updateCartLine(44L, 11L, new SaleCartUpdateLineRequest(BigDecimal.ONE, null, null)).join().id());
         assertEquals(44L, client.removeCartLine(44L, 11L).join().id());
         assertEquals(44L, client.recalculateCart(44L).join().id());
+        assertEquals("R-0000501", client.checkout(new SaleCheckoutRequest(
+                44L,
+                7L,
+                3L,
+                List.of(new SaleCheckoutPaymentRequest(TenderType.CASH, BigDecimal.TEN, BigDecimal.TEN, null))
+        )).join().receiptNumber());
 
         HttpRequest lookupRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/lookup")).findFirst().orElseThrow();
         HttpRequest searchRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products/search")).findFirst().orElseThrow();
         HttpRequest addLineRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/carts/44/lines")).findFirst().orElseThrow();
+        HttpRequest checkoutRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/sales/checkout")).findFirst().orElseThrow();
 
         assertTrue(lookupRequest.uri().getRawQuery().contains("merchantId=1"));
         assertTrue(searchRequest.uri().getRawQuery().contains("q=soda"));
         assertEquals("Bearer access-123", addLineRequest.headers().firstValue("Authorization").orElseThrow());
+        assertTrue(checkoutRequest.headers().firstValue("Idempotency-Key").orElseThrow().startsWith("pos-client-"));
     }
 
     private static String cartJson() {

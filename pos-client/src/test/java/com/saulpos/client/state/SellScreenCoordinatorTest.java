@@ -13,11 +13,16 @@ import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
+import com.saulpos.api.sale.SaleCheckoutRequest;
+import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.sale.PaymentStatus;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
+import com.saulpos.api.tax.TenderType;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import org.junit.jupiter.api.Test;
@@ -130,6 +135,94 @@ class SellScreenCoordinatorTest {
         assertEquals("quantity must be greater than zero", coordinator.sellMessageProperty().get());
     }
 
+    @Test
+    void checkoutSuccess_shouldStoreCheckoutAndReceiptMessage() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of(
+                new SaleCartLineResponse(
+                        1L,
+                        "line-1",
+                        300L,
+                        "SODA-350",
+                        "Soda 350ml",
+                        ProductSaleMode.UNIT,
+                        BigDecimal.ONE,
+                        new BigDecimal("1.50"),
+                        new BigDecimal("1.50"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("1.50"),
+                        null
+                )
+        ));
+        apiClient.checkoutResponse = new SaleCheckoutResponse(
+                99L,
+                500L,
+                "R-000500",
+                3000L,
+                PaymentStatus.CAPTURED,
+                new BigDecimal("1.50"),
+                new BigDecimal("1.50"),
+                new BigDecimal("2.00"),
+                new BigDecimal("0.50"),
+                List.of(new SaleCheckoutPaymentResponse(
+                        1,
+                        TenderType.CASH,
+                        new BigDecimal("1.50"),
+                        new BigDecimal("2.00"),
+                        new BigDecimal("0.50"),
+                        null
+                )),
+                NOW
+        );
+
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+
+        coordinator.loadCart(99L).join();
+        coordinator.checkout(10L, 30L, new BigDecimal("1.50"), new BigDecimal("2.00"), BigDecimal.ZERO, null).join();
+
+        assertEquals("R-000500", coordinator.checkoutState().receiptNumber());
+        assertEquals("Checkout completed. Receipt R-000500 generated.", coordinator.sellMessageProperty().get());
+        assertEquals(1, apiClient.checkoutRequest.payments().size());
+    }
+
+    @Test
+    void checkoutSplitTenderMismatch_shouldRejectWithoutCallingApi() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of());
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+
+        coordinator.loadCart(99L).join();
+        coordinator.checkout(10L, 30L, new BigDecimal("5.00"), new BigDecimal("5.00"), new BigDecimal("3.00"), "CARD-REF").join();
+
+        assertEquals("Tender allocation must match cart payable total.", coordinator.sellMessageProperty().get());
+        assertNull(apiClient.checkoutRequest);
+    }
+
+    @Test
+    void checkoutInsufficientCashTendered_shouldRejectWithoutCallingApi() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of());
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+
+        coordinator.loadCart(99L).join();
+        coordinator.checkout(10L, 30L, new BigDecimal("1.50"), new BigDecimal("1.00"), BigDecimal.ZERO, null).join();
+
+        assertEquals("Tendered cash must be greater than or equal to allocated cash.", coordinator.sellMessageProperty().get());
+        assertNull(apiClient.checkoutRequest);
+    }
+
     private static ProductResponse product(Long id, String sku, String name, boolean active) {
         return new ProductResponse(
                 id,
@@ -178,6 +271,8 @@ class SellScreenCoordinatorTest {
         private SaleCartResponse cartAfterAdd;
         private ProductSearchResponse searchResponse;
         private RuntimeException updateFailure;
+        private SaleCheckoutResponse checkoutResponse;
+        private SaleCheckoutRequest checkoutRequest;
 
         @Override
         public CompletableFuture<Boolean> ping() {
@@ -277,6 +372,12 @@ class SellScreenCoordinatorTest {
         @Override
         public CompletableFuture<SaleCartResponse> recalculateCart(Long cartId) {
             return CompletableFuture.completedFuture(cart);
+        }
+
+        @Override
+        public CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request) {
+            this.checkoutRequest = request;
+            return CompletableFuture.completedFuture(checkoutResponse);
         }
 
         @Override

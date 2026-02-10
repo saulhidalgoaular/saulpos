@@ -8,6 +8,8 @@ import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
+import com.saulpos.api.sale.SaleCheckoutRequest;
+import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -50,6 +52,8 @@ public interface PosApiClient {
     CompletableFuture<SaleCartResponse> removeCartLine(Long cartId, Long lineId);
 
     CompletableFuture<SaleCartResponse> recalculateCart(Long cartId);
+
+    CompletableFuture<SaleCheckoutResponse> checkout(SaleCheckoutRequest request);
 
     void setAccessToken(String accessToken);
 }
