@@ -48,6 +48,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L5` Exception and override reports.
 - `M1` Printer abstraction and templates.
 - `M2` Cash drawer integration.
+- `M3` Scanner/scale extension interfaces.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -62,7 +63,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 ## Monorepo Architecture
 
 Modules:
-- `pos-core`: shared cross-cutting abstractions (for example soft-delete contract).
+- `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale hardware extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
 - `pos-client`: JavaFX client module (currently thin and API-consumer oriented).
@@ -546,6 +547,15 @@ Backend source of truth:
 - Access is permission-protected with `CASH_DRAWER_OPEN`.
 - Every drawer-open request is audited in `no_sale_drawer_event` with terminal/store context, actor username, reason code, note/reference, and correlation ID for exception reporting reconciliation.
 
+### Scanner and Scale Extension Interfaces (M3)
+- Hardware extension contracts introduced in `pos-core`:
+  - scanner: `ScannerAdapter`, `ScanRequest`, `ScanResult`, `ScanStatus`
+  - scale: `ScaleAdapter`, `ScaleReadRequest`, `ScaleReadResult`, `ScaleReadStatus`
+- Default no-op stubs are available in `pos-server`:
+  - `NoOpScannerAdapter`
+  - `NoOpScaleAdapter`
+- Stubs return deterministic unsupported/failure responses so hardware-specific integrations can be added later without coupling checkout/reporting domains to concrete scanner/scale vendors.
+
 ### Discount Primitives
 - Discount APIs:
   - `POST /api/discounts/apply`
@@ -735,6 +745,7 @@ Key settings include:
 - Permission-matrix integration coverage for inventory ledger endpoints.
 - Permission-matrix integration coverage for stock adjustment endpoint authorization (`INVENTORY_ADJUST` vs `CONFIGURATION_MANAGE` approval path).
 - Unit tests for FEFO lot selection ordering and expired-lot conflict behavior.
+- Unit tests for default scanner/scale no-op adapters and deterministic unsupported/failure contract behavior.
 
 ## Project Planning and Status
 

@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- Implemented Card M3 Scanner/Scale Extension Interfaces in `pos-core` and `pos-server`.
+- Added scanner and scale hardware extension contracts (`ScannerAdapter`, `ScaleAdapter`) with request/result/status DTOs in `pos-core`.
+- Added default server-side no-op hardware stubs (`NoOpScannerAdapter`, `NoOpScaleAdapter`) for deterministic unsupported/failure behavior until concrete device adapters are configured.
+- Added unit tests for scanner/scale stub adapters.
 - Implemented Card J1 Tender and Split Payments in `pos-server` and `pos-api`.
 - Added migration `V23__tender_and_split_payments.sql` with `payment` and `payment_allocation` tables plus tender consistency checks.
 - Added checkout payment API contract and endpoint: `POST /api/sales/checkout`.
