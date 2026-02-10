@@ -105,6 +105,11 @@ public class SecurityConfiguration {
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
                                 SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
+                        .requestMatchers("/api/gift-cards/**")
+                        .hasAnyAuthority(
+                                SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.REFUND_PROCESS),
+                                SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
                         .requestMatchers("/api/customers/**")
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),

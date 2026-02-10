@@ -668,7 +668,7 @@ Out of Scope:
 1. Unit tests for state machine.
 2. Integration tests for reversal/refund.
 
-#### Card J3: Gift Card (Optional)
+#### Card J3: Gift Card (Optional) [SOLVED]
 - Goal: Enable issuance and redemption.
 - Dependencies: J1, F1.
 - Data Model: `gift_card`, `gift_card_transaction`.
@@ -1097,7 +1097,7 @@ Out of Scope:
 | I4 | DONE |  |  | Implemented supplier-return workflow with migration `V35` (`supplier_return`, `supplier_return_line`), APIs (`POST /api/inventory/supplier-returns`, `GET /api/inventory/supplier-returns/{id}`, `POST /api/inventory/supplier-returns/{id}/approve`, `POST /api/inventory/supplier-returns/{id}/post`), eligibility validation against received-minus-returned quantities, and outbound `SUPPLIER_RETURN` inventory movement posting with integration coverage |
 | J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
 | J2 | DONE |  |  | Implemented payment lifecycle state machine with migration `V25` (`payment.status`, `payment_transition`), new lifecycle APIs (`GET /api/payments/{id}`, `POST /api/payments/{id}/capture|void|refund`), explicit transition validation with stable conflict errors, and unit/integration + permission-matrix coverage for transition history/auditability |
-| J3 | TODO |  |  |  |
+| J3 | DONE |  |  | Implemented gift-card issuance/redeem flow with migration `V41` (`gift_card`, `gift_card_transaction`), APIs (`POST /api/gift-cards/issue`, `POST /api/gift-cards/{cardNumber}/redeem`, `GET /api/gift-cards/{cardNumber}`), non-negative balance enforcement, and mandatory sale/refund-linked redemption context with unit/integration coverage |
 | J4 | TODO |  |  |  |
 | K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
 | K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O8` Reporting and export UI.
-2. `O9` Hardware interaction UI.
-3. `O10` Offline/degraded mode UX.
+1. `J4` Store Credit (Optional).
+2. `O8` Reporting and export UI.
+3. `O9` Hardware interaction UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

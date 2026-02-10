@@ -39,6 +39,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `I4` Supplier returns.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
+- `J3` Gift card issuance and redemption.
 - `K1` Offline policy definition.
 - `K2` Idempotent event ingestion.
 - `L1` Sales and returns reports.
@@ -439,6 +440,19 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Enforced rules:
   - invalid payment state transitions are rejected with stable conflict errors,
   - every payment transition stores actor, correlation context, and timestamp for auditability.
+
+### Gift Cards
+- Gift card APIs:
+  - `POST /api/gift-cards/issue`
+  - `POST /api/gift-cards/{cardNumber}/redeem`
+  - `GET /api/gift-cards/{cardNumber}?merchantId={id}`
+- Gift card model:
+  - `gift_card`
+  - `gift_card_transaction`
+- Enforced rules:
+  - gift-card balance cannot go below zero on redemption,
+  - every redemption must be linked to exactly one financial context (`saleId` or `saleReturnId`),
+  - sale/refund context merchant must match the gift-card merchant.
 
 ### Offline Policy Definition
 - Offline policy contract API:
@@ -868,10 +882,12 @@ Key settings include:
 - Integration tests for manager-threshold override enforcement and sales authorization checks on new override endpoints.
 - Integration tests for checkout split-payment allocation validation, persisted payment snapshots, and atomic sale/line/inventory movement persistence.
 - Integration tests for payment lifecycle transitions (`authorize -> capture -> refund`) and invalid transition rejection with persisted transition history audit.
+- Integration tests for gift-card issue/redeem/get API flow, redemption sale-context linkage, and overdraw conflict behavior.
 - Concurrency integration test for parallel checkout attempts on the same cart (single success + conflict for competing request).
 - Unit tests for cart quantity policy validation by sale mode and precision.
 - Unit tests for tender allocation validation and cash-change calculation.
 - Unit tests for payment state transition rules.
+- Unit tests for gift-card issue/redeem rules, including non-negative balance enforcement and sale-linked redemption context.
 - Integration tests for offline policy contract endpoint authorization and payload (`GET /api/system/offline-policy`).
 - Unit tests for inventory balance calculation and deterministic 3-decimal quantity normalization.
 - Integration tests for inventory ledger sale/return/adjustment effects, running-balance output, and stock-balance aggregation.
