@@ -708,7 +708,7 @@ Out of Scope:
 
 ### Phase L: Reporting and Exports
 
-#### Card L1: Sales and Returns Reports
+#### Card L1: Sales and Returns Reports [SOLVED]
 - Goal: Produce operational sales insights.
 - Dependencies: G2, G3.
 - API Contract: aggregated report endpoints with filters.
@@ -1101,7 +1101,7 @@ Out of Scope:
 | J4 | TODO |  |  |  |
 | K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
 | K2 | DONE |  |  | Implemented idempotent ingestion with migration `V36` (`idempotency_key_event`), enforced `Idempotency-Key` API contract on checkout/payment transition endpoints, deterministic replay for same-payload retries, and stable conflict behavior (`POS-4009`) for key reuse with different payloads validated by integration tests |
-| L1 | TODO |  |  |  |
+| L1 | DONE |  |  | Implemented aggregated sales/returns reporting endpoint (`GET /api/reports/sales`, alias `/api/reports/sales-returns`) with date/store/terminal/cashier/category/tax-group filters, day/store/terminal/cashier/category/tax-group breakouts, summary totals including return and discount breakout (`discountGross`), and integration/security coverage |
 | L2 | TODO |  |  |  |
 | L3 | TODO |  |  |  |
 | L4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `L1` Sales and returns reports.
-2. `L2` Inventory reports.
-3. `L3` Cash and shift reports.
+1. `L2` Inventory reports.
+2. `L3` Cash and shift reports.
+3. `L4` CSV export.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

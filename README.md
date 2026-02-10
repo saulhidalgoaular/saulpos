@@ -41,6 +41,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `J2` Payment state machine.
 - `K1` Offline policy definition.
 - `K2` Idempotent event ingestion.
+- `L1` Sales and returns reports.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -258,6 +259,17 @@ Backend source of truth:
 - Payment model:
   - `payment`
   - `payment_allocation`
+
+### Sales and Returns Reporting
+- Aggregated reporting APIs:
+  - `GET /api/reports/sales`
+  - `GET /api/reports/sales-returns` (alias)
+- Supported filters:
+  - `from`, `to`, `storeLocationId`, `terminalDeviceId`, `cashierUserId`, `categoryId`, `taxGroupId`
+- Report outputs:
+  - summary totals for sales and returns,
+  - explicit return breakout (`returnGross`) and discount breakout (`discountGross`),
+  - grouped breakdowns by day, store, terminal, cashier, category, and tax group.
 - Enforced rules:
   - sum of allocated tenders must equal cart payable total,
   - cash allocations support explicit tendered amount and deterministic change calculation,

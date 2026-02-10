@@ -415,7 +415,7 @@ class PermissionMatrixIntegrationTest {
 
         mockMvc.perform(get("/api/reports/sales")
                         .header("Authorization", "Bearer " + reportToken))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk());
 
         mockMvc.perform(get("/api/identity/merchants")
                         .header("Authorization", "Bearer " + limitedToken))
