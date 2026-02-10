@@ -1026,7 +1026,7 @@ Out of Scope:
 1. New operator can execute daily tasks using docs alone.
 2. New engineer can run and extend system using docs alone.
 
-#### Card P6: Release Candidate and Go-Live
+#### Card P6: Release Candidate and Go-Live [SOLVED]
 - Goal: Execute final release process after iterative AI implementation cycles.
 - Dependencies: P1-P5.
 - Business Rules:
@@ -1137,10 +1137,10 @@ Out of Scope:
 | P3 | DONE |  |  | Implemented executable security/compliance verification suite (`P3SecurityComplianceIntegrationTest`) covering RBAC regression and queryable sensitive-action audits, plus `P3` evidence docs (`docs/uat/P3-security-and-compliance-verification.md`) and secret/config hardening checklist (`docs/security/P3-secret-configuration-hardening-checklist.md`) |
 | P4 | DONE |  |  | Implemented packaging/deployment/operations baseline with environment profiles (`application-dev|staging|prod.properties`), executable ops scripts (`ops/scripts/package-release.sh`, `deploy-server.sh`, `backup-postgres.sh`, `restore-postgres.sh`), runbooks/evidence docs (`docs/ops/P4-packaging-deployment-and-operations.md`, `docs/ops/P4-backup-restore-validation.md`), and readiness coverage via `P4OperationsReadinessTest` |
 | P5 | DONE |  |  | Implemented documentation and handover baseline with operator guide (`docs/handover/P5-user-guide.md`), integration/API guide (`docs/handover/P5-api-reference-and-integration-notes.md`), architecture/maintenance guide (`docs/handover/P5-architecture-and-maintenance-guide.md`), README linkage updates, and readiness coverage via `P5DocumentationHandoverReadinessTest` |
-| P6 | TODO |  |  |  |
+| P6 | DONE |  |  | Implemented final release candidate and go-live runbook (`docs/release/P6-release-candidate-and-go-live.md`) with scope-freeze/blocker-only policy, dependency evidence gates across `P1`-`P5`, production checklist, and readiness coverage via `P6ReleaseCandidateReadinessTest` |
 
 ## 12. Immediate Next Three Cards
-1. `P6` Release candidate and go-live.
+1. No pending roadmap cards. Start post-go-live backlog triage.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

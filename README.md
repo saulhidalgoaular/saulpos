@@ -72,6 +72,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `P3` Security and compliance verification.
 - `P4` Packaging, deployment, and operations.
 - `P5` Documentation and handover.
+- `P6` Release candidate and go-live.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -327,6 +328,12 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `docs/handover/P5-architecture-and-maintenance-guide.md`
 - Added readiness test coverage for document presence and required sections:
   - `mvn -pl pos-server test -Dtest=P5DocumentationHandoverReadinessTest`.
+
+### Release Candidate and Go-Live (`P6`)
+- Added final release/go-live runbook and checklist:
+  - `docs/release/P6-release-candidate-and-go-live.md`
+- Added readiness test coverage for RC policy, dependency evidence references, and README linkage:
+  - `mvn -pl pos-server test -Dtest=P6ReleaseCandidateReadinessTest`.
 
 ## Implemented Domain Capabilities
 
@@ -1091,6 +1098,7 @@ Key settings include:
 - Permission-matrix integration coverage for store-credit endpoint authorization (`SALES_PROCESS`/`REFUND_PROCESS`/`CONFIGURATION_MANAGE`).
 - Integration tests for `P3` security/compliance verification covering RBAC regression and queryable sensitive-action audit evidence (`P3SecurityComplianceIntegrationTest`).
 - Readiness tests for `P5` documentation/handover artifacts and README linkage (`P5DocumentationHandoverReadinessTest`).
+- Readiness tests for `P6` release-candidate/go-live checklist coverage and dependency evidence linkage (`P6ReleaseCandidateReadinessTest`).
 
 ## Project Planning and Status
 
@@ -1100,6 +1108,8 @@ Key settings include:
   - `docs/handover/P5-user-guide.md`
   - `docs/handover/P5-api-reference-and-integration-notes.md`
   - `docs/handover/P5-architecture-and-maintenance-guide.md`
+- P6 release-candidate and go-live runbook:
+  - `docs/release/P6-release-candidate-and-go-live.md`
 
 ## Legacy Branch
 
