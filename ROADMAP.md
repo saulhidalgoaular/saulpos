@@ -763,7 +763,7 @@ Out of Scope:
 1. ESC/POS adapter implemented behind interface.
 2. Retry/error status available.
 
-#### Card M2: Cash Drawer Integration
+#### Card M2: Cash Drawer Integration [SOLVED]
 - Goal: Support drawer open commands with permissions.
 - Dependencies: M1, B2.
 - Acceptance Criteria:
@@ -1107,7 +1107,7 @@ Out of Scope:
 | L4 | DONE |  |  | Implemented CSV export endpoints for sales, inventory, and cash reports with deterministic UTF-8 headers/column order (`/api/reports/sales/export`, `/api/reports/inventory/*/export`, `/api/reports/cash/*/export`) and integration coverage for content type, file disposition, and authorization |
 | L5 | DONE |  |  | Implemented exception reporting endpoints (`GET /api/reports/exceptions`, `/api/reports/exceptions/export`) with filters (`from`/`to`/store/terminal/cashier/reason/eventType), reconciliation-ready rows including actor/approver/terminal/correlation/reference, migration `V37` (`no_sale_drawer_event`), and integration/security coverage for filter combinations, invalid range validation, and authorization |
 | M1 | DONE |  |  | Implemented printer abstraction in `pos-core` (`PrinterAdapter`, `PrintJob`, `PrintResult`), server-side receipt template rendering and ESC/POS adapter in `pos-server`, plus `POST /api/receipts/print` with explicit success/failure + retryable status and authorization/integration/unit coverage |
-| M2 | TODO |  |  |  |
+| M2 | DONE |  |  | Implemented cash drawer open flow (`POST /api/receipts/drawer/open`) with explicit `CASH_DRAWER_OPEN` permission enforcement, ESC/POS pulse dispatch through printer abstraction, and persisted no-sale audit trail in `no_sale_drawer_event` including actor/correlation/reason metadata plus integration coverage |
 | M3 | TODO |  |  |  |
 | M4 | TODO |  |  |  |
 | N1 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `M2` Cash drawer integration.
-2. `M3` Scanner/Scale extension interfaces.
-3. `M4` Receipt reprint and journal retrieval.
+1. `M3` Scanner/Scale extension interfaces.
+2. `M4` Receipt reprint and journal retrieval.
+3. `N1` Fiscal provider SPI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

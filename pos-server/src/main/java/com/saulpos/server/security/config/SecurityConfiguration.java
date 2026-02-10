@@ -82,6 +82,8 @@ public class SecurityConfiguration {
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
                         .requestMatchers(HttpMethod.POST, "/api/receipts/print")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.SALES_PROCESS))
+                        .requestMatchers(HttpMethod.POST, "/api/receipts/drawer/open")
+                        .hasAuthority(SecurityAuthority.permission(PermissionCodes.CASH_DRAWER_OPEN))
                         .requestMatchers("/api/discounts/**")
                         .hasAnyAuthority(
                                 SecurityAuthority.permission(PermissionCodes.SALES_PROCESS),

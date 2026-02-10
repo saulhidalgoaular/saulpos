@@ -47,6 +47,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `L4` CSV export.
 - `L5` Exception and override reports.
 - `M1` Printer abstraction and templates.
+- `M2` Cash drawer integration.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -538,6 +539,13 @@ Backend source of truth:
 - Default ESC/POS adapter is implemented behind the abstraction and returns explicit status (`SUCCESS`/`FAILED`) with retryability metadata.
 - Print endpoint is permission-protected (`SALES_PROCESS`) and never mutates checkout/sale financial state.
 
+### Cash Drawer Integration (M2)
+- Cash drawer API:
+  - `POST /api/receipts/drawer/open`
+- Drawer-open requests dispatch an ESC/POS pulse command through the same printer abstraction used by receipt printing.
+- Access is permission-protected with `CASH_DRAWER_OPEN`.
+- Every drawer-open request is audited in `no_sale_drawer_event` with terminal/store context, actor username, reason code, note/reference, and correlation ID for exception reporting reconciliation.
+
 ### Discount Primitives
 - Discount APIs:
   - `POST /api/discounts/apply`
@@ -615,6 +623,11 @@ Backend source of truth:
   - `V31__transfer_orders.sql`
   - `V32__purchase_orders_and_receiving.sql`
   - `V33__lot_and_expiry_tracking.sql`
+  - `V34__inventory_costing_v1.sql`
+  - `V35__supplier_returns.sql`
+  - `V36__idempotent_event_ingestion.sql`
+  - `V37__exception_and_override_reports.sql`
+  - `V38__cash_drawer_integration.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -694,6 +707,7 @@ Key settings include:
 - Integration tests for tax preview rounding output (`roundingAdjustment`, `totalPayable`) with and without tender-specific policy.
 - Integration tests for promotion evaluation endpoint, overlapping promotion conflicts, and explanation payloads.
 - Integration tests for receipt allocation sequencing, authorization enforcement, and concurrent allocation race safety.
+- Integration tests for cash drawer open authorization and persisted no-sale drawer audit events.
 - Integration tests for discount apply/remove/preview flows, reason-code validation, and high-threshold permission enforcement.
 - Integration tests for customer-group create/list/assignment flows and cross-merchant assignment rejection.
 - Integration tests for customer-context price resolution precedence (`CUSTOMER_GROUP_PRICE_BOOK` vs generic price books).
