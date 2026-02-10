@@ -820,7 +820,7 @@ Out of Scope:
 
 ### Phase O: UI/UX Delivery (`pos-client`)
 
-#### Card O1: UI Architecture and Design System
+#### Card O1: UI Architecture and Design System [SOLVED]
 - Goal: Define client architecture and reusable UI foundation.
 - Dependencies: B1, C1.
 - Impacted Modules: `pos-client`.
@@ -1112,7 +1112,7 @@ Out of Scope:
 | M4 | DONE |  |  | Implemented receipt journal retrieval endpoints (`GET /api/receipts/journal/by-sale/{saleId}`, `GET /api/receipts/journal/by-number/{receiptNumber}`) and reprint endpoint (`POST /api/receipts/reprint`) with migration `V39` (`receipt_print_event` + `RECEIPT_REPRINT` permission), copy-marked receipt rendering with operator/timestamp, and unit/integration coverage for authorization, retrieval, and reprint auditing |
 | N1 | DONE |  |  | Implemented modular fiscal SPI in `pos-core` (`FiscalProvider` with invoice/cancel/credit-note commands), migration `V40` (`fiscal_document`, `fiscal_event`, `sale.invoice_required`), server stub provider + configurable policy (`app.fiscal.enabled`, `app.fiscal.allow-invoice-with-disabled-provider`), checkout invoice-required validation for required customer tax identity, and unit/integration coverage for disabled-provider skip behavior and invoice-required enforcement |
 | N2 | TODO |  |  |  |
-| O1 | TODO |  |  |  |
+| O1 | DONE |  |  | Implemented JavaFX client architecture baseline with deterministic screen registry/navigation state, reusable component primitives (`button/input/table/dialog/toast`), centralized theme tokens/CSS, API/state abstraction scaffolding, and unit coverage for screen flow, design-system catalog, accessibility contrast, and session-state transitions |
 | O2 | TODO |  |  |  |
 | O3 | TODO |  |  |  |
 | O4 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O1` UI architecture and design system.
-2. `O2` Authentication and session UI.
-3. `O3` Shift open/close and cash controls UI.
+1. `O2` Authentication and session UI.
+2. `O3` Shift open/close and cash controls UI.
+3. `O4` Product search and cart screen.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

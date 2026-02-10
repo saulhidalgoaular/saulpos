@@ -51,6 +51,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `M4` Receipt reprint and journal retrieval.
 - `M3` Scanner/scale extension interfaces.
 - `N1` Fiscal provider SPI.
+- `O1` UI architecture and design system.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -68,11 +69,13 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module (currently thin and API-consumer oriented).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, and centralized theme tokens (O1 baseline).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
 - `pos-client` is intentionally "dumb" and should only consume APIs.
+
+Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-design-system.md`.
 
 ## Implemented Domain Capabilities
 
@@ -714,6 +717,9 @@ cd pos-client
 mvn javafx:run
 ```
 
+Client architecture notes:
+- `docs/ui/O1-ui-architecture-and-design-system.md`
+
 ## Configuration Highlights
 
 Main runtime properties are in `pos-server/src/main/resources/application.properties`.
@@ -733,6 +739,12 @@ Key settings include:
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
+
+`pos-client` currently includes:
+- Screen-map/navigation integrity tests for deterministic route flow (`ScreenRegistryTest`).
+- Design-system component catalog tests for reusable primitive coverage and keyboard order (`DesignSystemCatalogTest`).
+- Theme contrast tests for readability thresholds (`ThemeTokensTest`).
+- App state store tests for authenticated session transitions (`AppStateStoreTest`).
 
 `pos-server` currently includes:
 - Integration tests for auth lifecycle, brute-force lockout, identity APIs, permission matrix, shift lifecycle, and catalog flows.

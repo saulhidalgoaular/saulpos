@@ -1,0 +1,70 @@
+.root {
+    -pos-font-family: "Poppins";
+    -pos-bg-app: #F7F3EA;
+    -pos-bg-surface: #FFFDF7;
+    -pos-text-primary: #1B1A17;
+    -pos-text-muted: #5E5B52;
+    -pos-action-primary: #004D40;
+    -pos-action-accent: #C2410C;
+    -pos-border: #D8CCB8;
+    -pos-danger: #B42318;
+    -fx-font-family: -pos-font-family;
+    -fx-background-color: -pos-bg-app;
+    -fx-text-fill: -pos-text-primary;
+}
+
+.pos-shell {
+    -fx-padding: 16;
+    -fx-spacing: 16;
+    -fx-background-color: linear-gradient(to bottom, #FFFDF7, #F7F3EA);
+}
+
+.pos-nav {
+    -fx-background-color: -pos-bg-surface;
+    -fx-border-color: -pos-border;
+    -fx-border-width: 1;
+    -fx-background-radius: 10;
+    -fx-border-radius: 10;
+    -fx-padding: 12;
+    -fx-spacing: 8;
+}
+
+.pos-content-card {
+    -fx-background-color: -pos-bg-surface;
+    -fx-border-color: -pos-border;
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 18;
+}
+
+.pos-button {
+    -fx-background-color: -pos-action-primary;
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-background-radius: 8;
+    -fx-padding: 8 14;
+}
+
+.pos-button-accent {
+    -fx-background-color: -pos-action-accent;
+}
+
+.pos-input {
+    -fx-background-color: white;
+    -fx-border-color: -pos-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+}
+
+.pos-table {
+    -fx-border-color: -pos-border;
+    -fx-border-width: 1;
+}
+
+.pos-toast {
+    -fx-background-color: -pos-action-primary;
+    -fx-text-fill: white;
+    -fx-padding: 8 12;
+    -fx-background-radius: 8;
+}

@@ -1,18 +1,26 @@
 package com.saulpos.client;
 
+import com.saulpos.client.app.NavigationState;
+import com.saulpos.client.state.AppStateStore;
+import com.saulpos.client.ui.layout.AppShell;
 import javafx.application.Application;
-import javafx.stage.Stage;
 import javafx.scene.Scene;
-import javafx.scene.control.Label;
-import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
 
 public class PosClientApplication extends Application {
+
     @Override
     public void start(Stage stage) {
-        String javaVersion = System.getProperty("java.version");
-        String javafxVersion = System.getProperty("javafx.version");
-        Label l = new Label("Hello, JavaFX " + javafxVersion + ", running on Java " + javaVersion + ".");
-        Scene scene = new Scene(new StackPane(l), 640, 480);
+        AppStateStore appStateStore = new AppStateStore();
+        NavigationState navigationState = new NavigationState();
+
+        Scene scene = new Scene(AppShell.createRoot(appStateStore, navigationState), 1180, 760);
+        String stylesheet = getClass().getResource("/ui/theme/saulpos-theme.css").toExternalForm();
+        scene.getStylesheets().add(stylesheet);
+
+        stage.setTitle("SaulPOS v2 Client");
+        stage.setMinWidth(980);
+        stage.setMinHeight(640);
         stage.setScene(scene);
         stage.show();
     }
