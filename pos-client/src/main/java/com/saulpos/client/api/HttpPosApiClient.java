@@ -4,6 +4,11 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.auth.LoginRequest;
 import com.saulpos.api.auth.RefreshTokenRequest;
+import com.saulpos.api.shift.CashMovementRequest;
+import com.saulpos.api.shift.CashMovementResponse;
+import com.saulpos.api.shift.CashShiftCloseRequest;
+import com.saulpos.api.shift.CashShiftOpenRequest;
+import com.saulpos.api.shift.CashShiftResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -92,6 +97,29 @@ public final class HttpPosApiClient implements PosApiClient {
 
         return send(request, Void.class)
                 .whenComplete((ignored, throwable) -> accessToken = null);
+    }
+
+    @Override
+    public CompletableFuture<CashShiftResponse> openShift(CashShiftOpenRequest request) {
+        return postJson("/api/shifts/open", request, CashShiftResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CashMovementResponse> addCashMovement(Long shiftId, CashMovementRequest request) {
+        return postJson("/api/shifts/" + shiftId + "/cash-movements", request, CashMovementResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CashShiftResponse> closeShift(Long shiftId, CashShiftCloseRequest request) {
+        return postJson("/api/shifts/" + shiftId + "/close", request, CashShiftResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CashShiftResponse> getShift(Long shiftId) {
+        HttpRequest request = baseRequest("/api/shifts/" + shiftId)
+                .GET()
+                .build();
+        return send(request, CashShiftResponse.class);
     }
 
     @Override

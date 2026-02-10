@@ -2,6 +2,11 @@ package com.saulpos.client.state;
 
 import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
+import com.saulpos.api.shift.CashMovementRequest;
+import com.saulpos.api.shift.CashMovementResponse;
+import com.saulpos.api.shift.CashShiftCloseRequest;
+import com.saulpos.api.shift.CashShiftOpenRequest;
+import com.saulpos.api.shift.CashShiftResponse;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import com.saulpos.client.app.NavigationState;
@@ -198,6 +203,26 @@ class AuthSessionCoordinatorTest {
         @Override
         public CompletableFuture<Void> logout() {
             return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public CompletableFuture<CashShiftResponse> openShift(CashShiftOpenRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<CashMovementResponse> addCashMovement(Long shiftId, CashMovementRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<CashShiftResponse> closeShift(Long shiftId, CashShiftCloseRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<CashShiftResponse> getShift(Long shiftId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override

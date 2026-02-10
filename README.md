@@ -53,6 +53,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `N1` Fiscal provider SPI.
 - `O1` UI architecture and design system.
 - `O2` Authentication and session UI.
+- `O3` Shift open/close and cash controls UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -70,7 +71,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, and authentication/session UI baseline (`O1` + `O2`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, and shift-control workflow baseline (`O1` + `O2` + `O3`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -84,6 +85,19 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Protected navigation targets are guarded in client state and redirect to `LOGIN` if no authenticated session exists.
 - Session expiry is visible in the top shell, and refresh handling uses `POST /api/auth/refresh` with safe fallback to login when refresh fails/expired.
 - Logout action is exposed in shell header and calls `POST /api/auth/logout` before local session reset.
+
+### Client Shift Open/Close and Cash Controls UI (`O3`)
+- Shift screen now supports:
+  - opening a shift (`cashierUserId`, `terminalDeviceId`, opening float),
+  - loading an existing shift by ID,
+  - recording paid-in and paid-out movements with reason note capture,
+  - closing/reconciling shift with counted cash and close note.
+- Client shift operations consume server contracts:
+  - `POST /api/shifts/open`
+  - `POST /api/shifts/{id}/cash-movements`
+  - `POST /api/shifts/{id}/close`
+  - `GET /api/shifts/{id}`
+- UI feedback includes shift status, open/close totals, expected/counted cash, and variance visibility after each operation.
 
 ## Implemented Domain Capabilities
 

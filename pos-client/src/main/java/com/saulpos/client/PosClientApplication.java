@@ -6,6 +6,7 @@ import com.saulpos.client.api.HttpPosApiClient;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
+import com.saulpos.client.state.ShiftControlCoordinator;
 import com.saulpos.client.ui.layout.AppShell;
 import javafx.application.Application;
 import javafx.scene.Scene;
@@ -23,8 +24,13 @@ public class PosClientApplication extends Application {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         HttpPosApiClient apiClient = new HttpPosApiClient(apiBaseUri, objectMapper);
         AuthSessionCoordinator authSessionCoordinator = new AuthSessionCoordinator(apiClient, appStateStore, navigationState);
+        ShiftControlCoordinator shiftControlCoordinator = new ShiftControlCoordinator(apiClient);
 
-        Scene scene = new Scene(AppShell.createRoot(appStateStore, navigationState, authSessionCoordinator), 1180, 760);
+        Scene scene = new Scene(
+                AppShell.createRoot(appStateStore, navigationState, authSessionCoordinator, shiftControlCoordinator),
+                1180,
+                760
+        );
         String stylesheet = getClass().getResource("/ui/theme/saulpos-theme.css").toExternalForm();
         scene.getStylesheets().add(stylesheet);
 

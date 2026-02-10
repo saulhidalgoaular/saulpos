@@ -848,7 +848,7 @@ Out of Scope:
 1. UI integration tests for auth flows.
 2. Contract tests against auth DTOs.
 
-#### Card O3: Shift Open/Close and Cash Controls UI
+#### Card O3: Shift Open/Close and Cash Controls UI [SOLVED]
 - Goal: Build shift lifecycle UI with cash reconciliation.
 - Dependencies: B3, O1.
 - Acceptance Criteria:
@@ -1114,7 +1114,7 @@ Out of Scope:
 | N2 | TODO |  |  |  |
 | O1 | DONE |  |  | Implemented JavaFX client architecture baseline with deterministic screen registry/navigation state, reusable component primitives (`button/input/table/dialog/toast`), centralized theme tokens/CSS, API/state abstraction scaffolding, and unit coverage for screen flow, design-system catalog, accessibility contrast, and session-state transitions |
 | O2 | DONE |  |  | Implemented authentication/session UI flow in `pos-client` with login form + logout control, API-backed auth client contract (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/security/me`), deterministic handling for invalid credentials/locked/disabled accounts, protected-route redirect to login when unauthenticated, visible token-expiry/session-status indicators, and client tests for coordinator behavior + auth HTTP contract mapping |
-| O3 | TODO |  |  |  |
+| O3 | DONE |  |  | Implemented shift-control UI workflow in `pos-client` with open/load/paid-in/paid-out/close actions mapped to `/api/shifts` contracts, deterministic operator feedback and shift totals/variance visibility, plus client coordinator + HTTP contract tests for shift state transitions |
 | O4 | TODO |  |  |  |
 | O5 | TODO |  |  |  |
 | O6 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O3` Shift open/close and cash controls UI.
-2. `O4` Product search and cart screen.
-3. `O5` Checkout and payments UI.
+1. `O4` Product search and cart screen.
+2. `O5` Checkout and payments UI.
+3. `O6` Returns and refunds UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

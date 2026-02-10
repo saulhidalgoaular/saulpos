@@ -1,5 +1,7 @@
 package com.saulpos.client.ui.layout;
 
+import com.saulpos.api.shift.CashShiftResponse;
+import com.saulpos.api.shift.CashShiftStatus;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
@@ -7,11 +9,12 @@ import com.saulpos.client.app.ScreenRegistry;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
+import com.saulpos.client.state.ShiftControlCoordinator;
 import com.saulpos.client.ui.components.PosButton;
 import com.saulpos.client.ui.components.PosTextField;
 import com.saulpos.client.ui.components.ToastHost;
-import javafx.geometry.Insets;
 import javafx.beans.binding.Bindings;
+import javafx.geometry.Insets;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
@@ -21,6 +24,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.math.BigDecimal;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 
@@ -34,7 +38,8 @@ public final class AppShell {
 
     public static Parent createRoot(AppStateStore stateStore,
                                     NavigationState navigationState,
-                                    AuthSessionCoordinator authSessionCoordinator) {
+                                    AuthSessionCoordinator authSessionCoordinator,
+                                    ShiftControlCoordinator shiftControlCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -66,10 +71,18 @@ public final class AppShell {
         description.setWrapText(true);
         VBox screenBody = new VBox(10);
 
-        updateContent(navigationState.activeTarget(), title, description, screenBody, authSessionCoordinator, stateStore);
+        updateContent(
+                navigationState.activeTarget(),
+                title,
+                description,
+                screenBody,
+                authSessionCoordinator,
+                shiftControlCoordinator,
+                stateStore
+        );
         navigationState.activeTargetProperty().addListener((obs, oldValue, newValue) -> {
             authSessionCoordinator.onNavigationChanged(newValue);
-            updateContent(newValue, title, description, screenBody, authSessionCoordinator, stateStore);
+            updateContent(newValue, title, description, screenBody, authSessionCoordinator, shiftControlCoordinator, stateStore);
         });
 
         content.getChildren().addAll(title, description, screenBody);
@@ -111,6 +124,7 @@ public final class AppShell {
                                       Label description,
                                       VBox screenBody,
                                       AuthSessionCoordinator authSessionCoordinator,
+                                      ShiftControlCoordinator shiftControlCoordinator,
                                       AppStateStore appStateStore) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
                 .orElseThrow(() -> new IllegalStateException("Screen not found: " + target));
@@ -120,6 +134,11 @@ public final class AppShell {
         screenBody.getChildren().clear();
         if (target == NavigationTarget.LOGIN) {
             renderLogin(screenBody, authSessionCoordinator);
+            return;
+        }
+
+        if (target == NavigationTarget.SHIFT_CONTROL) {
+            renderShiftControl(screenBody, shiftControlCoordinator);
             return;
         }
 
@@ -150,6 +169,162 @@ public final class AppShell {
                 password,
                 loginButton
         );
+    }
+
+    private static void renderShiftControl(VBox screenBody, ShiftControlCoordinator shiftControlCoordinator) {
+        Label status = new Label();
+        status.textProperty().bind(Bindings.createStringBinding(
+                () -> toShiftSummary(shiftControlCoordinator.shiftState()),
+                shiftControlCoordinator.shiftStateProperty()
+        ));
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(shiftControlCoordinator.shiftMessageProperty());
+
+        PosTextField loadShiftId = new PosTextField("Shift ID");
+        PosButton loadButton = PosButton.accent("Load Shift");
+        loadButton.disableProperty().bind(shiftControlCoordinator.busyProperty());
+        loadButton.setOnAction(event -> {
+            Long shiftId = parseLong(loadShiftId.getText());
+            if (shiftId == null) {
+                shiftControlCoordinator.shiftMessageProperty().set("Shift ID must be numeric.");
+                return;
+            }
+            shiftControlCoordinator.loadShift(shiftId);
+        });
+
+        PosTextField cashierUserId = new PosTextField("Cashier user ID");
+        PosTextField terminalDeviceId = new PosTextField("Terminal device ID");
+        PosTextField openingCash = new PosTextField("Opening float (e.g. 120.00)");
+        PosButton openButton = PosButton.primary("Open Shift");
+        openButton.disableProperty().bind(shiftControlCoordinator.busyProperty());
+        openButton.setOnAction(event -> {
+            Long cashierId = parseLong(cashierUserId.getText());
+            Long terminalId = parseLong(terminalDeviceId.getText());
+            BigDecimal amount = parseMoney(openingCash.getText());
+            if (cashierId == null || terminalId == null || amount == null) {
+                shiftControlCoordinator.shiftMessageProperty().set("Cashier/terminal/opening cash are required.");
+                return;
+            }
+            shiftControlCoordinator.openShift(cashierId, terminalId, amount);
+        });
+
+        PosTextField movementAmount = new PosTextField("Cash movement amount");
+        PosTextField movementNote = new PosTextField("Paid-in / paid-out reason");
+        PosButton paidInButton = PosButton.primary("Paid-In");
+        PosButton paidOutButton = PosButton.accent("Paid-Out");
+
+        paidInButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> shiftControlCoordinator.busyProperty().get() || !isOpenShift(shiftControlCoordinator.shiftState()),
+                shiftControlCoordinator.busyProperty(),
+                shiftControlCoordinator.shiftStateProperty()
+        ));
+        paidOutButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> shiftControlCoordinator.busyProperty().get() || !isOpenShift(shiftControlCoordinator.shiftState()),
+                shiftControlCoordinator.busyProperty(),
+                shiftControlCoordinator.shiftStateProperty()
+        ));
+
+        paidInButton.setOnAction(event -> {
+            BigDecimal amount = parseMoney(movementAmount.getText());
+            if (amount == null) {
+                shiftControlCoordinator.shiftMessageProperty().set("Movement amount is required.");
+                return;
+            }
+            shiftControlCoordinator.recordPaidIn(amount, movementNote.getText());
+        });
+
+        paidOutButton.setOnAction(event -> {
+            BigDecimal amount = parseMoney(movementAmount.getText());
+            if (amount == null) {
+                shiftControlCoordinator.shiftMessageProperty().set("Movement amount is required.");
+                return;
+            }
+            shiftControlCoordinator.recordPaidOut(amount, movementNote.getText());
+        });
+
+        PosTextField countedCash = new PosTextField("Counted close cash");
+        PosTextField closeNote = new PosTextField("Close note / variance reason");
+        PosButton closeButton = PosButton.primary("Close Shift");
+        closeButton.disableProperty().bind(Bindings.createBooleanBinding(
+                () -> shiftControlCoordinator.busyProperty().get() || !isOpenShift(shiftControlCoordinator.shiftState()),
+                shiftControlCoordinator.busyProperty(),
+                shiftControlCoordinator.shiftStateProperty()
+        ));
+        closeButton.setOnAction(event -> {
+            BigDecimal closeAmount = parseMoney(countedCash.getText());
+            if (closeAmount == null) {
+                shiftControlCoordinator.shiftMessageProperty().set("Counted close cash is required.");
+                return;
+            }
+            shiftControlCoordinator.closeShift(closeAmount, closeNote.getText());
+        });
+
+        screenBody.getChildren().addAll(
+                new Label("Shift lifecycle controls"),
+                status,
+                feedback,
+                new Label("Load existing shift"),
+                loadShiftId,
+                loadButton,
+                new Label("Open shift"),
+                cashierUserId,
+                terminalDeviceId,
+                openingCash,
+                openButton,
+                new Label("Cash movements"),
+                movementAmount,
+                movementNote,
+                new HBox(8, paidInButton, paidOutButton),
+                new Label("Close and reconcile"),
+                countedCash,
+                closeNote,
+                closeButton
+        );
+    }
+
+    private static boolean isOpenShift(CashShiftResponse shift) {
+        return shift != null && shift.status() == CashShiftStatus.OPEN;
+    }
+
+    private static String toShiftSummary(CashShiftResponse shift) {
+        if (shift == null) {
+            return "No shift loaded.";
+        }
+        return "Shift #" + shift.id()
+                + " | status=" + shift.status()
+                + " | opening=" + defaultMoney(shift.openingCash())
+                + " | paidIn=" + defaultMoney(shift.totalPaidIn())
+                + " | paidOut=" + defaultMoney(shift.totalPaidOut())
+                + " | expectedClose=" + defaultMoney(shift.expectedCloseCash())
+                + " | counted=" + defaultMoney(shift.countedCloseCash())
+                + " | variance=" + defaultMoney(shift.varianceCash());
+    }
+
+    private static String defaultMoney(BigDecimal value) {
+        return value == null ? "0.00" : value.toPlainString();
+    }
+
+    private static Long parseLong(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
+    }
+
+    private static BigDecimal parseMoney(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return new BigDecimal(value.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private static String formatExpiryValue(AuthSessionState session) {
