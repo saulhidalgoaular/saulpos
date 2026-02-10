@@ -622,7 +622,7 @@ Out of Scope:
 - Test Plan:
 1. Unit tests for weighted average calculations.
 
-#### Card I4: Supplier Returns
+#### Card I4: Supplier Returns [SOLVED]
 - Goal: Return damaged/expired inventory to suppliers with full traceability.
 - Dependencies: I2, H1.
 - Data Model:
@@ -1094,7 +1094,7 @@ Out of Scope:
 | I1 | DONE |  |  | Implemented supplier master with migration `V22` (`supplier`, `supplier_contact`, `supplier_terms`), CRUD/search APIs (`/api/suppliers`), merchant-scoped unique code/tax-identifier enforcement, activate/deactivate lifecycle, and integration/security-matrix coverage |
 | I2 | DONE |  |  | Implemented purchase-order receiving flow with migration `V32` (`purchase_order`, `purchase_order_line`, `goods_receipt`), APIs (`POST /api/inventory/purchase-orders`, `GET /api/inventory/purchase-orders/{id}`, `POST /api/inventory/purchase-orders/{id}/approve`, `POST /api/inventory/purchase-orders/{id}/receive`), and inventory posting integration via `PURCHASE_RECEIPT` reference movements with integration coverage for partial/full receiving and lifecycle validation |
 | I3 | DONE |  |  | Implemented costing v1 with migration `V34` (`inventory_product_cost`), purchase-receipt `unitCost` capture, deterministic weighted-average/last-cost updates per store+product, and unit/integration coverage for calculation and audit persistence |
-| I4 | TODO |  |  |  |
+| I4 | DONE |  |  | Implemented supplier-return workflow with migration `V35` (`supplier_return`, `supplier_return_line`), APIs (`POST /api/inventory/supplier-returns`, `GET /api/inventory/supplier-returns/{id}`, `POST /api/inventory/supplier-returns/{id}/approve`, `POST /api/inventory/supplier-returns/{id}/post`), eligibility validation against received-minus-returned quantities, and outbound `SUPPLIER_RETURN` inventory movement posting with integration coverage |
 | J1 | DONE |  |  | Implemented checkout payment allocation flow with migration `V23` (`payment`, `payment_allocation`), checkout API contract (`POST /api/sales/checkout`), deterministic split/cash-change validation rules, and unit/integration coverage for allocation and authorization scenarios |
 | J2 | DONE |  |  | Implemented payment lifecycle state machine with migration `V25` (`payment.status`, `payment_transition`), new lifecycle APIs (`GET /api/payments/{id}`, `POST /api/payments/{id}/capture|void|refund`), explicit transition validation with stable conflict errors, and unit/integration + permission-matrix coverage for transition history/auditability |
 | J3 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `I4` Supplier returns.
-2. `K1` Offline policy definition.
-3. `K2` Idempotent event ingestion.
+1. `K1` Offline policy definition.
+2. `K2` Idempotent event ingestion.
+3. `L1` Sales and returns reports.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

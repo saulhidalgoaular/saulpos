@@ -7,5 +7,6 @@ public enum InventoryReferenceType {
     STOCKTAKE,
     STOCK_TRANSFER_OUT,
     STOCK_TRANSFER_IN,
-    PURCHASE_RECEIPT
+    PURCHASE_RECEIPT,
+    SUPPLIER_RETURN
 }

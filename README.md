@@ -36,6 +36,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `I1` Supplier master.
 - `I2` Purchase orders and receiving.
 - `I3` Costing v1.
+- `I4` Supplier returns.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
 - `G1` Cart lifecycle service.
@@ -179,6 +180,20 @@ Backend source of truth:
 - Inventory balance responses now include:
   - `weightedAverageCost`
   - `lastCost`
+
+### Supplier Returns
+- Supplier return APIs:
+  - `POST /api/inventory/supplier-returns`
+  - `GET /api/inventory/supplier-returns/{id}`
+  - `POST /api/inventory/supplier-returns/{id}/approve`
+  - `POST /api/inventory/supplier-returns/{id}/post`
+- Supplier return model:
+  - `supplier_return`
+  - `supplier_return_line`
+- Enforced rules:
+  - supplier return lifecycle is explicit (`DRAFT` -> `APPROVED` -> `POSTED`),
+  - return quantity per line cannot exceed supplier-received eligible quantity (received minus already returned),
+  - posting records immutable negative inventory movements with `SUPPLIER_RETURN` reference type for stock and cost traceability.
 
 ### Shift and Cash Session Lifecycle
 - `POST /api/shifts/open`

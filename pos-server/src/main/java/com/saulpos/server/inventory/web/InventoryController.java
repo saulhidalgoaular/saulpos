@@ -11,6 +11,10 @@ import com.saulpos.api.inventory.StockAdjustmentApproveRequest;
 import com.saulpos.api.inventory.StockAdjustmentCreateRequest;
 import com.saulpos.api.inventory.StockAdjustmentPostRequest;
 import com.saulpos.api.inventory.StockAdjustmentResponse;
+import com.saulpos.api.inventory.SupplierReturnApproveRequest;
+import com.saulpos.api.inventory.SupplierReturnCreateRequest;
+import com.saulpos.api.inventory.SupplierReturnPostRequest;
+import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.inventory.StockTransferCreateRequest;
 import com.saulpos.api.inventory.StockTransferReceiveRequest;
 import com.saulpos.api.inventory.StockTransferResponse;
@@ -24,6 +28,7 @@ import com.saulpos.server.inventory.service.PurchaseOrderService;
 import com.saulpos.server.inventory.service.StockAdjustmentService;
 import com.saulpos.server.inventory.service.StockTransferService;
 import com.saulpos.server.inventory.service.StocktakeService;
+import com.saulpos.server.inventory.service.SupplierReturnService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -51,6 +56,7 @@ public class InventoryController {
     private final StocktakeService stocktakeService;
     private final StockTransferService stockTransferService;
     private final PurchaseOrderService purchaseOrderService;
+    private final SupplierReturnService supplierReturnService;
 
     @PostMapping("/purchase-orders")
     @ResponseStatus(HttpStatus.CREATED)
@@ -73,6 +79,29 @@ public class InventoryController {
     public PurchaseOrderResponse receivePurchaseOrder(@PathVariable("purchaseOrderId") Long purchaseOrderId,
                                                       @Valid @RequestBody PurchaseOrderReceiveRequest request) {
         return purchaseOrderService.receivePurchaseOrder(purchaseOrderId, request);
+    }
+
+    @PostMapping("/supplier-returns")
+    @ResponseStatus(HttpStatus.CREATED)
+    public SupplierReturnResponse createSupplierReturn(@Valid @RequestBody SupplierReturnCreateRequest request) {
+        return supplierReturnService.createSupplierReturn(request);
+    }
+
+    @GetMapping("/supplier-returns/{supplierReturnId}")
+    public SupplierReturnResponse getSupplierReturn(@PathVariable("supplierReturnId") Long supplierReturnId) {
+        return supplierReturnService.getSupplierReturn(supplierReturnId);
+    }
+
+    @PostMapping("/supplier-returns/{supplierReturnId}/approve")
+    public SupplierReturnResponse approveSupplierReturn(@PathVariable("supplierReturnId") Long supplierReturnId,
+                                                        @Valid @RequestBody(required = false) SupplierReturnApproveRequest request) {
+        return supplierReturnService.approveSupplierReturn(supplierReturnId, request);
+    }
+
+    @PostMapping("/supplier-returns/{supplierReturnId}/post")
+    public SupplierReturnResponse postSupplierReturn(@PathVariable("supplierReturnId") Long supplierReturnId,
+                                                     @Valid @RequestBody(required = false) SupplierReturnPostRequest request) {
+        return supplierReturnService.postSupplierReturn(supplierReturnId, request);
     }
 
     @PostMapping("/adjustments")
