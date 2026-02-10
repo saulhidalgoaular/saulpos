@@ -993,7 +993,7 @@ Out of Scope:
 1. Checkout and lookup meet defined p95 targets.
 2. No data corruption in failure-recovery tests.
 
-#### Card P3: Security and Compliance Verification
+#### Card P3: Security and Compliance Verification [SOLVED]
 - Goal: Confirm baseline security posture and auditability.
 - Dependencies: P1.
 - Deliverables:
@@ -1134,15 +1134,15 @@ Out of Scope:
 | O13 | DONE |  |  | Implemented receipt journal lookup + reprint workflow in `pos-client` (`GET /api/receipts/journal/by-number/{receiptNumber}`, `GET /api/receipts/journal/by-sale/{saleId}`, `POST /api/receipts/reprint`) with permission-aware UI controls (`RECEIPT_REPRINT`), enhanced exception preview drill-down context (actor/approver/reason/terminal/reference/correlation), and API/coordinator test coverage |
 | P1 | DONE |  |  | Implemented executable UAT persona suite (`P1EndToEndUatIntegrationTest`) covering cashier/manager/inventory/admin workflows and documented signed checklist scaffold in `docs/uat/P1-end-to-end-uat-scenarios.md` |
 | P2 | DONE |  |  | Implemented executable reliability/performance suite (`P2PerformanceReliabilityIntegrationTest`) with defined lookup/checkout p95 targets and failure-recovery no-corruption assertions, plus k6 load scripts for checkout/lookup and reporting patterns (`docs/perf/k6/P2-peak-checkout-lookup.js`, `docs/perf/k6/P2-peak-reporting.js`) and evidence notes in `docs/uat/P2-performance-and-reliability-hardening.md` |
-| P3 | TODO |  |  |  |
+| P3 | DONE |  |  | Implemented executable security/compliance verification suite (`P3SecurityComplianceIntegrationTest`) covering RBAC regression and queryable sensitive-action audits, plus `P3` evidence docs (`docs/uat/P3-security-and-compliance-verification.md`) and secret/config hardening checklist (`docs/security/P3-secret-configuration-hardening-checklist.md`) |
 | P4 | TODO |  |  |  |
 | P5 | TODO |  |  |  |
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `P3` Security and compliance verification.
-2. `P4` Packaging, deployment, and operations.
-3. `P5` Documentation and handover.
+1. `P4` Packaging, deployment, and operations.
+2. `P5` Documentation and handover.
+3. `P6` Release candidate and go-live.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -69,6 +69,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O13` Receipt reprint and exception monitoring UX.
 - `P1` End-to-end UAT scenarios.
 - `P2` Performance and reliability hardening.
+- `P3` Security and compliance verification.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -291,6 +292,15 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `docs/perf/k6/P2-peak-reporting.js`
 - Suite execution command:
   - `mvn -pl pos-server test -Dtest=P2PerformanceReliabilityIntegrationTest`.
+
+### Security and Compliance Verification (`P3`)
+- Added executable `P3` security/compliance verification suite in `pos-server`:
+  - `P3SecurityComplianceIntegrationTest` validates RBAC deny-by-default/allow-by-permission paths and sensitive-action audit persistence/queryability.
+- Added `P3` evidence and hardening checklist documentation:
+  - `docs/uat/P3-security-and-compliance-verification.md`
+  - `docs/security/P3-secret-configuration-hardening-checklist.md`
+- Suite execution command:
+  - `mvn -pl pos-server test -Dtest=P3SecurityComplianceIntegrationTest`.
 
 ## Implemented Domain Capabilities
 
@@ -1053,6 +1063,7 @@ Key settings include:
 - Unit tests for fiscal country-provider selection and startup validation behavior (`FiscalConfigurationTest`).
 - Integration tests for invoice-required checkout validation and fiscal outcome persistence when provider is disabled.
 - Permission-matrix integration coverage for store-credit endpoint authorization (`SALES_PROCESS`/`REFUND_PROCESS`/`CONFIGURATION_MANAGE`).
+- Integration tests for `P3` security/compliance verification covering RBAC regression and queryable sensitive-action audit evidence (`P3SecurityComplianceIntegrationTest`).
 
 ## Project Planning and Status
 
