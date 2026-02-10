@@ -1,6 +1,11 @@
 # Changelog
 
 ## Unreleased
+- Implemented Card P4 Packaging, Deployment, and Operations with scripted release packaging/deployment and documented ops runbooks.
+- Added environment-specific server profiles: `application-dev.properties`, `application-staging.properties`, and `application-prod.properties`.
+- Added ops scripts for packaging/deploy and backup/restore: `ops/scripts/package-release.sh`, `ops/scripts/deploy-server.sh`, `ops/scripts/backup-postgres.sh`, `ops/scripts/restore-postgres.sh`.
+- Added P4 operational documentation and validation evidence: `docs/ops/P4-packaging-deployment-and-operations.md` and `docs/ops/P4-backup-restore-validation.md`.
+- Added `P4OperationsReadinessTest` in `pos-server` to assert profile/script/runbook readiness.
 - Implemented Card P1 End-to-End UAT Scenarios with executable persona coverage.
 - Added `P1EndToEndUatIntegrationTest` in `pos-server` covering cashier, manager, inventory clerk, and admin workflow paths.
 - Added `docs/uat/P1-end-to-end-uat-scenarios.md` with UAT checklist scaffold and execution evidence mapping.

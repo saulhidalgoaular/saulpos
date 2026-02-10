@@ -1004,7 +1004,7 @@ Out of Scope:
 1. No high-severity security findings open.
 2. Required audit trails are complete and queryable.
 
-#### Card P4: Packaging, Deployment, and Operations
+#### Card P4: Packaging, Deployment, and Operations [SOLVED]
 - Goal: Produce repeatable deployment artifacts and runbooks.
 - Dependencies: P2, P3.
 - Deliverables:
@@ -1135,14 +1135,13 @@ Out of Scope:
 | P1 | DONE |  |  | Implemented executable UAT persona suite (`P1EndToEndUatIntegrationTest`) covering cashier/manager/inventory/admin workflows and documented signed checklist scaffold in `docs/uat/P1-end-to-end-uat-scenarios.md` |
 | P2 | DONE |  |  | Implemented executable reliability/performance suite (`P2PerformanceReliabilityIntegrationTest`) with defined lookup/checkout p95 targets and failure-recovery no-corruption assertions, plus k6 load scripts for checkout/lookup and reporting patterns (`docs/perf/k6/P2-peak-checkout-lookup.js`, `docs/perf/k6/P2-peak-reporting.js`) and evidence notes in `docs/uat/P2-performance-and-reliability-hardening.md` |
 | P3 | DONE |  |  | Implemented executable security/compliance verification suite (`P3SecurityComplianceIntegrationTest`) covering RBAC regression and queryable sensitive-action audits, plus `P3` evidence docs (`docs/uat/P3-security-and-compliance-verification.md`) and secret/config hardening checklist (`docs/security/P3-secret-configuration-hardening-checklist.md`) |
-| P4 | TODO |  |  |  |
+| P4 | DONE |  |  | Implemented packaging/deployment/operations baseline with environment profiles (`application-dev|staging|prod.properties`), executable ops scripts (`ops/scripts/package-release.sh`, `deploy-server.sh`, `backup-postgres.sh`, `restore-postgres.sh`), runbooks/evidence docs (`docs/ops/P4-packaging-deployment-and-operations.md`, `docs/ops/P4-backup-restore-validation.md`), and readiness coverage via `P4OperationsReadinessTest` |
 | P5 | TODO |  |  |  |
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `P4` Packaging, deployment, and operations.
-2. `P5` Documentation and handover.
-3. `P6` Release candidate and go-live.
+1. `P5` Documentation and handover.
+2. `P6` Release candidate and go-live.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

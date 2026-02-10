@@ -70,6 +70,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `P1` End-to-end UAT scenarios.
 - `P2` Performance and reliability hardening.
 - `P3` Security and compliance verification.
+- `P4` Packaging, deployment, and operations.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -301,6 +302,22 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
   - `docs/security/P3-secret-configuration-hardening-checklist.md`
 - Suite execution command:
   - `mvn -pl pos-server test -Dtest=P3SecurityComplianceIntegrationTest`.
+
+### Packaging, Deployment, and Operations (`P4`)
+- Added environment-specific runtime profiles in `pos-server`:
+  - `application-dev.properties`
+  - `application-staging.properties`
+  - `application-prod.properties`
+- Added operational scripts:
+  - `ops/scripts/package-release.sh`
+  - `ops/scripts/deploy-server.sh`
+  - `ops/scripts/backup-postgres.sh`
+  - `ops/scripts/restore-postgres.sh`
+- Added operations runbook and validation notes:
+  - `docs/ops/P4-packaging-deployment-and-operations.md`
+  - `docs/ops/P4-backup-restore-validation.md`
+- Readiness test command:
+  - `mvn -pl pos-server test -Dtest=P4OperationsReadinessTest`.
 
 ## Implemented Domain Capabilities
 
