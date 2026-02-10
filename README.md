@@ -62,6 +62,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O7` Backoffice UI (catalog, pricing, customers).
 - `O8` Reporting and export UI.
 - `O9` Hardware interaction UI.
+- `O10` Offline/degraded mode UX.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -79,7 +80,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, reporting/export actions, and hardware actions (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, reporting/export actions, hardware actions, and degraded-mode connectivity guidance (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9` + `O10`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -202,6 +203,20 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP hardware contract mapping for permission lookup, receipt print, and drawer open endpoints,
   - hardware coordinator behavior for permission gating plus success/failure action status messaging.
+
+### Client Offline/Degraded Mode UX (`O10`)
+- Shell header now shows explicit connectivity status (`ONLINE`/`OFFLINE`) with operator-facing status text and retry control.
+- Client connectivity checks are policy-aware:
+  - `GET /api/system/offline-policy` provides operation-level offline behavior/messages.
+  - `GET /actuator/health` drives live connectivity status.
+- Transactional actions now respect offline policy guards:
+  - login blocks when `AUTH_LOGIN` is `ONLINE_ONLY`,
+  - cart mutation paths block when `CART_MUTATION` is `ONLINE_ONLY`,
+  - checkout blocks when `CHECKOUT` is `ONLINE_ONLY`.
+- Tests now cover:
+  - HTTP offline-policy contract mapping,
+  - connectivity coordinator online/offline transitions and policy-message behavior,
+  - auth and sell coordinator blocking behavior while offline.
 
 ## Implemented Domain Capabilities
 

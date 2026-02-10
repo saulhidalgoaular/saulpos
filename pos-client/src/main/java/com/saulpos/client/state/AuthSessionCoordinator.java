@@ -26,6 +26,7 @@ public final class AuthSessionCoordinator {
     private final PosApiClient apiClient;
     private final AppStateStore appStateStore;
     private final NavigationState navigationState;
+    private final ConnectivityCoordinator connectivityCoordinator;
     private final Clock clock;
     private final Consumer<Runnable> uiDispatcher;
     private final StringProperty sessionMessage = new SimpleStringProperty("Please sign in.");
@@ -35,7 +36,14 @@ public final class AuthSessionCoordinator {
     public AuthSessionCoordinator(PosApiClient apiClient,
                                   AppStateStore appStateStore,
                                   NavigationState navigationState) {
-        this(apiClient, appStateStore, navigationState, Clock.systemUTC(), Platform::runLater);
+        this(apiClient, appStateStore, navigationState, null, Clock.systemUTC(), Platform::runLater);
+    }
+
+    public AuthSessionCoordinator(PosApiClient apiClient,
+                                  AppStateStore appStateStore,
+                                  NavigationState navigationState,
+                                  ConnectivityCoordinator connectivityCoordinator) {
+        this(apiClient, appStateStore, navigationState, connectivityCoordinator, Clock.systemUTC(), Platform::runLater);
     }
 
     AuthSessionCoordinator(PosApiClient apiClient,
@@ -43,9 +51,19 @@ public final class AuthSessionCoordinator {
                            NavigationState navigationState,
                            Clock clock,
                            Consumer<Runnable> uiDispatcher) {
+        this(apiClient, appStateStore, navigationState, null, clock, uiDispatcher);
+    }
+
+    AuthSessionCoordinator(PosApiClient apiClient,
+                           AppStateStore appStateStore,
+                           NavigationState navigationState,
+                           ConnectivityCoordinator connectivityCoordinator,
+                           Clock clock,
+                           Consumer<Runnable> uiDispatcher) {
         this.apiClient = apiClient;
         this.appStateStore = appStateStore;
         this.navigationState = navigationState;
+        this.connectivityCoordinator = connectivityCoordinator;
         this.clock = clock;
         this.uiDispatcher = uiDispatcher;
     }
@@ -59,6 +77,14 @@ public final class AuthSessionCoordinator {
     }
 
     public CompletableFuture<Void> login(String username, String password) {
+        if (connectivityCoordinator != null
+                && connectivityCoordinator.isOperationBlocked(ConnectivityCoordinator.AUTH_LOGIN)) {
+            dispatch(() -> sessionMessage.set(connectivityCoordinator.blockedMessage(
+                    ConnectivityCoordinator.AUTH_LOGIN,
+                    "Cannot sign in while offline. Reconnect to continue."
+            )));
+            return CompletableFuture.completedFuture(null);
+        }
         dispatch(() -> authenticating.set(true));
         return apiClient.login(username, password)
                 .thenCompose(token -> apiClient.currentUser().thenAccept(user -> dispatch(() -> {

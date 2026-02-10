@@ -26,102 +26,44 @@ import com.saulpos.api.shift.CashShiftResponse;
 import com.saulpos.api.system.OfflineMode;
 import com.saulpos.api.system.OfflineOperationPolicyResponse;
 import com.saulpos.api.system.OfflinePolicyResponse;
-import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
-import com.saulpos.client.app.NavigationState;
-import com.saulpos.client.app.NavigationTarget;
 import org.junit.jupiter.api.Test;
 
-import java.time.Clock;
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class AuthSessionCoordinatorTest {
-
-    private static final Instant NOW = Instant.parse("2026-02-10T12:00:00Z");
+class ConnectivityCoordinatorTest {
 
     @Test
-    void loginSuccess_shouldPopulateSessionAndNavigateToShift() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
+    void refreshWhenOnline_shouldLoadPolicyAndEnableOperations() {
         FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.loginResponse = new AuthTokenResponse(
-                "access-1",
-                "refresh-1",
-                NOW.plusSeconds(600),
-                NOW.plusSeconds(3600),
-                Set.of("CASHIER")
+        apiClient.reachable = true;
+        apiClient.policy = new OfflinePolicyResponse(
+                "K1-v1",
+                "Server connectivity is required for transactional flows in SaulPOS v2.",
+                List.of(new OfflineOperationPolicyResponse(
+                        ConnectivityCoordinator.CHECKOUT,
+                        OfflineMode.ONLINE_ONLY,
+                        "Checkout is blocked while disconnected.",
+                        "Sale cannot be completed offline. Reconnect to finalize payment."
+                ))
         );
-        apiClient.currentUserResponse = new CurrentUserResponse(1L, "cashier", Set.of("CASHIER"));
+        ConnectivityCoordinator coordinator = new ConnectivityCoordinator(apiClient, Runnable::run);
 
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                apiClient,
-                store,
-                navigationState,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
+        coordinator.refresh().join();
 
-        coordinator.login("cashier", "secret").join();
-
-        assertTrue(store.isAuthenticated());
-        assertEquals("cashier", store.sessionState().username());
-        assertEquals(NavigationTarget.SHIFT_CONTROL, navigationState.activeTarget());
-        assertEquals("Session active for cashier.", coordinator.sessionMessageProperty().get());
+        assertTrue(coordinator.isOnline());
+        assertEquals("Connectivity online. Transactional actions are available.",
+                coordinator.connectivityMessageProperty().get());
+        assertFalse(coordinator.isOperationBlocked(ConnectivityCoordinator.CHECKOUT));
     }
 
     @Test
-    void loginInvalidCredentials_shouldKeepGuestAndExposeMessage() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
-        FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.loginFailure = new ApiProblemException(401, "POS-4011", "Invalid username or password");
-
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                apiClient,
-                store,
-                navigationState,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
-
-        coordinator.login("cashier", "bad-password").handle((ok, ex) -> null).join();
-
-        assertFalse(store.isAuthenticated());
-        assertEquals(NavigationTarget.LOGIN, navigationState.activeTarget());
-        assertEquals("Invalid username or password.", coordinator.sessionMessageProperty().get());
-    }
-
-    @Test
-    void protectedNavigationWithoutSession_shouldRedirectToLogin() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                new FakePosApiClient(),
-                store,
-                navigationState,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
-
-        navigationState.navigate(NavigationTarget.SELL);
-        coordinator.onNavigationChanged(NavigationTarget.SELL);
-
-        assertEquals(NavigationTarget.LOGIN, navigationState.activeTarget());
-        assertEquals("Authentication is required for this screen.", coordinator.sessionMessageProperty().get());
-    }
-
-    @Test
-    void loginWhileOffline_shouldUseOfflinePolicyMessageAndSkipApiCall() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
+    void refreshWhenOffline_shouldBlockOnlineOnlyOperationsAndExposePolicyMessage() {
         FakePosApiClient apiClient = new FakePosApiClient();
         apiClient.policy = new OfflinePolicyResponse(
                 "K1-v1",
@@ -133,102 +75,19 @@ class AuthSessionCoordinatorTest {
                         "Cannot sign in while offline. Reconnect to continue."
                 ))
         );
-        ConnectivityCoordinator connectivityCoordinator = new ConnectivityCoordinator(apiClient, Runnable::run);
-        connectivityCoordinator.refresh().join();
+        ConnectivityCoordinator coordinator = new ConnectivityCoordinator(apiClient, Runnable::run);
+        coordinator.refresh().join();
         apiClient.reachable = false;
-        connectivityCoordinator.refresh().join();
+        coordinator.refresh().join();
 
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                apiClient,
-                store,
-                navigationState,
-                connectivityCoordinator,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
-
-        coordinator.login("cashier", "secret").join();
-
-        assertFalse(store.isAuthenticated());
+        assertFalse(coordinator.isOnline());
+        assertTrue(coordinator.isOperationBlocked(ConnectivityCoordinator.AUTH_LOGIN));
         assertEquals("Cannot sign in while offline. Reconnect to continue.",
-                coordinator.sessionMessageProperty().get());
-    }
-
-    @Test
-    void expiredSessionNavigation_shouldRefreshWhenRefreshTokenIsValid() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
-        FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.refreshResponse = new AuthTokenResponse(
-                "access-2",
-                "refresh-2",
-                NOW.plusSeconds(900),
-                NOW.plusSeconds(7200),
-                Set.of("CASHIER")
-        );
-
-        store.updateSession(new AuthSessionState(
-                "cashier",
-                "access-1",
-                "refresh-1",
-                Set.of("CASHIER"),
-                NOW.minusSeconds(1),
-                NOW.plusSeconds(7200)
-        ));
-
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                apiClient,
-                store,
-                navigationState,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
-
-        coordinator.onNavigationChanged(NavigationTarget.SELL);
-
-        assertEquals("access-2", store.sessionState().accessToken());
-        assertEquals("Session refreshed.", coordinator.sessionMessageProperty().get());
-    }
-
-    @Test
-    void expiredSessionRefreshFailure_shouldClearSessionAndRedirectLogin() {
-        AppStateStore store = new AppStateStore();
-        NavigationState navigationState = new NavigationState();
-        FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.refreshFailure = new ApiProblemException(401, "POS-4015", "Token expired");
-
-        store.updateSession(new AuthSessionState(
-                "cashier",
-                "access-1",
-                "refresh-1",
-                Set.of("CASHIER"),
-                NOW.minusSeconds(1),
-                NOW.plusSeconds(7200)
-        ));
-        navigationState.navigate(NavigationTarget.SELL);
-
-        AuthSessionCoordinator coordinator = new AuthSessionCoordinator(
-                apiClient,
-                store,
-                navigationState,
-                Clock.fixed(NOW, ZoneOffset.UTC),
-                Runnable::run
-        );
-
-        coordinator.onNavigationChanged(NavigationTarget.SELL);
-
-        assertFalse(store.isAuthenticated());
-        assertEquals(NavigationTarget.LOGIN, navigationState.activeTarget());
-        assertEquals("Session expired. Please sign in again.", coordinator.sessionMessageProperty().get());
+                coordinator.blockedMessage(ConnectivityCoordinator.AUTH_LOGIN, "fallback"));
     }
 
     private static final class FakePosApiClient implements PosApiClient {
 
-        private AuthTokenResponse loginResponse;
-        private AuthTokenResponse refreshResponse;
-        private CurrentUserResponse currentUserResponse;
-        private RuntimeException loginFailure;
-        private RuntimeException refreshFailure;
         private boolean reachable = true;
         private OfflinePolicyResponse policy = new OfflinePolicyResponse("K1-v1", "", List.of());
 
@@ -244,28 +103,22 @@ class AuthSessionCoordinatorTest {
 
         @Override
         public CompletableFuture<AuthTokenResponse> login(String username, String password) {
-            if (loginFailure != null) {
-                return CompletableFuture.failedFuture(loginFailure);
-            }
-            return CompletableFuture.completedFuture(loginResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<AuthTokenResponse> refresh(String refreshToken) {
-            if (refreshFailure != null) {
-                return CompletableFuture.failedFuture(refreshFailure);
-            }
-            return CompletableFuture.completedFuture(refreshResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<CurrentUserResponse> currentUser() {
-            return CompletableFuture.completedFuture(currentUserResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<Void> logout() {
-            return CompletableFuture.completedFuture(null);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override

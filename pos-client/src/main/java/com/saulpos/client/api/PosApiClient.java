@@ -36,6 +36,7 @@ import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
+import com.saulpos.api.system.OfflinePolicyResponse;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -44,6 +45,10 @@ import java.util.concurrent.CompletableFuture;
 public interface PosApiClient {
 
     CompletableFuture<Boolean> ping();
+
+    default CompletableFuture<OfflinePolicyResponse> offlinePolicy() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
 
     CompletableFuture<AuthTokenResponse> login(String username, String password);
 

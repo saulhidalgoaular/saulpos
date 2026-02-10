@@ -38,6 +38,7 @@ import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
+import com.saulpos.api.system.OfflinePolicyResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -94,6 +95,14 @@ public final class HttpPosApiClient implements PosApiClient {
                         throw new CompletionException(ex);
                     }
                 });
+    }
+
+    @Override
+    public CompletableFuture<OfflinePolicyResponse> offlinePolicy() {
+        HttpRequest request = baseRequest("/api/system/offline-policy")
+                .GET()
+                .build();
+        return send(request, OfflinePolicyResponse.class);
     }
 
     @Override

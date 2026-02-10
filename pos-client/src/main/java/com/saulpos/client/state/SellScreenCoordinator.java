@@ -36,6 +36,7 @@ public final class SellScreenCoordinator {
     private static final int DEFAULT_PAGE_SIZE = 12;
 
     private final PosApiClient apiClient;
+    private final ConnectivityCoordinator connectivityCoordinator;
     private final Clock clock;
     private final Consumer<Runnable> uiDispatcher;
     private final ObjectProperty<SaleCartResponse> cartState = new SimpleObjectProperty<>();
@@ -45,11 +46,23 @@ public final class SellScreenCoordinator {
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
     public SellScreenCoordinator(PosApiClient apiClient) {
-        this(apiClient, Clock.systemUTC(), Platform::runLater);
+        this(apiClient, null, Clock.systemUTC(), Platform::runLater);
+    }
+
+    public SellScreenCoordinator(PosApiClient apiClient, ConnectivityCoordinator connectivityCoordinator) {
+        this(apiClient, connectivityCoordinator, Clock.systemUTC(), Platform::runLater);
     }
 
     SellScreenCoordinator(PosApiClient apiClient, Clock clock, Consumer<Runnable> uiDispatcher) {
+        this(apiClient, null, clock, uiDispatcher);
+    }
+
+    SellScreenCoordinator(PosApiClient apiClient,
+                          ConnectivityCoordinator connectivityCoordinator,
+                          Clock clock,
+                          Consumer<Runnable> uiDispatcher) {
         this.apiClient = apiClient;
+        this.connectivityCoordinator = connectivityCoordinator;
         this.clock = clock;
         this.uiDispatcher = uiDispatcher;
     }
@@ -83,6 +96,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> createCart(Long cashierUserId, Long storeLocationId, Long terminalDeviceId) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (cashierUserId == null || storeLocationId == null || terminalDeviceId == null) {
             dispatch(() -> sellMessage.set("Cashier, store, and terminal are required to create cart."));
             return CompletableFuture.completedFuture(null);
@@ -107,6 +124,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> scanBarcode(Long merchantId, String barcode, BigDecimal quantity) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before scanning."));
             return CompletableFuture.completedFuture(null);
@@ -143,6 +164,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> quickAddProduct(Long productId, BigDecimal quantity) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before adding products."));
             return CompletableFuture.completedFuture(null);
@@ -163,6 +188,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> updateLineQuantity(Long lineId, BigDecimal quantity) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before editing lines."));
             return CompletableFuture.completedFuture(null);
@@ -179,6 +208,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> removeLine(Long lineId) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before removing lines."));
             return CompletableFuture.completedFuture(null);
@@ -195,6 +228,10 @@ public final class SellScreenCoordinator {
     }
 
     public CompletableFuture<Void> recalculate() {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CART_MUTATION,
+                "Cart changes are unavailable offline. Reconnect and try again.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before recalculation."));
             return CompletableFuture.completedFuture(null);
@@ -212,6 +249,10 @@ public final class SellScreenCoordinator {
                                             BigDecimal cashTenderedAmount,
                                             BigDecimal cardAmount,
                                             String cardReference) {
+        if (isBlockedByConnectivity(ConnectivityCoordinator.CHECKOUT,
+                "Sale cannot be completed offline. Reconnect to finalize payment.")) {
+            return CompletableFuture.completedFuture(null);
+        }
         if (!hasActiveCart()) {
             dispatch(() -> sellMessage.set("Create or load an ACTIVE cart before checkout."));
             return CompletableFuture.completedFuture(null);
@@ -308,6 +349,14 @@ public final class SellScreenCoordinator {
 
     private void dispatch(Runnable runnable) {
         uiDispatcher.accept(runnable);
+    }
+
+    private boolean isBlockedByConnectivity(String operation, String fallbackMessage) {
+        if (connectivityCoordinator == null || !connectivityCoordinator.isOperationBlocked(operation)) {
+            return false;
+        }
+        dispatch(() -> sellMessage.set(connectivityCoordinator.blockedMessage(operation, fallbackMessage)));
+        return true;
     }
 
     private static BigDecimal normalizeAmount(BigDecimal value) {

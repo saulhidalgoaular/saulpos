@@ -25,6 +25,7 @@ import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
 import com.saulpos.client.state.BackofficeCoordinator;
+import com.saulpos.client.state.ConnectivityCoordinator;
 import com.saulpos.client.state.HardwareActionStatus;
 import com.saulpos.client.state.HardwareCoordinator;
 import com.saulpos.client.state.ReportingCoordinator;
@@ -69,7 +70,8 @@ public final class AppShell {
                                     ReturnsScreenCoordinator returnsScreenCoordinator,
                                     BackofficeCoordinator backofficeCoordinator,
                                     ReportingCoordinator reportingCoordinator,
-                                    HardwareCoordinator hardwareCoordinator) {
+                                    HardwareCoordinator hardwareCoordinator,
+                                    ConnectivityCoordinator connectivityCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -155,13 +157,33 @@ public final class AppShell {
         ));
         Label authFeedback = new Label();
         authFeedback.textProperty().bind(authSessionCoordinator.sessionMessageProperty());
+        Label connectivityBadge = new Label();
+        connectivityBadge.textProperty().bind(Bindings.createStringBinding(
+                () -> connectivityCoordinator.isOnline() ? "Connectivity: ONLINE" : "Connectivity: OFFLINE",
+                connectivityCoordinator.onlineProperty()
+        ));
+        Label connectivityFeedback = new Label();
+        connectivityFeedback.textProperty().bind(connectivityCoordinator.connectivityMessageProperty());
+        PosButton refreshConnectivityButton = PosButton.accent("Retry Connectivity");
+        refreshConnectivityButton.disableProperty().bind(connectivityCoordinator.checkingProperty());
+        refreshConnectivityButton.setOnAction(event -> connectivityCoordinator.refresh());
         PosButton logoutButton = PosButton.accent("Sign Out");
         logoutButton.disableProperty().bind(Bindings.not(stateStore.authenticatedProperty()));
         logoutButton.setOnAction(event -> authSessionCoordinator.logout());
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        top.getChildren().addAll(sessionBadge, sessionExpiry, authFeedback, spacer, logoutButton, toastHost);
+        top.getChildren().addAll(
+                sessionBadge,
+                sessionExpiry,
+                authFeedback,
+                connectivityBadge,
+                connectivityFeedback,
+                refreshConnectivityButton,
+                spacer,
+                logoutButton,
+                toastHost
+        );
 
         root.setLeft(nav);
         root.setTop(top);

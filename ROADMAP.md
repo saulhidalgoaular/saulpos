@@ -921,7 +921,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests with mocked hardware adapters.
 
-#### Card O10: Offline/Degraded Mode UX
+#### Card O10: Offline/Degraded Mode UX [SOLVED]
 - Goal: Ensure predictable user behavior during service degradation.
 - Dependencies: K1, K2, O1.
 - Acceptance Criteria:
@@ -1121,7 +1121,7 @@ Out of Scope:
 | O7 | DONE |  |  | Implemented Backoffice workflow in `pos-client` with catalog load/search + create/update product actions, store-context price resolution (`/api/catalog/prices/resolve`), and customer load/lookup + create/update actions; added coordinator/UI wiring plus API contract and state-coordinator test coverage |
 | O8 | DONE |  |  | Implemented reporting UI workflow in `pos-client` with shared filters (date/store/terminal/cashier + contextual category/supplier/reason/event-type), report-load actions for sales/returns, inventory movements, cash shifts, and exceptions, streaming row preview strategy (bounded client-side window), and CSV export actions with deterministic operator feedback; added API contract tests and reporting coordinator coverage for filter/export behavior |
 | O9 | DONE |  |  | Implemented hardware UI workflow in `pos-client` with receipt print action/status visibility (`queued`/`success`/`failure`), role-gated drawer open action backed by current-permissions introspection (`/api/security/permissions/current`), and API/coordinator coverage for print/drawer contracts and authorization behavior |
-| O10 | TODO |  |  |  |
+| O10 | DONE |  |  | Implemented connectivity/degraded-mode UX in `pos-client` with top-bar online/offline visibility + retry action, policy-aware operation blocking for `AUTH_LOGIN`/`CART_MUTATION`/`CHECKOUT` using `/api/system/offline-policy`, and client API/coordinator coverage for offline blocking and recovery messaging |
 | O11 | TODO |  |  |  |
 | O12 | TODO |  |  |  |
 | O13 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O10` Offline/degraded mode UX.
-2. `O11` Suspended sales and override UX.
-3. `O12` Lot/expiry and supplier return UX.
+1. `O11` Suspended sales and override UX.
+2. `O12` Lot/expiry and supplier return UX.
+3. `O13` Receipt reprint and exception monitoring UX.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

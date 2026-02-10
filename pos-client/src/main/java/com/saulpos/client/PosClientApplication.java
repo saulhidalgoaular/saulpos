@@ -7,6 +7,7 @@ import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.BackofficeCoordinator;
+import com.saulpos.client.state.ConnectivityCoordinator;
 import com.saulpos.client.state.HardwareCoordinator;
 import com.saulpos.client.state.ReportingCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
@@ -28,13 +29,16 @@ public class PosClientApplication extends Application {
         URI apiBaseUri = URI.create(System.getProperty("saulpos.api.base-url", "http://localhost:8080"));
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         HttpPosApiClient apiClient = new HttpPosApiClient(apiBaseUri, objectMapper);
-        AuthSessionCoordinator authSessionCoordinator = new AuthSessionCoordinator(apiClient, appStateStore, navigationState);
+        ConnectivityCoordinator connectivityCoordinator = new ConnectivityCoordinator(apiClient);
+        AuthSessionCoordinator authSessionCoordinator =
+                new AuthSessionCoordinator(apiClient, appStateStore, navigationState, connectivityCoordinator);
         ShiftControlCoordinator shiftControlCoordinator = new ShiftControlCoordinator(apiClient);
-        SellScreenCoordinator sellScreenCoordinator = new SellScreenCoordinator(apiClient);
+        SellScreenCoordinator sellScreenCoordinator = new SellScreenCoordinator(apiClient, connectivityCoordinator);
         ReturnsScreenCoordinator returnsScreenCoordinator = new ReturnsScreenCoordinator(apiClient);
         BackofficeCoordinator backofficeCoordinator = new BackofficeCoordinator(apiClient);
         ReportingCoordinator reportingCoordinator = new ReportingCoordinator(apiClient);
         HardwareCoordinator hardwareCoordinator = new HardwareCoordinator(apiClient);
+        connectivityCoordinator.refresh();
 
         Scene scene = new Scene(
                 AppShell.createRoot(
@@ -46,7 +50,8 @@ public class PosClientApplication extends Application {
                         returnsScreenCoordinator,
                         backofficeCoordinator,
                         reportingCoordinator,
-                        hardwareCoordinator
+                        hardwareCoordinator,
+                        connectivityCoordinator
                 ),
                 1180,
                 760

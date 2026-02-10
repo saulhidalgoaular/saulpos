@@ -25,6 +25,7 @@ import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementType;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
+import com.saulpos.api.system.OfflineMode;
 import com.saulpos.api.tax.TenderType;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,33 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class HttpPosApiClientTest {
+
+    @Test
+    void offlinePolicy_shouldUseExpectedEndpointAndMapResponse() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    if ("/api/system/offline-policy".equals(request.uri().getPath())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"policyVersion\":\"K1-v1\",\"connectivityExpectation\":\"Server connectivity is required.\","
+                                        + "\"operations\":[{\"operation\":\"CHECKOUT\",\"mode\":\"ONLINE_ONLY\","
+                                        + "\"technicalControl\":\"Block checkout while disconnected.\","
+                                        + "\"userMessage\":\"Sale cannot be completed offline.\"}]}"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        assertEquals("K1-v1", client.offlinePolicy().join().policyVersion());
+        assertEquals(OfflineMode.ONLINE_ONLY, client.offlinePolicy().join().operations().get(0).mode());
+        assertEquals("/api/system/offline-policy", requests.get(0).uri().getPath());
+    }
 
     @Test
     void loginCurrentUserAndLogout_shouldUseExpectedContracts() {

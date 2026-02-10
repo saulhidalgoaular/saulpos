@@ -29,6 +29,9 @@ import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
+import com.saulpos.api.system.OfflineMode;
+import com.saulpos.api.system.OfflineOperationPolicyResponse;
+import com.saulpos.api.system.OfflinePolicyResponse;
 import com.saulpos.api.tax.TenderType;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
@@ -230,6 +233,39 @@ class SellScreenCoordinatorTest {
         assertNull(apiClient.checkoutRequest);
     }
 
+    @Test
+    void checkoutWhileOffline_shouldBlockWithPolicyMessage() {
+        FakePosApiClient apiClient = new FakePosApiClient();
+        apiClient.cart = cart(99L, List.of());
+        apiClient.policy = new OfflinePolicyResponse(
+                "K1-v1",
+                "Server connectivity is required for transactional flows in SaulPOS v2.",
+                List.of(new OfflineOperationPolicyResponse(
+                        ConnectivityCoordinator.CHECKOUT,
+                        OfflineMode.ONLINE_ONLY,
+                        "Checkout action is blocked unless live server round-trip is available.",
+                        "Sale cannot be completed offline. Reconnect to finalize payment."
+                ))
+        );
+        ConnectivityCoordinator connectivityCoordinator = new ConnectivityCoordinator(apiClient, Runnable::run);
+        connectivityCoordinator.refresh().join();
+        apiClient.reachable = false;
+        connectivityCoordinator.refresh().join();
+
+        SellScreenCoordinator coordinator = new SellScreenCoordinator(
+                apiClient,
+                connectivityCoordinator,
+                Clock.fixed(NOW, ZoneOffset.UTC),
+                Runnable::run
+        );
+        coordinator.loadCart(99L).join();
+
+        coordinator.checkout(10L, 30L, new BigDecimal("1.50"), new BigDecimal("2.00"), BigDecimal.ZERO, null).join();
+
+        assertEquals("Sale cannot be completed offline. Reconnect to finalize payment.", coordinator.sellMessageProperty().get());
+        assertNull(apiClient.checkoutRequest);
+    }
+
     private static ProductResponse product(Long id, String sku, String name, boolean active) {
         return new ProductResponse(
                 id,
@@ -280,10 +316,17 @@ class SellScreenCoordinatorTest {
         private RuntimeException updateFailure;
         private SaleCheckoutResponse checkoutResponse;
         private SaleCheckoutRequest checkoutRequest;
+        private boolean reachable = true;
+        private OfflinePolicyResponse policy = new OfflinePolicyResponse("K1-v1", "", List.of());
 
         @Override
         public CompletableFuture<Boolean> ping() {
-            return CompletableFuture.completedFuture(true);
+            return CompletableFuture.completedFuture(reachable);
+        }
+
+        @Override
+        public CompletableFuture<OfflinePolicyResponse> offlinePolicy() {
+            return CompletableFuture.completedFuture(policy);
         }
 
         @Override
