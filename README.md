@@ -52,6 +52,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `M3` Scanner/scale extension interfaces.
 - `N1` Fiscal provider SPI.
 - `O1` UI architecture and design system.
+- `O2` Authentication and session UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -69,13 +70,20 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, and centralized theme tokens (O1 baseline).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, and authentication/session UI baseline (`O1` + `O2`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
 - `pos-client` is intentionally "dumb" and should only consume APIs.
 
 Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-design-system.md`.
+
+### Client Authentication and Session UX (`O2`)
+- Login screen submits credentials to `POST /api/auth/login` and maps deterministic auth failures (`POS-4011`, `POS-4012`, `POS-4013`) into explicit operator feedback.
+- Session bootstrap resolves current user context through `GET /api/security/me` after successful login.
+- Protected navigation targets are guarded in client state and redirect to `LOGIN` if no authenticated session exists.
+- Session expiry is visible in the top shell, and refresh handling uses `POST /api/auth/refresh` with safe fallback to login when refresh fails/expired.
+- Logout action is exposed in shell header and calls `POST /api/auth/logout` before local session reset.
 
 ## Implemented Domain Capabilities
 

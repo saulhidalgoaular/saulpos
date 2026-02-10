@@ -836,7 +836,7 @@ Out of Scope:
 1. Component rendering tests.
 2. Accessibility checks for focus order and contrast.
 
-#### Card O2: Authentication and Session UI
+#### Card O2: Authentication and Session UI [SOLVED]
 - Goal: Implement login/logout/session-expiry experiences.
 - Dependencies: A3, O1.
 - API Contract: consumes auth endpoints from `A3`.
@@ -1113,7 +1113,7 @@ Out of Scope:
 | N1 | DONE |  |  | Implemented modular fiscal SPI in `pos-core` (`FiscalProvider` with invoice/cancel/credit-note commands), migration `V40` (`fiscal_document`, `fiscal_event`, `sale.invoice_required`), server stub provider + configurable policy (`app.fiscal.enabled`, `app.fiscal.allow-invoice-with-disabled-provider`), checkout invoice-required validation for required customer tax identity, and unit/integration coverage for disabled-provider skip behavior and invoice-required enforcement |
 | N2 | TODO |  |  |  |
 | O1 | DONE |  |  | Implemented JavaFX client architecture baseline with deterministic screen registry/navigation state, reusable component primitives (`button/input/table/dialog/toast`), centralized theme tokens/CSS, API/state abstraction scaffolding, and unit coverage for screen flow, design-system catalog, accessibility contrast, and session-state transitions |
-| O2 | TODO |  |  |  |
+| O2 | DONE |  |  | Implemented authentication/session UI flow in `pos-client` with login form + logout control, API-backed auth client contract (`/api/auth/login`, `/api/auth/refresh`, `/api/auth/logout`, `/api/security/me`), deterministic handling for invalid credentials/locked/disabled accounts, protected-route redirect to login when unauthenticated, visible token-expiry/session-status indicators, and client tests for coordinator behavior + auth HTTP contract mapping |
 | O3 | TODO |  |  |  |
 | O4 | TODO |  |  |  |
 | O5 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O2` Authentication and session UI.
-2. `O3` Shift open/close and cash controls UI.
-3. `O4` Product search and cart screen.
+1. `O3` Shift open/close and cash controls UI.
+2. `O4` Product search and cart screen.
+3. `O5` Checkout and payments UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

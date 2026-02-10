@@ -4,6 +4,7 @@ import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionState;
 import org.junit.jupiter.api.Test;
 
+import java.time.Instant;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -16,7 +17,14 @@ class AppStateStoreTest {
         AppStateStore store = new AppStateStore();
         assertFalse(store.isAuthenticated());
 
-        store.updateSession(new AuthSessionState("cashier", "access-token", "refresh-token", Set.of("SALES_PROCESS")));
+        store.updateSession(new AuthSessionState(
+                "cashier",
+                "access-token",
+                "refresh-token",
+                Set.of("SALES_PROCESS"),
+                Instant.now().plusSeconds(600),
+                Instant.now().plusSeconds(3600)
+        ));
         assertTrue(store.isAuthenticated());
 
         store.clearSession();
