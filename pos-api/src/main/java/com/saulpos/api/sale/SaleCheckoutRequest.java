@@ -15,13 +15,22 @@ public record SaleCheckoutRequest(
         Long terminalDeviceId,
         @NotEmpty(message = "payments is required")
         List<@Valid SaleCheckoutPaymentRequest> payments,
-        Long customerId
+        Long customerId,
+        Boolean invoiceRequired
 ) {
 
     public SaleCheckoutRequest(Long cartId,
                                Long cashierUserId,
                                Long terminalDeviceId,
                                List<@Valid SaleCheckoutPaymentRequest> payments) {
-        this(cartId, cashierUserId, terminalDeviceId, payments, null);
+        this(cartId, cashierUserId, terminalDeviceId, payments, null, null);
+    }
+
+    public SaleCheckoutRequest(Long cartId,
+                               Long cashierUserId,
+                               Long terminalDeviceId,
+                               List<@Valid SaleCheckoutPaymentRequest> payments,
+                               Long customerId) {
+        this(cartId, cashierUserId, terminalDeviceId, payments, customerId, null);
     }
 }

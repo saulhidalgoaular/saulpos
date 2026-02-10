@@ -794,7 +794,7 @@ Out of Scope:
 
 ### Phase N: LATAM Fiscal Plugin Layer
 
-#### Card N1: Fiscal Provider SPI
+#### Card N1: Fiscal Provider SPI [SOLVED]
 - Goal: Keep fiscal integrations modular and country-isolated.
 - Dependencies: G2, D3.
 - Impacted Modules: `pos-core`, `pos-server`.
@@ -1110,7 +1110,7 @@ Out of Scope:
 | M2 | DONE |  |  | Implemented cash drawer open flow (`POST /api/receipts/drawer/open`) with explicit `CASH_DRAWER_OPEN` permission enforcement, ESC/POS pulse dispatch through printer abstraction, and persisted no-sale audit trail in `no_sale_drawer_event` including actor/correlation/reason metadata plus integration coverage |
 | M3 | DONE |  |  | Added scanner/scale hardware extension contracts in `pos-core` (`ScannerAdapter`, `ScaleAdapter` + request/result/status types), implemented default no-op stub adapters in `pos-server` (`NoOpScannerAdapter`, `NoOpScaleAdapter`), and added unit coverage for deterministic unsupported/failure behavior |
 | M4 | DONE |  |  | Implemented receipt journal retrieval endpoints (`GET /api/receipts/journal/by-sale/{saleId}`, `GET /api/receipts/journal/by-number/{receiptNumber}`) and reprint endpoint (`POST /api/receipts/reprint`) with migration `V39` (`receipt_print_event` + `RECEIPT_REPRINT` permission), copy-marked receipt rendering with operator/timestamp, and unit/integration coverage for authorization, retrieval, and reprint auditing |
-| N1 | TODO |  |  |  |
+| N1 | DONE |  |  | Implemented modular fiscal SPI in `pos-core` (`FiscalProvider` with invoice/cancel/credit-note commands), migration `V40` (`fiscal_document`, `fiscal_event`, `sale.invoice_required`), server stub provider + configurable policy (`app.fiscal.enabled`, `app.fiscal.allow-invoice-with-disabled-provider`), checkout invoice-required validation for required customer tax identity, and unit/integration coverage for disabled-provider skip behavior and invoice-required enforcement |
 | N2 | TODO |  |  |  |
 | O1 | TODO |  |  |  |
 | O2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `N1` Fiscal provider SPI.
-2. `O1` UI architecture and design system.
-3. `O2` Authentication and session UI.
+1. `O1` UI architecture and design system.
+2. `O2` Authentication and session UI.
+3. `O3` Shift open/close and cash controls UI.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

@@ -8,9 +8,11 @@ import com.saulpos.api.sale.SaleCheckoutPaymentResponse;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.server.customer.model.CustomerEntity;
+import com.saulpos.server.customer.model.CustomerTaxIdentityEntity;
 import com.saulpos.server.customer.repository.CustomerRepository;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.fiscal.service.FiscalService;
 import com.saulpos.server.identity.model.StoreLocationEntity;
 import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
@@ -60,6 +62,7 @@ public class SaleCheckoutService {
     private final ReceiptService receiptService;
     private final InventoryLotService inventoryLotService;
     private final IdempotencyService idempotencyService;
+    private final FiscalService fiscalService;
 
     @Value("${app.inventory.expiry-override-enabled:false}")
     private boolean expiryOverrideEnabled;
@@ -91,11 +94,14 @@ public class SaleCheckoutService {
         CustomerEntity customer = resolveCustomerForCheckout(
                 request.customerId(),
                 cart.getStoreLocation().getMerchant().getId());
+        boolean invoiceRequired = resolveInvoiceRequired(request, customer);
+        validateInvoiceRequirements(invoiceRequired, customer);
 
         ReceiptAllocationResponse receipt = receiptService.allocate(new ReceiptAllocationRequest(cart.getTerminalDevice().getId()));
 
-        SaleEntity sale = createSale(cart, receipt, customer);
+        SaleEntity sale = createSale(cart, receipt, customer, invoiceRequired);
         SaleEntity savedSale = saleRepository.save(sale);
+        fiscalService.processSaleInvoice(savedSale);
         List<InventoryMovementDraft> movementDrafts = createInventoryMovements(savedSale);
         inventoryMovementRepository.saveAll(movementDrafts.stream()
                 .map(InventoryMovementDraft::movement)
@@ -125,7 +131,10 @@ public class SaleCheckoutService {
                 savedPayment.getUpdatedAt());
     }
 
-    private SaleEntity createSale(SaleCartEntity cart, ReceiptAllocationResponse receipt, CustomerEntity customer) {
+    private SaleEntity createSale(SaleCartEntity cart,
+                                  ReceiptAllocationResponse receipt,
+                                  CustomerEntity customer,
+                                  boolean invoiceRequired) {
         SaleEntity sale = new SaleEntity();
         sale.setCart(cart);
         sale.setCashierUser(cart.getCashierUser());
@@ -139,6 +148,7 @@ public class SaleCheckoutService {
         sale.setTotalGross(cart.getTotalGross());
         sale.setRoundingAdjustment(cart.getRoundingAdjustment());
         sale.setTotalPayable(cart.getTotalPayable());
+        sale.setInvoiceRequired(invoiceRequired);
 
         for (SaleCartLineEntity cartLine : orderedCartLines(cart)) {
             SaleLineEntity line = new SaleLineEntity();
@@ -319,7 +329,7 @@ public class SaleCheckoutService {
             return null;
         }
 
-        CustomerEntity customer = customerRepository.findById(customerId)
+        CustomerEntity customer = customerRepository.findByIdWithDetails(customerId)
                 .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND,
                         "customer not found: " + customerId));
         if (!customer.getMerchant().getId().equals(merchantId)) {
@@ -331,6 +341,35 @@ public class SaleCheckoutService {
             throw new BaseException(ErrorCode.CONFLICT, "customer is inactive: " + customerId);
         }
         return customer;
+    }
+
+    private boolean resolveInvoiceRequired(SaleCheckoutRequest request, CustomerEntity customer) {
+        return Boolean.TRUE.equals(request.invoiceRequired()) || (customer != null && customer.isInvoiceRequired());
+    }
+
+    private void validateInvoiceRequirements(boolean invoiceRequired, CustomerEntity customer) {
+        if (!invoiceRequired) {
+            return;
+        }
+        if (customer == null) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "customerId is required when invoiceRequired is true");
+        }
+        boolean hasActiveTaxIdentity = customer.getTaxIdentities().stream()
+                .anyMatch(this::isActiveTaxIdentity);
+        if (!hasActiveTaxIdentity) {
+            throw new BaseException(ErrorCode.VALIDATION_ERROR,
+                    "customer requires an active tax identity when invoiceRequired is true");
+        }
+    }
+
+    private boolean isActiveTaxIdentity(CustomerTaxIdentityEntity taxIdentity) {
+        return taxIdentity != null
+                && taxIdentity.isActive()
+                && taxIdentity.getDocumentType() != null
+                && !taxIdentity.getDocumentType().isBlank()
+                && taxIdentity.getDocumentValue() != null
+                && !taxIdentity.getDocumentValue().isBlank();
     }
 
     private record InventoryMovementDraft(InventoryMovementEntity movement,

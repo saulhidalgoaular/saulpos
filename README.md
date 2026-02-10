@@ -50,6 +50,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `M2` Cash drawer integration.
 - `M4` Receipt reprint and journal retrieval.
 - `M3` Scanner/scale extension interfaces.
+- `N1` Fiscal provider SPI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -64,7 +65,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 ## Monorepo Architecture
 
 Modules:
-- `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale hardware extension contracts).
+- `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
 - `pos-client`: JavaFX client module (currently thin and API-consumer oriented).
@@ -366,6 +367,7 @@ Backend source of truth:
 ### Atomic Checkout
 - Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.
 - Checkout request supports optional `customerId` linkage to persist customer-centric sale history.
+- Checkout request supports optional `invoiceRequired` toggle with required customer tax identity validation.
 - Checkout persistence model:
   - `sale`
   - `sale_line`
@@ -607,6 +609,24 @@ Backend source of truth:
   - provider runtime failures return deterministic `UNAVAILABLE` status without breaking the calling flow.
 - Includes a default stub provider contract (`LoyaltyProvider`) for earn/redeem extension points without hard coupling.
 
+### Fiscal Provider SPI (N1)
+- Fiscal plugin contracts introduced in `pos-core`:
+  - `FiscalProvider`
+  - `FiscalIssueInvoiceCommand`
+  - `FiscalCancelInvoiceCommand`
+  - `FiscalIssueCreditNoteCommand`
+  - `FiscalProviderResult`
+- Fiscal persistence model:
+  - `fiscal_document`
+  - `fiscal_event`
+- Checkout behavior:
+  - `POST /api/sales/checkout` supports `invoiceRequired` toggle,
+  - invoice-required checkout validates required customer fiscal fields (active customer tax identity),
+  - fiscal outcomes are persisted for retry/audit visibility.
+- Deployment policy behavior:
+  - when `app.fiscal.enabled=false`, checkout can still proceed if `app.fiscal.allow-invoice-with-disabled-provider=true`, and a deterministic `SKIPPED` fiscal outcome is recorded.
+- Includes a default stub fiscal provider (`StubFiscalProvider`) so country implementations can be added without changing sales core contracts.
+
 ## Data and Migration Strategy
 
 - Flyway migrations live in `pos-server/src/main/resources/db/migration`.
@@ -649,6 +669,8 @@ Backend source of truth:
   - `V36__idempotent_event_ingestion.sql`
   - `V37__exception_and_override_reports.sql`
   - `V38__cash_drawer_integration.sql`
+  - `V39__receipt_reprint_and_journal.sql`
+  - `V40__fiscal_provider_spi.sql`
 - Deletion policy is configurable with:
   - `app.deletion-strategy=soft` (default)
   - `app.deletion-strategy=hard`
@@ -706,6 +728,8 @@ Key settings include:
 - `app.sales.price-override-approval-threshold-percent`
 - `app.inventory.adjustment-manager-approval-threshold`
 - `app.inventory.expiry-override-enabled`
+- `app.fiscal.enabled`
+- `app.fiscal.allow-invoice-with-disabled-provider`
 - `management.endpoints.web.exposure.include=health,info,metrics`
 
 ## Testing Coverage (Implemented Domains)
@@ -757,6 +781,8 @@ Key settings include:
 - Permission-matrix integration coverage for stock adjustment endpoint authorization (`INVENTORY_ADJUST` vs `CONFIGURATION_MANAGE` approval path).
 - Unit tests for FEFO lot selection ordering and expired-lot conflict behavior.
 - Unit tests for default scanner/scale no-op adapters and deterministic unsupported/failure contract behavior.
+- Unit tests for fiscal SPI service behavior (provider enabled/disabled policy and deterministic outcome persistence).
+- Integration tests for invoice-required checkout validation and fiscal outcome persistence when provider is disabled.
 
 ## Project Planning and Status
 

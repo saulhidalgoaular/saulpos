@@ -84,6 +84,9 @@ public class SaleEntity {
     @Column(name = "total_payable", nullable = false, precision = 14, scale = 2)
     private BigDecimal totalPayable = BigDecimal.ZERO;
 
+    @Column(name = "invoice_required", nullable = false)
+    private boolean invoiceRequired = false;
+
     @OneToMany(mappedBy = "sale", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("lineNumber ASC, id ASC")
     private List<SaleLineEntity> lines = new ArrayList<>();

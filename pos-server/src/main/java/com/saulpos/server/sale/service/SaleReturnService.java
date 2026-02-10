@@ -8,6 +8,7 @@ import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
+import com.saulpos.server.fiscal.service.FiscalService;
 import com.saulpos.server.inventory.service.InventoryLotService;
 import com.saulpos.server.sale.model.InventoryMovementEntity;
 import com.saulpos.server.sale.model.InventoryMovementType;
@@ -60,6 +61,7 @@ public class SaleReturnService {
     private final InventoryMovementRepository inventoryMovementRepository;
     private final InventoryLotService inventoryLotService;
     private final SaleReturnAmountAllocator amountAllocator;
+    private final FiscalService fiscalService;
     private final Clock clock;
 
     @Value("${app.sales.return-restricted-window-days:30}")
@@ -162,6 +164,7 @@ public class SaleReturnService {
         saleReturn.addRefund(refund);
 
         SaleReturnEntity savedReturn = saleReturnRepository.save(saleReturn);
+        fiscalService.processSaleReturnCreditNote(savedReturn);
         List<ReturnMovementDraft> movementDrafts = createReturnMovements(savedReturn);
         inventoryMovementRepository.saveAll(movementDrafts.stream()
                 .map(ReturnMovementDraft::movement)
