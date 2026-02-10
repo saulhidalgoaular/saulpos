@@ -4,8 +4,13 @@ import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
 import com.saulpos.api.auth.LoginRequest;
 import com.saulpos.api.auth.RefreshTokenRequest;
+import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
+import com.saulpos.api.catalog.ProductRequest;
+import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.customer.CustomerRequest;
+import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -31,6 +36,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -168,6 +174,70 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<List<ProductResponse>> listProducts(Long merchantId, Boolean active, String query) {
+        StringBuilder path = new StringBuilder("/api/catalog/products");
+        if (merchantId != null || active != null || query != null) {
+            path.append("?");
+            boolean hasParam = false;
+            if (merchantId != null) {
+                path.append("merchantId=").append(merchantId);
+                hasParam = true;
+            }
+            if (active != null) {
+                if (hasParam) {
+                    path.append("&");
+                }
+                path.append("active=").append(active);
+                hasParam = true;
+            }
+            if (query != null && !query.isBlank()) {
+                if (hasParam) {
+                    path.append("&");
+                }
+                path.append("q=").append(encodeQueryParam(query));
+            }
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return sendList(request, ProductResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ProductResponse> createProduct(ProductRequest request) {
+        return postJson("/api/catalog/products", request, ProductResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ProductResponse> updateProduct(Long productId, ProductRequest request) {
+        final String body;
+        try {
+            body = objectMapper.writeValueAsString(request);
+        } catch (IOException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+        HttpRequest httpRequest = baseRequest("/api/catalog/products/" + productId)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(httpRequest, ProductResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<PriceResolutionResponse> resolvePrice(Long storeLocationId, Long productId, Long customerId) {
+        StringBuilder path = new StringBuilder("/api/catalog/prices/resolve?storeLocationId=")
+                .append(storeLocationId)
+                .append("&productId=").append(productId);
+        if (customerId != null) {
+            path.append("&customerId=").append(customerId);
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return send(request, PriceResolutionResponse.class);
+    }
+
+    @Override
     public CompletableFuture<SaleCartResponse> createCart(SaleCartCreateRequest request) {
         return postJson("/api/sales/carts", request, SaleCartResponse.class);
     }
@@ -237,6 +307,74 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<List<CustomerResponse>> listCustomers(Long merchantId, Boolean active) {
+        StringBuilder path = new StringBuilder("/api/customers");
+        if (merchantId != null || active != null) {
+            path.append("?");
+            boolean hasParam = false;
+            if (merchantId != null) {
+                path.append("merchantId=").append(merchantId);
+                hasParam = true;
+            }
+            if (active != null) {
+                if (hasParam) {
+                    path.append("&");
+                }
+                path.append("active=").append(active);
+            }
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return sendList(request, CustomerResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<CustomerResponse>> lookupCustomers(Long merchantId,
+                                                                     String documentType,
+                                                                     String documentValue,
+                                                                     String email,
+                                                                     String phone) {
+        StringBuilder path = new StringBuilder("/api/customers/lookup?merchantId=").append(merchantId);
+        if (documentType != null && !documentType.isBlank()) {
+            path.append("&documentType=").append(encodeQueryParam(documentType));
+        }
+        if (documentValue != null && !documentValue.isBlank()) {
+            path.append("&documentValue=").append(encodeQueryParam(documentValue));
+        }
+        if (email != null && !email.isBlank()) {
+            path.append("&email=").append(encodeQueryParam(email));
+        }
+        if (phone != null && !phone.isBlank()) {
+            path.append("&phone=").append(encodeQueryParam(phone));
+        }
+        HttpRequest request = baseRequest(path.toString())
+                .GET()
+                .build();
+        return sendList(request, CustomerResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request) {
+        return postJson("/api/customers", request, CustomerResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request) {
+        final String body;
+        try {
+            body = objectMapper.writeValueAsString(request);
+        } catch (IOException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+        HttpRequest httpRequest = baseRequest("/api/customers/" + customerId)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(httpRequest, CustomerResponse.class);
+    }
+
+    @Override
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
     }
@@ -283,6 +421,26 @@ public final class HttpPosApiClient implements PosApiClient {
                     }
                     try {
                         return objectMapper.readValue(response.body(), responseType);
+                    } catch (IOException ex) {
+                        throw new CompletionException(ex);
+                    }
+                });
+    }
+
+    private <T> CompletableFuture<List<T>> sendList(HttpRequest request, Class<T> elementType) {
+        return transport.apply(request)
+                .thenApply(response -> {
+                    if (response.statusCode() / 100 != 2) {
+                        throw new CompletionException(toProblemException(response.statusCode(), response.body()));
+                    }
+                    if (response.body() == null || response.body().isBlank()) {
+                        return List.of();
+                    }
+                    try {
+                        return objectMapper.readValue(
+                                response.body(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, elementType)
+                        );
                     } catch (IOException ex) {
                         throw new CompletionException(ex);
                     }

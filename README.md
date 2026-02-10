@@ -57,6 +57,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O4` Product search and cart screen.
 - `O5` Checkout and payments UI.
 - `O6` Returns and refunds UI.
+- `O7` Backoffice UI (catalog, pricing, customers).
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -74,7 +75,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, and cashier workstation flows for selling, checkout, and returns (`O1` + `O2` + `O3` + `O4` + `O5` + `O6`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, and backoffice operations for catalog/pricing/customers (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -145,6 +146,26 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP refund lookup/submit contract mapping,
   - returns coordinator success/error paths for lookup, submit, and manager-approval-required flows.
+
+### Client Backoffice UI (`O7`)
+- Backoffice screen now supports:
+  - catalog search/list by merchant and query,
+  - product create/update actions (SKU, name, base price, barcodes),
+  - customer list and lookup by document/email/phone criteria,
+  - customer create/update actions with invoice/credit flags, tax identity, and contacts,
+  - store-context price resolution preview (`storeLocationId` + `productId` + optional `customerId`).
+- Client backoffice operations consume server contracts:
+  - `GET /api/catalog/products`
+  - `POST /api/catalog/products`
+  - `PUT /api/catalog/products/{id}`
+  - `GET /api/catalog/prices/resolve`
+  - `GET /api/customers`
+  - `GET /api/customers/lookup`
+  - `POST /api/customers`
+  - `PUT /api/customers/{id}`
+- Tests now cover:
+  - HTTP backoffice contract mapping for catalog/pricing/customer endpoints,
+  - backoffice coordinator state/message handling for product load, customer validation, and price resolution flows.
 
 ## Implemented Domain Capabilities
 

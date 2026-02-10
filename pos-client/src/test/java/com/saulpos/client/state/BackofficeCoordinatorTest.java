@@ -2,15 +2,16 @@ package com.saulpos.client.state;
 
 import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
-import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.PriceResolutionResponse;
+import com.saulpos.api.catalog.PriceResolutionSource;
+import com.saulpos.api.catalog.ProductLookupResponse;
 import com.saulpos.api.catalog.ProductRequest;
 import com.saulpos.api.catalog.ProductResponse;
+import com.saulpos.api.catalog.ProductSaleMode;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.catalog.ProductUnitOfMeasure;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
-import com.saulpos.api.refund.SaleReturnLineResponse;
-import com.saulpos.api.refund.SaleReturnLookupLineResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -25,8 +26,6 @@ import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
-import com.saulpos.api.tax.TenderType;
-import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import org.junit.jupiter.api.Test;
 
@@ -38,117 +37,79 @@ import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
-class ReturnsScreenCoordinatorTest {
-
-    private static final Instant NOW = Instant.parse("2026-02-10T12:00:00Z");
+class BackofficeCoordinatorTest {
 
     @Test
-    void lookupSuccess_shouldStoreReceiptContext() {
+    void loadProductsSuccess_shouldPopulateStateAndMessage() {
         FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.lookupResponse = lookupResponse();
-        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
+        apiClient.products = List.of(product(300L, "SODA-350", "Soda 350ml"));
+        BackofficeCoordinator coordinator = new BackofficeCoordinator(apiClient, Runnable::run);
 
-        coordinator.lookupByReceipt("R-0000501").join();
+        coordinator.loadProducts(1L, "soda").join();
 
-        assertEquals("R-0000501", coordinator.lookupState().receiptNumber());
-        assertEquals("Receipt loaded. 1 lines eligible for return review.", coordinator.returnsMessageProperty().get());
+        assertEquals(1, coordinator.productsProperty().get().size());
+        assertEquals("Catalog loaded with 1 product(s).", coordinator.backofficeMessageProperty().get());
     }
 
     @Test
-    void submitWithoutLookup_shouldReject() {
-        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(new FakePosApiClient(), Runnable::run);
+    void saveCustomerWithPartialTaxIdentity_shouldRejectLocally() {
+        BackofficeCoordinator coordinator = new BackofficeCoordinator(new FakePosApiClient(), Runnable::run);
 
-        coordinator.submitReturn(1001L, BigDecimal.ONE, "DAMAGED", TenderType.CASH, null, null).join();
+        coordinator.saveCustomer(null, 1L, "Walk-in", false, false, "NIT", null, null, null).join();
 
-        assertNull(coordinator.submitState());
-        assertEquals("Lookup a receipt before submitting a return.", coordinator.returnsMessageProperty().get());
+        assertEquals("Document type and value must both be provided when setting tax identity.",
+                coordinator.backofficeMessageProperty().get());
     }
 
     @Test
-    void submitSuccess_shouldStoreReturnResponse() {
+    void resolvePriceSuccess_shouldExposeResolvedSource() {
         FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.lookupResponse = lookupResponse();
-        apiClient.submitResponse = returnResponse();
-        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
-
-        coordinator.lookupByReceipt("R-0000501").join();
-        coordinator.submitReturn(1001L, new BigDecimal("1.000"), "damaged", TenderType.CASH, null, "can dent").join();
-
-        assertEquals("RET-SALE-501", coordinator.submitState().returnReference());
-        assertEquals("Return submitted. Reference RET-SALE-501 created.", coordinator.returnsMessageProperty().get());
-        assertEquals("DAMAGED", apiClient.submitRequest.reasonCode());
-    }
-
-    @Test
-    void submitManagerApprovalRequired_shouldExposeGuidance() {
-        FakePosApiClient apiClient = new FakePosApiClient();
-        apiClient.lookupResponse = lookupResponse();
-        apiClient.submitFailure = new ApiProblemException(403, "POS-4030",
-                "return is outside allowed window and requires manager approval");
-        ReturnsScreenCoordinator coordinator = new ReturnsScreenCoordinator(apiClient, Runnable::run);
-
-        coordinator.lookupByReceipt("R-0000501").join();
-        coordinator.submitReturn(1001L, new BigDecimal("1.000"), "damaged", TenderType.CASH, null, null)
-                .handle((ok, ex) -> null)
-                .join();
-
-        assertTrue(coordinator.managerApprovalRequiredProperty().get());
-        assertTrue(coordinator.returnsMessageProperty().get().contains("Have a manager sign in and retry."));
-    }
-
-    private static SaleReturnLookupResponse lookupResponse() {
-        return new SaleReturnLookupResponse(
-                501L,
-                "R-0000501",
+        apiClient.priceResolution = new PriceResolutionResponse(
                 10L,
-                20L,
-                NOW,
-                List.of(new SaleReturnLookupLineResponse(
-                        1001L,
-                        301L,
-                        1,
-                        new BigDecimal("2.000"),
-                        new BigDecimal("1.000"),
-                        new BigDecimal("1.000"),
-                        new BigDecimal("2.50"),
-                        new BigDecimal("5.00")
-                ))
+                300L,
+                new BigDecimal("1.25"),
+                PriceResolutionSource.STORE_OVERRIDE,
+                77L,
+                Instant.parse("2026-02-10T00:00:00Z"),
+                null,
+                Instant.parse("2026-02-10T12:00:00Z")
         );
+        BackofficeCoordinator coordinator = new BackofficeCoordinator(apiClient, Runnable::run);
+
+        coordinator.resolveStorePrice(10L, 300L, null).join();
+
+        assertEquals(PriceResolutionSource.STORE_OVERRIDE, coordinator.priceResolutionProperty().get().source());
+        assertEquals("Resolved price 1.25 from STORE_OVERRIDE.", coordinator.backofficeMessageProperty().get());
     }
 
-    private static SaleReturnResponse returnResponse() {
-        return new SaleReturnResponse(
-                9001L,
-                501L,
-                "R-0000501",
-                "RET-SALE-501",
-                "DAMAGED",
-                TenderType.CASH,
-                new BigDecimal("2.12"),
-                new BigDecimal("0.38"),
-                new BigDecimal("2.50"),
-                List.of(new SaleReturnLineResponse(
-                        1L,
-                        1001L,
-                        301L,
-                        1,
-                        new BigDecimal("1.000"),
-                        new BigDecimal("2.12"),
-                        new BigDecimal("0.38"),
-                        new BigDecimal("2.50")
-                )),
-                NOW
+    private static ProductResponse product(Long id, String sku, String name) {
+        return new ProductResponse(
+                id,
+                1L,
+                null,
+                null,
+                sku,
+                name,
+                new BigDecimal("1.50"),
+                ProductSaleMode.UNIT,
+                ProductUnitOfMeasure.UNIT,
+                0,
+                null,
+                null,
+                false,
+                false,
+                null,
+                true,
+                List.of()
         );
     }
 
     private static final class FakePosApiClient implements PosApiClient {
 
-        private SaleReturnLookupResponse lookupResponse;
-        private SaleReturnResponse submitResponse;
-        private SaleReturnSubmitRequest submitRequest;
-        private RuntimeException submitFailure;
+        private List<ProductResponse> products = List.of();
+        private List<CustomerResponse> customers = List.of();
+        private PriceResolutionResponse priceResolution;
 
         @Override
         public CompletableFuture<Boolean> ping() {
@@ -167,7 +128,7 @@ class ReturnsScreenCoordinatorTest {
 
         @Override
         public CompletableFuture<CurrentUserResponse> currentUser() {
-            return CompletableFuture.completedFuture(new CurrentUserResponse(1L, "cashier", Set.of("CASHIER")));
+            return CompletableFuture.completedFuture(new CurrentUserResponse(1L, "manager", Set.of("MANAGER")));
         }
 
         @Override
@@ -207,22 +168,22 @@ class ReturnsScreenCoordinatorTest {
 
         @Override
         public CompletableFuture<List<ProductResponse>> listProducts(Long merchantId, Boolean active, String query) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(products);
         }
 
         @Override
         public CompletableFuture<ProductResponse> createProduct(ProductRequest request) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(product(401L, request.sku(), request.name()));
         }
 
         @Override
         public CompletableFuture<ProductResponse> updateProduct(Long productId, ProductRequest request) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(product(productId, request.sku(), request.name()));
         }
 
         @Override
         public CompletableFuture<PriceResolutionResponse> resolvePrice(Long storeLocationId, Long productId, Long customerId) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(priceResolution);
         }
 
         @Override
@@ -262,21 +223,17 @@ class ReturnsScreenCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber) {
-            return CompletableFuture.completedFuture(lookupResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
-            this.submitRequest = request;
-            if (submitFailure != null) {
-                return CompletableFuture.failedFuture(submitFailure);
-            }
-            return CompletableFuture.completedFuture(submitResponse);
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 
         @Override
         public CompletableFuture<List<CustomerResponse>> listCustomers(Long merchantId, Boolean active) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(customers);
         }
 
         @Override
@@ -285,17 +242,21 @@ class ReturnsScreenCoordinatorTest {
                                                                          String documentValue,
                                                                          String email,
                                                                          String phone) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(customers);
         }
 
         @Override
         public CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(new CustomerResponse(
+                    601L, request.merchantId(), request.displayName(), request.invoiceRequired(), request.creditEnabled(),
+                    true, List.of(), List.of(), List.of()));
         }
 
         @Override
         public CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request) {
-            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+            return CompletableFuture.completedFuture(new CustomerResponse(
+                    customerId, request.merchantId(), request.displayName(), request.invoiceRequired(), request.creditEnabled(),
+                    true, List.of(), List.of(), List.of()));
         }
 
         @Override

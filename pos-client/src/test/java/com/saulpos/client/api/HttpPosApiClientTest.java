@@ -2,6 +2,15 @@ package com.saulpos.client.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.saulpos.api.catalog.PriceResolutionSource;
+import com.saulpos.api.catalog.ProductRequest;
+import com.saulpos.api.catalog.ProductSaleMode;
+import com.saulpos.api.catalog.ProductUnitOfMeasure;
+import com.saulpos.api.catalog.ProductVariantRequest;
+import com.saulpos.api.customer.CustomerContactRequest;
+import com.saulpos.api.customer.CustomerContactType;
+import com.saulpos.api.customer.CustomerRequest;
+import com.saulpos.api.customer.CustomerTaxIdentityRequest;
 import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
@@ -27,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 
@@ -287,6 +297,148 @@ class HttpPosApiClientTest {
         assertTrue(searchRequest.uri().getRawQuery().contains("q=soda"));
         assertEquals("Bearer access-123", addLineRequest.headers().firstValue("Authorization").orElseThrow());
         assertTrue(checkoutRequest.headers().firstValue("Idempotency-Key").orElseThrow().startsWith("pos-client-"));
+    }
+
+    @Test
+    void backofficeContracts_shouldUseCatalogPricingAndCustomerEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    String query = request.uri().getRawQuery();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"MANAGER\"]}"
+                        ));
+                    }
+                    if ("/api/catalog/products".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":301,\"merchantId\":1,\"categoryId\":null,\"taxGroupId\":null,"
+                                        + "\"sku\":\"SODA-350\",\"name\":\"Soda 350ml\",\"basePrice\":1.50,\"saleMode\":\"UNIT\","
+                                        + "\"quantityUom\":\"UNIT\",\"quantityPrecision\":0,\"openPriceMin\":null,\"openPriceMax\":null,"
+                                        + "\"openPriceRequiresReason\":false,\"lotTrackingEnabled\":false,\"description\":null,"
+                                        + "\"active\":true,\"variants\":[]}]"
+                        ));
+                    }
+                    if ("/api/catalog/products".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":302,\"merchantId\":1,\"categoryId\":null,\"taxGroupId\":null,"
+                                        + "\"sku\":\"WATER-500\",\"name\":\"Water 500ml\",\"basePrice\":0.90,\"saleMode\":\"UNIT\","
+                                        + "\"quantityUom\":\"UNIT\",\"quantityPrecision\":0,\"openPriceMin\":null,\"openPriceMax\":null,"
+                                        + "\"openPriceRequiresReason\":false,\"lotTrackingEnabled\":false,\"description\":null,"
+                                        + "\"active\":true,\"variants\":[]}"
+                        ));
+                    }
+                    if ("/api/catalog/products/302".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":302,\"merchantId\":1,\"categoryId\":null,\"taxGroupId\":null,"
+                                        + "\"sku\":\"WATER-500\",\"name\":\"Water 500ml\",\"basePrice\":0.95,\"saleMode\":\"UNIT\","
+                                        + "\"quantityUom\":\"UNIT\",\"quantityPrecision\":0,\"openPriceMin\":null,\"openPriceMax\":null,"
+                                        + "\"openPriceRequiresReason\":false,\"lotTrackingEnabled\":false,\"description\":null,"
+                                        + "\"active\":true,\"variants\":[]}"
+                        ));
+                    }
+                    if ("/api/catalog/prices/resolve".equals(path)
+                            && query.contains("storeLocationId=10")
+                            && query.contains("productId=302")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"storeLocationId\":10,\"productId\":302,\"resolvedPrice\":0.95,"
+                                        + "\"source\":\"STORE_OVERRIDE\",\"sourceId\":77,"
+                                        + "\"effectiveFrom\":\"2026-02-10T00:00:00Z\",\"effectiveTo\":null,"
+                                        + "\"resolvedAt\":\"2026-02-10T12:00:00Z\"}"
+                        ));
+                    }
+                    if ("/api/customers".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":501,\"merchantId\":1,\"displayName\":\"Ana Perez\",\"invoiceRequired\":false,"
+                                        + "\"creditEnabled\":false,\"active\":true,\"groups\":[],\"taxIdentities\":[],\"contacts\":[]}]"
+                        ));
+                    }
+                    if ("/api/customers/lookup".equals(path) && query.contains("merchantId=1") && query.contains("email=ana%40mail.com")) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":501,\"merchantId\":1,\"displayName\":\"Ana Perez\",\"invoiceRequired\":false,"
+                                        + "\"creditEnabled\":false,\"active\":true,\"groups\":[],\"taxIdentities\":[],\"contacts\":[]}]"
+                        ));
+                    }
+                    if ("/api/customers".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":601,\"merchantId\":1,\"displayName\":\"Luis Rojas\",\"invoiceRequired\":true,"
+                                        + "\"creditEnabled\":false,\"active\":true,\"groups\":[],\"taxIdentities\":[],\"contacts\":[]}"
+                        ));
+                    }
+                    if ("/api/customers/601".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":601,\"merchantId\":1,\"displayName\":\"Luis Rojas\",\"invoiceRequired\":true,"
+                                        + "\"creditEnabled\":true,\"active\":true,\"groups\":[],\"taxIdentities\":[],\"contacts\":[]}"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("manager", "secret").join();
+        assertEquals(1, client.listProducts(1L, true, "soda").join().size());
+        assertEquals("WATER-500", client.createProduct(new ProductRequest(
+                1L, null, null, "WATER-500", "Water 500ml", new BigDecimal("0.90"),
+                ProductSaleMode.UNIT, ProductUnitOfMeasure.UNIT, 0, null, null, false, false, null,
+                List.of(new ProductVariantRequest("WATER-500", "Water 500ml", Set.of("7700001")))
+        )).join().sku());
+        assertEquals(new BigDecimal("0.95"), client.updateProduct(302L, new ProductRequest(
+                1L, null, null, "WATER-500", "Water 500ml", new BigDecimal("0.95"),
+                ProductSaleMode.UNIT, ProductUnitOfMeasure.UNIT, 0, null, null, false, false, null,
+                List.of(new ProductVariantRequest("WATER-500", "Water 500ml", Set.of("7700001")))
+        )).join().basePrice());
+        assertEquals(PriceResolutionSource.STORE_OVERRIDE, client.resolvePrice(10L, 302L, null).join().source());
+        assertEquals(1, client.listCustomers(1L, true).join().size());
+        assertEquals(1, client.lookupCustomers(1L, null, null, "ana@mail.com", null).join().size());
+        assertEquals("Luis Rojas", client.createCustomer(new CustomerRequest(
+                1L,
+                "Luis Rojas",
+                true,
+                false,
+                List.of(new CustomerTaxIdentityRequest("NIT", "12345")),
+                List.of(new CustomerContactRequest(CustomerContactType.EMAIL, "luis@mail.com", true))
+        )).join().displayName());
+        assertEquals(true, client.updateCustomer(601L, new CustomerRequest(
+                1L,
+                "Luis Rojas",
+                true,
+                true,
+                List.of(),
+                List.of()
+        )).join().creditEnabled());
+
+        HttpRequest productListRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/products") && req.method().equals("GET")).findFirst().orElseThrow();
+        HttpRequest priceResolveRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/catalog/prices/resolve")).findFirst().orElseThrow();
+        HttpRequest customerLookupRequest = requests.stream().filter(req -> req.uri().getPath().equals("/api/customers/lookup")).findFirst().orElseThrow();
+
+        assertTrue(productListRequest.uri().getRawQuery().contains("merchantId=1"));
+        assertTrue(priceResolveRequest.uri().getRawQuery().contains("storeLocationId=10"));
+        assertTrue(customerLookupRequest.uri().getRawQuery().contains("email=ana%40mail.com"));
     }
 
     @Test

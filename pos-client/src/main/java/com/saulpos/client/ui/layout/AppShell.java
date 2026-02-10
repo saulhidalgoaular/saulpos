@@ -2,8 +2,10 @@ package com.saulpos.client.ui.layout;
 
 import com.saulpos.api.shift.CashShiftResponse;
 import com.saulpos.api.shift.CashShiftStatus;
+import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
@@ -19,6 +21,7 @@ import com.saulpos.client.app.ScreenRegistry;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
+import com.saulpos.client.state.BackofficeCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
@@ -55,7 +58,8 @@ public final class AppShell {
                                     AuthSessionCoordinator authSessionCoordinator,
                                     ShiftControlCoordinator shiftControlCoordinator,
                                     SellScreenCoordinator sellScreenCoordinator,
-                                    ReturnsScreenCoordinator returnsScreenCoordinator) {
+                                    ReturnsScreenCoordinator returnsScreenCoordinator,
+                                    BackofficeCoordinator backofficeCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -96,6 +100,7 @@ public final class AppShell {
                 shiftControlCoordinator,
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
+                backofficeCoordinator,
                 stateStore,
                 navigationState
         );
@@ -110,6 +115,7 @@ public final class AppShell {
                     shiftControlCoordinator,
                     sellScreenCoordinator,
                     returnsScreenCoordinator,
+                    backofficeCoordinator,
                     stateStore,
                     navigationState
             );
@@ -157,6 +163,7 @@ public final class AppShell {
                                       ShiftControlCoordinator shiftControlCoordinator,
                                       SellScreenCoordinator sellScreenCoordinator,
                                       ReturnsScreenCoordinator returnsScreenCoordinator,
+                                      BackofficeCoordinator backofficeCoordinator,
                                       AppStateStore appStateStore,
                                       NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
@@ -187,6 +194,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.RETURNS) {
             renderReturns(screenBody, returnsScreenCoordinator);
+            return;
+        }
+
+        if (target == NavigationTarget.BACKOFFICE) {
+            renderBackoffice(screenBody, backofficeCoordinator);
             return;
         }
 
@@ -738,6 +750,210 @@ public final class AppShell {
         );
     }
 
+    private static void renderBackoffice(VBox screenBody,
+                                         BackofficeCoordinator backofficeCoordinator) {
+        Label feedback = new Label();
+        feedback.textProperty().bind(backofficeCoordinator.backofficeMessageProperty());
+
+        Label priceSummary = new Label();
+        priceSummary.textProperty().bind(Bindings.createStringBinding(
+                () -> toPriceSummary(backofficeCoordinator.priceResolutionProperty().get()),
+                backofficeCoordinator.priceResolutionProperty()
+        ));
+
+        PosTextField catalogMerchantId = new PosTextField("Catalog merchant ID");
+        PosTextField productQuery = new PosTextField("Catalog search (SKU/name)");
+        PosButton loadProducts = PosButton.primary("Load Products");
+        loadProducts.disableProperty().bind(backofficeCoordinator.busyProperty());
+        loadProducts.setOnAction(event -> backofficeCoordinator.loadProducts(
+                parseLong(catalogMerchantId.getText()),
+                productQuery.getText()
+        ));
+
+        ListView<ProductResponse> productList = new ListView<>();
+        productList.setPrefHeight(140);
+        backofficeCoordinator.productsProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                productList.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            productList.setItems(FXCollections.observableArrayList(newValue));
+        });
+        productList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(ProductResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText(item.id()
+                        + " | " + item.sku()
+                        + " | " + item.name()
+                        + " | " + defaultMoney(item.basePrice())
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE"));
+            }
+        });
+
+        PosTextField productId = new PosTextField("Product ID (for update)");
+        PosTextField productSku = new PosTextField("SKU");
+        PosTextField productName = new PosTextField("Name");
+        PosTextField productBasePrice = new PosTextField("Base price");
+        PosTextField productBarcodes = new PosTextField("Barcode(s), comma-separated");
+        PosButton createProduct = PosButton.primary("Create Product");
+        PosButton updateProduct = PosButton.accent("Update Product");
+        createProduct.disableProperty().bind(backofficeCoordinator.busyProperty());
+        updateProduct.disableProperty().bind(backofficeCoordinator.busyProperty());
+        createProduct.setOnAction(event -> backofficeCoordinator.saveProduct(
+                null,
+                parseLong(catalogMerchantId.getText()),
+                productSku.getText(),
+                productName.getText(),
+                parseMoney(productBasePrice.getText()),
+                productBarcodes.getText()
+        ));
+        updateProduct.setOnAction(event -> backofficeCoordinator.saveProduct(
+                parseLong(productId.getText()),
+                parseLong(catalogMerchantId.getText()),
+                productSku.getText(),
+                productName.getText(),
+                parseMoney(productBasePrice.getText()),
+                productBarcodes.getText()
+        ));
+
+        PosTextField customerMerchantId = new PosTextField("Customer merchant ID");
+        PosButton loadCustomers = PosButton.primary("Load Customers");
+        loadCustomers.disableProperty().bind(backofficeCoordinator.busyProperty());
+        loadCustomers.setOnAction(event -> backofficeCoordinator.loadCustomers(parseLong(customerMerchantId.getText())));
+
+        PosTextField lookupDocumentType = new PosTextField("Lookup document type");
+        PosTextField lookupDocumentValue = new PosTextField("Lookup document value");
+        PosTextField lookupEmail = new PosTextField("Lookup email");
+        PosTextField lookupPhone = new PosTextField("Lookup phone");
+        PosButton lookupCustomers = PosButton.accent("Lookup Customers");
+        lookupCustomers.disableProperty().bind(backofficeCoordinator.busyProperty());
+        lookupCustomers.setOnAction(event -> backofficeCoordinator.lookupCustomers(
+                parseLong(customerMerchantId.getText()),
+                lookupDocumentType.getText(),
+                lookupDocumentValue.getText(),
+                lookupEmail.getText(),
+                lookupPhone.getText()
+        ));
+
+        ListView<CustomerResponse> customerList = new ListView<>();
+        customerList.setPrefHeight(140);
+        backofficeCoordinator.customersProperty().addListener((obs, oldValue, newValue) -> {
+            if (newValue == null) {
+                customerList.setItems(FXCollections.emptyObservableList());
+                return;
+            }
+            customerList.setItems(FXCollections.observableArrayList(newValue));
+        });
+        customerList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(CustomerResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    return;
+                }
+                setText(item.id()
+                        + " | " + defaultText(item.displayName())
+                        + " | invoiceRequired=" + item.invoiceRequired()
+                        + " | creditEnabled=" + item.creditEnabled()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE"));
+            }
+        });
+
+        PosTextField customerId = new PosTextField("Customer ID (for update)");
+        PosTextField customerName = new PosTextField("Display name");
+        PosTextField customerInvoiceRequired = new PosTextField("Invoice required (true/false)");
+        customerInvoiceRequired.setText("false");
+        PosTextField customerCreditEnabled = new PosTextField("Credit enabled (true/false)");
+        customerCreditEnabled.setText("false");
+        PosTextField customerDocumentType = new PosTextField("Document type (optional)");
+        PosTextField customerDocumentValue = new PosTextField("Document value (optional)");
+        PosTextField customerEmail = new PosTextField("Primary email (optional)");
+        PosTextField customerPhone = new PosTextField("Primary phone (optional)");
+        PosButton createCustomer = PosButton.primary("Create Customer");
+        PosButton updateCustomer = PosButton.accent("Update Customer");
+        createCustomer.disableProperty().bind(backofficeCoordinator.busyProperty());
+        updateCustomer.disableProperty().bind(backofficeCoordinator.busyProperty());
+        createCustomer.setOnAction(event -> backofficeCoordinator.saveCustomer(
+                null,
+                parseLong(customerMerchantId.getText()),
+                customerName.getText(),
+                parseBoolean(customerInvoiceRequired.getText()),
+                parseBoolean(customerCreditEnabled.getText()),
+                customerDocumentType.getText(),
+                customerDocumentValue.getText(),
+                customerEmail.getText(),
+                customerPhone.getText()
+        ));
+        updateCustomer.setOnAction(event -> backofficeCoordinator.saveCustomer(
+                parseLong(customerId.getText()),
+                parseLong(customerMerchantId.getText()),
+                customerName.getText(),
+                parseBoolean(customerInvoiceRequired.getText()),
+                parseBoolean(customerCreditEnabled.getText()),
+                customerDocumentType.getText(),
+                customerDocumentValue.getText(),
+                customerEmail.getText(),
+                customerPhone.getText()
+        ));
+
+        PosTextField priceStoreId = new PosTextField("Store location ID");
+        PosTextField priceProductId = new PosTextField("Product ID");
+        PosTextField priceCustomerId = new PosTextField("Customer ID (optional)");
+        PosButton resolvePrice = PosButton.primary("Resolve Store Price");
+        resolvePrice.disableProperty().bind(backofficeCoordinator.busyProperty());
+        resolvePrice.setOnAction(event -> backofficeCoordinator.resolveStorePrice(
+                parseLong(priceStoreId.getText()),
+                parseLong(priceProductId.getText()),
+                parseLong(priceCustomerId.getText())
+        ));
+
+        screenBody.getChildren().addAll(
+                new Label("Backoffice workspace: catalog, pricing, and customer operations"),
+                feedback,
+                new Label("Catalog"),
+                catalogMerchantId,
+                productQuery,
+                new HBox(8, loadProducts),
+                productList,
+                productId,
+                productSku,
+                productName,
+                productBasePrice,
+                productBarcodes,
+                new HBox(8, createProduct, updateProduct),
+                new Label("Customers"),
+                customerMerchantId,
+                new HBox(8, loadCustomers),
+                lookupDocumentType,
+                lookupDocumentValue,
+                lookupEmail,
+                lookupPhone,
+                new HBox(8, lookupCustomers),
+                customerList,
+                customerId,
+                customerName,
+                customerInvoiceRequired,
+                customerCreditEnabled,
+                customerDocumentType,
+                customerDocumentValue,
+                customerEmail,
+                customerPhone,
+                new HBox(8, createCustomer, updateCustomer),
+                new Label("Pricing"),
+                priceStoreId,
+                priceProductId,
+                priceCustomerId,
+                new HBox(8, resolvePrice),
+                priceSummary
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
     }
@@ -806,6 +1022,17 @@ public final class AppShell {
                 + " | gross=" + defaultMoney(response.totalGross());
     }
 
+    private static String toPriceSummary(PriceResolutionResponse response) {
+        if (response == null) {
+            return "No price resolution requested yet.";
+        }
+        return "Store=" + response.storeLocationId()
+                + " | product=" + response.productId()
+                + " | resolved=" + defaultMoney(response.resolvedPrice())
+                + " | source=" + response.source()
+                + " | sourceId=" + response.sourceId();
+    }
+
     private static String defaultMoney(BigDecimal value) {
         return value == null ? "0.00" : value.toPlainString();
     }
@@ -856,6 +1083,21 @@ public final class AppShell {
         } catch (IllegalArgumentException ex) {
             return null;
         }
+    }
+
+    private static Boolean parseBoolean(String value) {
+        if (value == null || value.isBlank()) {
+            return false;
+        }
+        String normalized = value.trim().toLowerCase();
+        return normalized.equals("true")
+                || normalized.equals("1")
+                || normalized.equals("yes")
+                || normalized.equals("y");
+    }
+
+    private static String defaultText(String value) {
+        return value == null || value.isBlank() ? "-" : value;
     }
 
     private static String formatExpiryValue(AuthSessionState session) {

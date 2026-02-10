@@ -2,8 +2,13 @@ package com.saulpos.client.state;
 
 import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
+import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
+import com.saulpos.api.catalog.ProductRequest;
+import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.customer.CustomerRequest;
+import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -26,6 +31,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
@@ -177,6 +183,26 @@ class ShiftControlCoordinatorTest {
         }
 
         @Override
+        public CompletableFuture<List<ProductResponse>> listProducts(Long merchantId, Boolean active, String query) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<ProductResponse> createProduct(ProductRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<ProductResponse> updateProduct(Long productId, ProductRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<PriceResolutionResponse> resolvePrice(Long storeLocationId, Long productId, Long customerId) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
         public CompletableFuture<SaleCartResponse> createCart(SaleCartCreateRequest request) {
             return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
@@ -218,6 +244,30 @@ class ShiftControlCoordinatorTest {
 
         @Override
         public CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<List<CustomerResponse>> listCustomers(Long merchantId, Boolean active) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<List<CustomerResponse>> lookupCustomers(Long merchantId,
+                                                                         String documentType,
+                                                                         String documentValue,
+                                                                         String email,
+                                                                         String phone) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request) {
+            return CompletableFuture.failedFuture(new UnsupportedOperationException());
+        }
+
+        @Override
+        public CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request) {
             return CompletableFuture.failedFuture(new UnsupportedOperationException());
         }
 

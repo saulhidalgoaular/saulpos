@@ -892,7 +892,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for partial/full return and approval scenarios.
 
-#### Card O7: Backoffice UI (Catalog, Pricing, Customers)
+#### Card O7: Backoffice UI (Catalog, Pricing, Customers) [SOLVED]
 - Goal: Provide operational maintenance screens.
 - Dependencies: C1, C3, F1, O1.
 - Acceptance Criteria:
@@ -1118,7 +1118,7 @@ Out of Scope:
 | O4 | DONE |  |  | Implemented Sell screen workflow in `pos-client` with cart create/load, barcode lookup add-line path, paginated product search, quick-add, cart line quantity update/remove, totals recalculation feedback, and client API/coordinator tests covering success and error handling |
 | O5 | DONE |  |  | Implemented checkout UI workflow in `pos-client` with tender capture (`cash`/`card`/split), allocation-vs-payable and due/change visibility, checkout commit integration (`POST /api/sales/checkout`) including `Idempotency-Key` propagation, receipt/payment summary feedback, and client API/coordinator coverage for successful and failed validation paths |
 | O6 | DONE |  |  | Implemented returns UI workflow in `pos-client` with receipt lookup (`GET /api/refunds/lookup`), eligible-line review, partial/full quantity return submission with reason/tender capture (`POST /api/refunds/submit`), and manager-approval-required guidance when policy rejects cashier-only returns; added client API/coordinator tests for lookup/submit/approval paths |
-| O7 | TODO |  |  |  |
+| O7 | DONE |  |  | Implemented Backoffice workflow in `pos-client` with catalog load/search + create/update product actions, store-context price resolution (`/api/catalog/prices/resolve`), and customer load/lookup + create/update actions; added coordinator/UI wiring plus API contract and state-coordinator test coverage |
 | O8 | TODO |  |  |  |
 | O9 | TODO |  |  |  |
 | O10 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O7` Backoffice UI (catalog, pricing, customers).
-2. `O8` Reporting and export UI.
-3. `O9` Hardware interaction UI.
+1. `O8` Reporting and export UI.
+2. `O9` Hardware interaction UI.
+3. `O10` Offline/degraded mode UX.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

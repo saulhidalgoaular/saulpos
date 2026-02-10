@@ -2,8 +2,13 @@ package com.saulpos.client.api;
 
 import com.saulpos.api.auth.AuthTokenResponse;
 import com.saulpos.api.auth.CurrentUserResponse;
+import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductLookupResponse;
+import com.saulpos.api.catalog.ProductRequest;
+import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
+import com.saulpos.api.customer.CustomerRequest;
+import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
@@ -18,6 +23,7 @@ import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.shift.CashShiftResponse;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public interface PosApiClient {
@@ -44,6 +50,14 @@ public interface PosApiClient {
 
     CompletableFuture<ProductSearchResponse> searchProducts(Long merchantId, String query, Boolean active, int page, int size);
 
+    CompletableFuture<List<ProductResponse>> listProducts(Long merchantId, Boolean active, String query);
+
+    CompletableFuture<ProductResponse> createProduct(ProductRequest request);
+
+    CompletableFuture<ProductResponse> updateProduct(Long productId, ProductRequest request);
+
+    CompletableFuture<PriceResolutionResponse> resolvePrice(Long storeLocationId, Long productId, Long customerId);
+
     CompletableFuture<SaleCartResponse> createCart(SaleCartCreateRequest request);
 
     CompletableFuture<SaleCartResponse> getCart(Long cartId);
@@ -61,6 +75,18 @@ public interface PosApiClient {
     CompletableFuture<SaleReturnLookupResponse> lookupReturnByReceipt(String receiptNumber);
 
     CompletableFuture<SaleReturnResponse> submitReturn(SaleReturnSubmitRequest request);
+
+    CompletableFuture<List<CustomerResponse>> listCustomers(Long merchantId, Boolean active);
+
+    CompletableFuture<List<CustomerResponse>> lookupCustomers(Long merchantId,
+                                                              String documentType,
+                                                              String documentValue,
+                                                              String email,
+                                                              String phone);
+
+    CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request);
+
+    CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request);
 
     void setAccessToken(String accessToken);
 }
