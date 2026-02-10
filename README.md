@@ -39,6 +39,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `I4` Supplier returns.
 - `J1` Tender and split payments.
 - `J2` Payment state machine.
+- `K1` Offline policy definition.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -274,6 +275,15 @@ Backend source of truth:
 - Enforced rules:
   - invalid payment state transitions are rejected with stable conflict errors,
   - every payment transition stores actor, correlation context, and timestamp for auditability.
+
+### Offline Policy Definition
+- Offline policy contract API:
+  - `GET /api/system/offline-policy`
+- Policy behavior in v1:
+  - transactional flows (`AUTH_LOGIN`, `CART_MUTATION`, `CHECKOUT`) are `ONLINE_ONLY`,
+  - cached reference viewing (`CATALOG_REFERENCE_VIEW`) is `DEGRADED_READ_ONLY`.
+- Technical controls and user-facing fail behavior are standardized and documented in:
+  - `docs/adr/ADR-0001-offline-policy-v1.md`
 
 ### Atomic Checkout
 - Checkout flow now commits sale, payment snapshot, receipt allocation, and inventory movement records in one transaction.
@@ -618,6 +628,7 @@ Key settings include:
 - Unit tests for cart quantity policy validation by sale mode and precision.
 - Unit tests for tender allocation validation and cash-change calculation.
 - Unit tests for payment state transition rules.
+- Integration tests for offline policy contract endpoint authorization and payload (`GET /api/system/offline-policy`).
 - Unit tests for inventory balance calculation and deterministic 3-decimal quantity normalization.
 - Integration tests for inventory ledger sale/return/adjustment effects, running-balance output, and stock-balance aggregation.
 - Integration tests for stock adjustment create/approve/post flow, manager-approval threshold enforcement, and movement posting guarantees.

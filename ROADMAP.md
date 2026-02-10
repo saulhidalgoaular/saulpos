@@ -685,7 +685,7 @@ Out of Scope:
 
 ### Phase K: Local-First Resilience and Sync Policy
 
-#### Card K1: Offline Policy Definition
+#### Card K1: Offline Policy Definition [SOLVED]
 - Goal: Define explicit supported offline modes for v1.
 - Dependencies: G2.
 - Deliverable: architecture decision record in repo.
@@ -1099,7 +1099,7 @@ Out of Scope:
 | J2 | DONE |  |  | Implemented payment lifecycle state machine with migration `V25` (`payment.status`, `payment_transition`), new lifecycle APIs (`GET /api/payments/{id}`, `POST /api/payments/{id}/capture|void|refund`), explicit transition validation with stable conflict errors, and unit/integration + permission-matrix coverage for transition history/auditability |
 | J3 | TODO |  |  |  |
 | J4 | TODO |  |  |  |
-| K1 | TODO |  |  |  |
+| K1 | DONE |  |  | Defined and documented v1 offline policy via ADR (`docs/adr/ADR-0001-offline-policy-v1.md`) and added machine-readable endpoint `GET /api/system/offline-policy` with integration coverage for auth and policy payload |
 | K2 | TODO |  |  |  |
 | L1 | TODO |  |  |  |
 | L2 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `K1` Offline policy definition.
-2. `K2` Idempotent event ingestion.
-3. `L1` Sales and returns reports.
+1. `K2` Idempotent event ingestion.
+2. `L1` Sales and returns reports.
+3. `L2` Inventory reports.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

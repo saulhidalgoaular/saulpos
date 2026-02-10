@@ -114,7 +114,7 @@ public class SecurityConfiguration {
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.REPORT_VIEW))
                         .requestMatchers("/api/identity/**", "/api/security/roles/**", "/api/security/permissions/catalog")
                         .hasAuthority(SecurityAuthority.permission(PermissionCodes.CONFIGURATION_MANAGE))
-                        .requestMatchers("/api/security/me", "/api/security/permissions/current", "/api/auth/logout")
+                        .requestMatchers("/api/security/me", "/api/security/permissions/current", "/api/auth/logout", "/api/system/offline-policy")
                         .authenticated()
                         .requestMatchers("/api/security/**")
                         .authenticated()
