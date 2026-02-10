@@ -21,6 +21,10 @@ import com.saulpos.api.report.ExceptionReportResponse;
 import com.saulpos.api.report.InventoryLowStockReportResponse;
 import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.receipt.CashDrawerOpenRequest;
+import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptPrintRequest;
+import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
@@ -28,6 +32,7 @@ import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.security.CurrentUserPermissionsResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -382,6 +387,24 @@ public final class HttpPosApiClient implements PosApiClient {
                 .PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
                 .build();
         return send(httpRequest, CustomerResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CurrentUserPermissionsResponse> currentUserPermissions() {
+        HttpRequest request = baseRequest("/api/security/permissions/current")
+                .GET()
+                .build();
+        return send(request, CurrentUserPermissionsResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<ReceiptPrintResponse> printReceipt(ReceiptPrintRequest request) {
+        return postJson("/api/receipts/print", request, ReceiptPrintResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<CashDrawerOpenResponse> openCashDrawer(CashDrawerOpenRequest request) {
+        return postJson("/api/receipts/drawer/open", request, CashDrawerOpenResponse.class);
     }
 
     @Override

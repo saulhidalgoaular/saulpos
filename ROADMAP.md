@@ -912,7 +912,7 @@ Out of Scope:
 - Test Plan:
 1. Integration tests for filter and export actions.
 
-#### Card O9: Hardware Interaction UI
+#### Card O9: Hardware Interaction UI [SOLVED]
 - Goal: Expose print and drawer actions safely in UI.
 - Dependencies: M1, M2, O4.
 - Acceptance Criteria:
@@ -1120,7 +1120,7 @@ Out of Scope:
 | O6 | DONE |  |  | Implemented returns UI workflow in `pos-client` with receipt lookup (`GET /api/refunds/lookup`), eligible-line review, partial/full quantity return submission with reason/tender capture (`POST /api/refunds/submit`), and manager-approval-required guidance when policy rejects cashier-only returns; added client API/coordinator tests for lookup/submit/approval paths |
 | O7 | DONE |  |  | Implemented Backoffice workflow in `pos-client` with catalog load/search + create/update product actions, store-context price resolution (`/api/catalog/prices/resolve`), and customer load/lookup + create/update actions; added coordinator/UI wiring plus API contract and state-coordinator test coverage |
 | O8 | DONE |  |  | Implemented reporting UI workflow in `pos-client` with shared filters (date/store/terminal/cashier + contextual category/supplier/reason/event-type), report-load actions for sales/returns, inventory movements, cash shifts, and exceptions, streaming row preview strategy (bounded client-side window), and CSV export actions with deterministic operator feedback; added API contract tests and reporting coordinator coverage for filter/export behavior |
-| O9 | TODO |  |  |  |
+| O9 | DONE |  |  | Implemented hardware UI workflow in `pos-client` with receipt print action/status visibility (`queued`/`success`/`failure`), role-gated drawer open action backed by current-permissions introspection (`/api/security/permissions/current`), and API/coordinator coverage for print/drawer contracts and authorization behavior |
 | O10 | TODO |  |  |  |
 | O11 | TODO |  |  |  |
 | O12 | TODO |  |  |  |
@@ -1133,9 +1133,9 @@ Out of Scope:
 | P6 | TODO |  |  |  |
 
 ## 12. Immediate Next Three Cards
-1. `O9` Hardware interaction UI.
-2. `O10` Offline/degraded mode UX.
-3. `O11` Suspended sales and override UX.
+1. `O10` Offline/degraded mode UX.
+2. `O11` Suspended sales and override UX.
+3. `O12` Lot/expiry and supplier return UX.
 
 ## 13. Final Product Readiness Checklist
 1. All mandatory cards (`A` to `P`, excluding optional cards) are `DONE`.

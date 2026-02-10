@@ -61,6 +61,7 @@ Current implementation status is concentrated on roadmap foundation + early core
 - `O6` Returns and refunds UI.
 - `O7` Backoffice UI (catalog, pricing, customers).
 - `O8` Reporting and export UI.
+- `O9` Hardware interaction UI.
 - `G1` Cart lifecycle service.
 - `G2` Atomic checkout.
 - `G3` Returns and refunds.
@@ -78,7 +79,7 @@ Modules:
 - `pos-core`: shared cross-cutting abstractions (soft-delete, printer adapter, scanner/scale/fiscal extension contracts).
 - `pos-api`: transport contracts (request/response DTOs) shared by server/client.
 - `pos-server`: Spring Boot backend with domain logic, persistence, security, and REST APIs.
-- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, and reporting/export actions (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8`).
+- `pos-client`: JavaFX client module with screen-map/navigation foundation, reusable UI primitives, centralized theme tokens, authentication/session UX, shift-control workflow baseline, cashier workstation flows for selling/checkout/returns, backoffice operations for catalog/pricing/customers, reporting/export actions, and hardware actions (`O1` + `O2` + `O3` + `O4` + `O5` + `O6` + `O7` + `O8` + `O9`).
 
 Backend source of truth:
 - All critical business behavior is implemented in `pos-server`.
@@ -188,6 +189,19 @@ Client UI foundation (`O1`) is documented in `docs/ui/O1-ui-architecture-and-des
 - Tests now cover:
   - HTTP reporting contract mapping for filter queries and CSV export endpoints,
   - reporting coordinator filter propagation, streaming-preview state updates, and export feedback/error handling.
+
+### Client Hardware Interaction UI (`O9`)
+- Hardware screen now supports:
+  - receipt print trigger with explicit operator-visible status progression (`queued`, `success`, `failure`),
+  - hardware permission refresh via current-user permission introspection,
+  - drawer-open action with terminal/reason capture and authorization gating.
+- Client hardware operations consume server contracts:
+  - `GET /api/security/permissions/current`
+  - `POST /api/receipts/print`
+  - `POST /api/receipts/drawer/open`
+- Tests now cover:
+  - HTTP hardware contract mapping for permission lookup, receipt print, and drawer open endpoints,
+  - hardware coordinator behavior for permission gating plus success/failure action status messaging.
 
 ## Implemented Domain Capabilities
 

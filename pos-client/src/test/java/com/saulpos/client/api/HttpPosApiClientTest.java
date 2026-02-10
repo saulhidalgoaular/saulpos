@@ -11,6 +11,8 @@ import com.saulpos.api.customer.CustomerContactRequest;
 import com.saulpos.api.customer.CustomerContactType;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
+import com.saulpos.api.receipt.CashDrawerOpenRequest;
+import com.saulpos.api.receipt.ReceiptPrintRequest;
 import com.saulpos.api.refund.SaleReturnSubmitLineRequest;
 import com.saulpos.api.refund.SaleReturnSubmitRequest;
 import com.saulpos.api.report.ExceptionReportEventType;
@@ -589,6 +591,77 @@ class HttpPosApiClientTest {
         assertTrue(salesRequest.uri().getRawQuery().contains("categoryId=40"));
         assertTrue(cashExportRequest.uri().getRawQuery().contains("terminalDeviceId=20"));
         assertTrue(exceptionExportRequest.uri().getRawQuery().contains("eventType=NO_SALE"));
+    }
+
+    @Test
+    void hardwareContracts_shouldUsePermissionPrintAndDrawerEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"MANAGER\"]}"
+                        ));
+                    }
+                    if ("/api/security/permissions/current".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"userId\":7,\"username\":\"manager\",\"roles\":[\"MANAGER\"],"
+                                        + "\"permissions\":[\"SALES_PROCESS\",\"CASH_DRAWER_OPEN\"]}"
+                        ));
+                    }
+                    if ("/api/receipts/print".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"receiptNumber\":\"R-0000501\",\"status\":\"SUCCESS\",\"adapter\":\"escpos\","
+                                        + "\"retryable\":false,\"message\":\"Printed\",\"printedAt\":\"2026-02-10T12:06:00Z\"}"
+                        ));
+                    }
+                    if ("/api/receipts/drawer/open".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"eventId\":9001,\"terminalDeviceId\":3,\"terminalCode\":\"TERM-3\","
+                                        + "\"status\":\"SUCCESS\",\"adapter\":\"escpos\",\"retryable\":false,"
+                                        + "\"message\":\"Drawer pulse sent\",\"openedAt\":\"2026-02-10T12:07:00Z\"}"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("manager", "secret").join();
+        assertTrue(client.currentUserPermissions().join().permissions().contains("CASH_DRAWER_OPEN"));
+        assertEquals("SUCCESS", client.printReceipt(new ReceiptPrintRequest("R-0000501", false)).join().status().name());
+        assertEquals("SUCCESS", client.openCashDrawer(new CashDrawerOpenRequest(3L, "NO_SALE", null, null)).join().status().name());
+
+        HttpRequest permissionsRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/security/permissions/current"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest printRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/receipts/print"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest drawerRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/receipts/drawer/open"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals("Bearer access-123", permissionsRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", printRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", drawerRequest.headers().firstValue("Authorization").orElseThrow());
     }
 
     private static String cartJson() {

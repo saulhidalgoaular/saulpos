@@ -7,6 +7,8 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
+import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
@@ -23,6 +25,8 @@ import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
 import com.saulpos.client.state.BackofficeCoordinator;
+import com.saulpos.client.state.HardwareActionStatus;
+import com.saulpos.client.state.HardwareCoordinator;
 import com.saulpos.client.state.ReportingCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
@@ -34,6 +38,7 @@ import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.scene.Parent;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.PasswordField;
@@ -63,7 +68,8 @@ public final class AppShell {
                                     SellScreenCoordinator sellScreenCoordinator,
                                     ReturnsScreenCoordinator returnsScreenCoordinator,
                                     BackofficeCoordinator backofficeCoordinator,
-                                    ReportingCoordinator reportingCoordinator) {
+                                    ReportingCoordinator reportingCoordinator,
+                                    HardwareCoordinator hardwareCoordinator) {
         BorderPane root = new BorderPane();
         root.getStyleClass().add("pos-shell");
 
@@ -106,6 +112,7 @@ public final class AppShell {
                 returnsScreenCoordinator,
                 backofficeCoordinator,
                 reportingCoordinator,
+                hardwareCoordinator,
                 stateStore,
                 navigationState
         );
@@ -122,6 +129,7 @@ public final class AppShell {
                     returnsScreenCoordinator,
                     backofficeCoordinator,
                     reportingCoordinator,
+                    hardwareCoordinator,
                     stateStore,
                     navigationState
             );
@@ -171,6 +179,7 @@ public final class AppShell {
                                       ReturnsScreenCoordinator returnsScreenCoordinator,
                                       BackofficeCoordinator backofficeCoordinator,
                                       ReportingCoordinator reportingCoordinator,
+                                      HardwareCoordinator hardwareCoordinator,
                                       AppStateStore appStateStore,
                                       NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
@@ -213,14 +222,9 @@ public final class AppShell {
             renderReporting(screenBody, reportingCoordinator);
             return;
         }
-
-        PosTextField actionPalette = new PosTextField("Global action palette (planned)");
-        actionPalette.setDisable(true);
-        screenBody.getChildren().add(actionPalette);
-
-        if (appStateStore.sessionState() != null && appStateStore.sessionState().accessTokenExpiresAt() != null) {
-            Label expiryHint = new Label("Access token expiry: " + formatExpiryValue(appStateStore.sessionState()));
-            screenBody.getChildren().add(expiryHint);
+        if (target == NavigationTarget.HARDWARE) {
+            renderHardware(screenBody, hardwareCoordinator, appStateStore);
+            return;
         }
     }
 
@@ -1105,6 +1109,86 @@ public final class AppShell {
         );
     }
 
+    private static void renderHardware(VBox screenBody,
+                                       HardwareCoordinator hardwareCoordinator,
+                                       AppStateStore appStateStore) {
+        if (appStateStore.isAuthenticated() && hardwareCoordinator.printStatusProperty().get() == HardwareActionStatus.IDLE) {
+            hardwareCoordinator.refreshPermissions();
+        }
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(hardwareCoordinator.hardwareMessageProperty());
+
+        Label printStatus = new Label();
+        printStatus.textProperty().bind(Bindings.createStringBinding(
+                () -> toPrintSummary(
+                        hardwareCoordinator.printStatusProperty().get(),
+                        hardwareCoordinator.printResponseProperty().get()),
+                hardwareCoordinator.printStatusProperty(),
+                hardwareCoordinator.printResponseProperty()
+        ));
+
+        Label drawerStatus = new Label();
+        drawerStatus.textProperty().bind(Bindings.createStringBinding(
+                () -> toDrawerSummary(
+                        hardwareCoordinator.drawerStatusProperty().get(),
+                        hardwareCoordinator.drawerResponseProperty().get()),
+                hardwareCoordinator.drawerStatusProperty(),
+                hardwareCoordinator.drawerResponseProperty()
+        ));
+
+        PosButton refreshPermissions = PosButton.accent("Refresh Hardware Access");
+        refreshPermissions.disableProperty().bind(hardwareCoordinator.busyProperty());
+        refreshPermissions.setOnAction(event -> hardwareCoordinator.refreshPermissions());
+
+        PosTextField receiptNumber = new PosTextField("Receipt number");
+        CheckBox copy = new CheckBox("Print as copy");
+        PosButton printReceipt = PosButton.primary("Print Receipt");
+        printReceipt.disableProperty().bind(hardwareCoordinator.busyProperty());
+        printReceipt.setOnAction(event -> hardwareCoordinator.printReceipt(receiptNumber.getText(), copy.isSelected()));
+
+        PosTextField terminalDeviceId = new PosTextField("Terminal device ID");
+        PosTextField reasonCode = new PosTextField("Reason code");
+        PosTextField note = new PosTextField("Note (optional)");
+        PosTextField referenceNumber = new PosTextField("Reference number (optional)");
+        PosButton openDrawer = PosButton.primary("Open Drawer");
+        openDrawer.disableProperty().bind(Bindings.or(
+                hardwareCoordinator.busyProperty(),
+                Bindings.not(hardwareCoordinator.drawerAuthorizedProperty())
+        ));
+        openDrawer.visibleProperty().bind(hardwareCoordinator.drawerAuthorizedProperty());
+        openDrawer.managedProperty().bind(openDrawer.visibleProperty());
+        openDrawer.setOnAction(event -> hardwareCoordinator.openDrawer(
+                parseLong(terminalDeviceId.getText()),
+                reasonCode.getText(),
+                note.getText(),
+                referenceNumber.getText()
+        ));
+
+        Label drawerHiddenHint = new Label("Drawer controls are hidden because this user is not authorized.");
+        drawerHiddenHint.visibleProperty().bind(Bindings.not(hardwareCoordinator.drawerAuthorizedProperty()));
+        drawerHiddenHint.managedProperty().bind(drawerHiddenHint.visibleProperty());
+
+        screenBody.getChildren().addAll(
+                new Label("Hardware workspace: receipt print status and role-gated drawer controls"),
+                feedback,
+                refreshPermissions,
+                new Label("Receipt print"),
+                receiptNumber,
+                copy,
+                printReceipt,
+                printStatus,
+                new Label("Cash drawer"),
+                terminalDeviceId,
+                reasonCode,
+                note,
+                referenceNumber,
+                openDrawer,
+                drawerHiddenHint,
+                drawerStatus
+        );
+    }
+
     private static boolean isOpenShift(CashShiftResponse shift) {
         return shift != null && shift.status() == CashShiftStatus.OPEN;
     }
@@ -1182,6 +1266,38 @@ public final class AppShell {
                 + " | resolved=" + defaultMoney(response.resolvedPrice())
                 + " | source=" + response.source()
                 + " | sourceId=" + response.sourceId();
+    }
+
+    private static String toPrintSummary(HardwareActionStatus status, ReceiptPrintResponse response) {
+        if (status == null || status == HardwareActionStatus.IDLE) {
+            return "Print status: idle.";
+        }
+        if (status == HardwareActionStatus.QUEUED) {
+            return "Print status: queued.";
+        }
+        if (response == null) {
+            return "Print status: " + status.name().toLowerCase();
+        }
+        return "Print status: " + status.name().toLowerCase()
+                + " | receipt=" + defaultText(response.receiptNumber())
+                + " | adapter=" + defaultText(response.adapter())
+                + " | retryable=" + response.retryable();
+    }
+
+    private static String toDrawerSummary(HardwareActionStatus status, CashDrawerOpenResponse response) {
+        if (status == null || status == HardwareActionStatus.IDLE) {
+            return "Drawer status: idle.";
+        }
+        if (status == HardwareActionStatus.QUEUED) {
+            return "Drawer status: queued.";
+        }
+        if (response == null) {
+            return "Drawer status: " + status.name().toLowerCase();
+        }
+        return "Drawer status: " + status.name().toLowerCase()
+                + " | terminal=" + defaultText(response.terminalCode())
+                + " | eventId=" + response.eventId()
+                + " | retryable=" + response.retryable();
     }
 
     private static String defaultMoney(BigDecimal value) {

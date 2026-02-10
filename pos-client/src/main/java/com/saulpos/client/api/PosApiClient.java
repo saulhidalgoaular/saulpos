@@ -19,6 +19,10 @@ import com.saulpos.api.report.ExceptionReportResponse;
 import com.saulpos.api.report.InventoryLowStockReportResponse;
 import com.saulpos.api.report.InventoryMovementReportResponse;
 import com.saulpos.api.report.InventoryStockOnHandReportResponse;
+import com.saulpos.api.receipt.CashDrawerOpenRequest;
+import com.saulpos.api.receipt.CashDrawerOpenResponse;
+import com.saulpos.api.receipt.ReceiptPrintRequest;
+import com.saulpos.api.receipt.ReceiptPrintResponse;
 import com.saulpos.api.report.SalesReturnsReportResponse;
 import com.saulpos.api.sale.SaleCartAddLineRequest;
 import com.saulpos.api.sale.SaleCartCreateRequest;
@@ -26,6 +30,7 @@ import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartUpdateLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.security.CurrentUserPermissionsResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -97,6 +102,18 @@ public interface PosApiClient {
     CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request);
 
     CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request);
+
+    default CompletableFuture<CurrentUserPermissionsResponse> currentUserPermissions() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<ReceiptPrintResponse> printReceipt(ReceiptPrintRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<CashDrawerOpenResponse> openCashDrawer(CashDrawerOpenRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
 
     default CompletableFuture<SalesReturnsReportResponse> getSalesReturnsReport(Instant from,
                                                                                 Instant to,
