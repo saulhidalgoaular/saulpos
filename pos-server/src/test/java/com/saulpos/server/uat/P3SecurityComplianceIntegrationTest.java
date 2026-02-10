@@ -8,9 +8,12 @@ import com.saulpos.server.identity.model.TerminalDeviceEntity;
 import com.saulpos.server.identity.repository.MerchantRepository;
 import com.saulpos.server.identity.repository.StoreLocationRepository;
 import com.saulpos.server.identity.repository.TerminalDeviceRepository;
+import com.saulpos.server.security.authorization.PermissionCodes;
+import com.saulpos.server.security.model.PermissionEntity;
 import com.saulpos.server.security.model.RoleEntity;
 import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.model.UserRoleEntity;
+import com.saulpos.server.security.repository.PermissionRepository;
 import com.saulpos.server.security.repository.RoleRepository;
 import com.saulpos.server.security.repository.UserAccountRepository;
 import com.saulpos.server.security.repository.UserRoleRepository;
@@ -62,6 +65,9 @@ class P3SecurityComplianceIntegrationTest {
 
     @Autowired
     private RoleRepository roleRepository;
+
+    @Autowired
+    private PermissionRepository permissionRepository;
 
     @Autowired
     private UserRoleRepository userRoleRepository;
@@ -160,6 +166,10 @@ class P3SecurityComplianceIntegrationTest {
         for (String table : tables) {
             jdbcTemplate.execute("DELETE FROM " + table);
         }
+
+        ensurePermission(PermissionCodes.REPORT_VIEW, "Allows report and analytics access");
+        ensurePermission(PermissionCodes.CONFIGURATION_MANAGE, "Allows configuration and security changes");
+        ensurePermission(PermissionCodes.CASH_DRAWER_OPEN, "Allows no-sale drawer open operations");
 
         RoleEntity savedRole = roleRepository.findByCode("MANAGER")
                 .orElseGet(() -> {
@@ -326,5 +336,15 @@ class P3SecurityComplianceIntegrationTest {
                   "referenceNumber": "P3-NO-SALE-1"
                 }
                 """.formatted(terminalDeviceId, reasonCode);
+    }
+
+    private void ensurePermission(String code, String description) {
+        permissionRepository.findByCode(code)
+                .orElseGet(() -> {
+                    PermissionEntity permission = new PermissionEntity();
+                    permission.setCode(code);
+                    permission.setDescription(description);
+                    return permissionRepository.save(permission);
+                });
     }
 }
