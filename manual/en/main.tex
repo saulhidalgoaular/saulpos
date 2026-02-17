@@ -1,0 +1,612 @@
+\documentclass[11pt,oneside]{book}
+
+\input{../shared/style.tex}
+\setdefaultlanguage{english}
+\setotherlanguage{spanish}
+\input{../shared/terms-en.tex}
+\input{../shared/macros.tex}
+
+\newcommand{\ManualVersion}{1.0.0}
+\newcommand{\SoftwareVersion}{[Fill in: SaulPOS version]}
+\newcommand{\ManualDate}{\today}
+\newcommand{\ShotPath}[1]{../images/placeholders/en/#1}
+\newcommand{\ShotRef}[1]{\texttt{\detokenize{en/#1}}}
+
+\begin{document}
+
+\frontmatter
+\SaulCoverPage{\ManualTitleText}{\ManualSubtitleText}{Manual version: \ManualVersion}{Date: \ManualDate}
+
+\thispagestyle{empty}
+\vspace*{3cm}
+{\Large \textbf{Copyright}}\\[0.8em]
+\SaulPOS{} and its documentation are the property of \CompanyName.\\
+All rights reserved. No part of this document may be reproduced without written authorization, except for internal training use by the licensed business.\\[1em]
+First internal edition.
+\clearpage
+
+\thispagestyle{empty}
+{\Large \textbf{Version page}}\\[1.0em]
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.36\textwidth}Y}
+Manual version & \ManualVersion \\
+Software version & \SoftwareVersion \\
+Publication date & \ManualDate \\
+Language & English \\
+Audience & Cashiers, supervisors, administrators, and business owners \\
+\end{tabularx}
+\clearpage
+
+\tableofcontents
+\listoffigures
+\clearpage
+
+\mainmatter
+
+\chapter{Introduction}\label{ch:intro}
+\section{What is \SaulPOS?}
+\SaulPOS{} is a point-of-sale system designed to process transactions, control inventory, manage customers, and generate operational reports. The primary goal is consistency: every sale, discount, and return should be traceable.
+
+\section{Who is this book for?}
+This manual is intended for:
+\begin{itemize}
+  \item Cashiers with basic computer skills.
+  \item Supervisors who approve exceptions and close shifts.
+  \item Administrators who configure catalog, taxes, and users.
+  \item Owners who review performance and enforce operational rules.
+\end{itemize}
+
+\section{Key benefits}
+\begin{itemize}
+  \item Repeatable sales workflow.
+  \item Clear discount, tax, and return rules.
+  \item Better inventory control and lower shrinkage risk.
+  \item Better decision-making through reliable reports.
+\end{itemize}
+
+\section{System overview}
+\SaulFigure{\ShotPath{introduction_main_dashboard_01.png}}{Screen: Main dashboard}{fig:intro-dashboard}
+
+\begin{notebox}
+Actual screens may differ by software version or enabled modules. Procedures in this manual remain valid.
+\end{notebox}
+
+\chapter{Core Concepts}\label{ch:concepts}
+\section{Products and services}
+A \TermProduct{} is a physical item and impacts stock. A \TermService{} usually does not change stock, but it can still affect taxes and reports.
+
+\section{Categories and subcategories}
+Categories support product discovery, promotion targeting, and reporting. Example: \emph{Beverages} $\rightarrow$ \emph{Juices}.
+
+\section{Customers}
+Customer records store purchase history and contact details. If enabled by your administrator, credit/receivable workflows may also be available.
+
+\section{Price, cost, and margin}
+\begin{longtable}{p{0.28\textwidth}p{0.66\textwidth}}
+\toprule
+\textbf{\RulesWord} & \textbf{\DetailWord}\\
+\midrule
+\endhead
+Selling price & Amount charged to the customer, tax-inclusive or tax-exclusive based on configuration.\\
+Cost & Internal value used for margin and inventory valuation.\\
+Gross margin & Relationship between selling price and cost.\\
+\bottomrule
+\end{longtable}
+
+\section{Discounts}
+\subsection{Percentage vs fixed amount}
+\begin{longtable}{p{0.30\textwidth}p{0.30\textwidth}p{0.34\textwidth}}
+\toprule
+\textbf{Type} & \textbf{\ExampleWord} & \textbf{\ResultWord}\\
+\midrule
+\endhead
+Percentage & 10\% on \$50.00 & \$5.00 discount, new subtotal \$45.00.\\
+Fixed amount & \$5.00 on \$50.00 & New subtotal \$45.00.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Line-level vs ticket-level}
+\begin{itemize}
+  \item \textbf{Line-level}: applies to one item line.
+  \item \textbf{Ticket-level}: applies to the full sale.
+\end{itemize}
+
+\subsection{Stacking, rounding, and approvals}
+\begin{warningbox}
+Default best practice: do not stack multiple manual discounts on the same line unless this policy is explicitly approved.
+\end{warningbox}
+
+\begin{tipbox}
+Define one rounding policy and keep it stable. Switching rounding rules mid-period creates reconciliation issues.
+\end{tipbox}
+
+\SaulFigure{\ShotPath{concepts_discount_line_01.png}}{Screen: Applying a line-level discount}{fig:concepts-discount}
+
+\section{Taxes}
+\begin{itemize}
+  \item \textbf{Tax-inclusive}: listed prices already include tax.
+  \item \textbf{Tax-exclusive}: tax is added at checkout.
+  \item \textbf{Exemptions}: available if enabled by your administrator and legally justified.
+\end{itemize}
+
+\section{Inventory}
+Base concepts:
+\begin{itemize}
+  \item \textbf{Stock on hand}: currently available units.
+  \item \textbf{Adjustment}: correction after discrepancy.
+  \item \textbf{Receiving}: stock intake from purchase orders.
+  \item \textbf{Transfer}: branch-to-branch movement, if enabled.
+\end{itemize}
+
+\section{Payment methods}
+Common methods include cash, card, and bank transfer. If enabled by your administrator, split payment is available.
+
+\section{Returns and refunds}
+Return windows are configurable. Always record reason, operator, and original sale reference when available.
+
+\section{Roles and permissions}
+\begin{itemize}
+  \item \TermCashier: creates and collects sales.
+  \item \TermSupervisor: approves exceptions and validates closures.
+  \item \TermAdmin: configures catalogs, taxes, users, and policies.
+\end{itemize}
+
+\chapter{Getting Started}\label{ch:getting-started}
+\section{Login and initial checks}
+\SaulFigure{\ShotPath{getting_started_login_01.png}}{Screen: Login}{fig:getting-login}
+
+\begin{enumerate}
+  \item Enter username and password.
+  \item Confirm branch/register assignment.
+  \item Verify workstation date and time.
+\end{enumerate}
+
+\section{First-time setup checklist}
+\SaulFigure{\ShotPath{getting_started_setup_checklist_01.png}}{Screen: First-time setup checklist}{fig:getting-setup}
+
+\begin{longtable}{p{0.35\textwidth}p{0.59\textwidth}}
+\toprule
+\textbf{Item} & \textbf{Purpose}\\
+\midrule
+\endhead
+Currency & Prevent symbol and decimal mismatches in receipts/reports.\\
+Taxes & Ensure legal compliance and consistent totals.\\
+Receipt footer & Add required legal or commercial text.\\
+Payment methods & Limit options to accepted methods only.\\
+User roles & Protect critical actions by permission level.\\
+\bottomrule
+\end{longtable}
+
+\section{Business profile and optional settings}
+If enabled by your administrator, complete fiscal identity fields, operating hours, and receipt template options.
+
+\chapter{Catalog Management}\label{ch:catalog}
+\section{Create and edit products}
+\SaulFigure{\ShotPath{catalog_new_product_01.png}}{Screen: New product form}{fig:catalog-product}
+
+Recommended minimum product fields:
+\begin{itemize}
+  \item Clear display name.
+  \item Internal SKU.
+  \item Barcode.
+  \item Category.
+  \item Selling price and cost.
+  \item Active/inactive status.
+\end{itemize}
+
+\section{Variants, barcodes, categories}
+\SaulFigure{\ShotPath{catalog_categories_01.png}}{Screen: Category management}{fig:catalog-categories}
+
+If enabled by your administrator, use variants for size/color and keep a unique identifier per variant.
+
+\section{Price lists, promotions, import/export}
+Possible configuration-dependent tools:
+\begin{itemize}
+  \item Customer-tier price lists.
+  \item Date-bound promotions.
+  \item Bulk import/export using files.
+\end{itemize}
+
+\chapter{Customer Management}\label{ch:customers}
+\section{Add and search customers}
+\SaulFigure{\ShotPath{customers_list_search_01.png}}{Screen: Customer list and search}{fig:customers-list}
+
+\begin{enumerate}
+  \item Add name and minimum contact data.
+  \item Add tax identity if required.
+  \item Save and validate search visibility.
+\end{enumerate}
+
+\section{History and credit (optional)}
+\SaulFigure{\ShotPath{customers_purchase_history_01.png}}{Screen: Customer purchase history}{fig:customers-history}
+
+If credit is enabled by your administrator, define credit limit and term, then monitor overdue balances weekly.
+
+\chapter{Sales Workflow}\label{ch:sales}
+\section{Register or shift opening (optional)}
+\SaulFigure{\ShotPath{sales_register_open_01.png}}{Screen: Register opening}{fig:sales-opening}
+
+\begin{enumerate}
+  \item Record opening cash float.
+  \item Test printer and scanner.
+  \item Confirm petty-cash expense process.
+\end{enumerate}
+
+\section{New sale: step-by-step}
+\SaulFigure{\ShotPath{sales_new_sale_01.png}}{Screen: New sale}{fig:sales-new}
+
+\begin{enumerate}
+  \item Select the option to create a new sale.
+  \item Add items by scan or search.
+  \item Update quantities as needed.
+  \item Apply line-level or ticket-level discount if applicable.
+  \item Confirm tax behavior and subtotal.
+  \item Add operational notes when needed.
+\end{enumerate}
+
+\SaulFigure{\ShotPath{sales_ticket_discount_01.png}}{Screen: Ticket-level discount}{fig:sales-ticket-discount}
+
+\subsection{Numeric worked example}
+\begin{longtable}{p{0.40\textwidth}p{0.54\textwidth}}
+\toprule
+\textbf{Step} & \textbf{Calculation}\\
+\midrule
+\endhead
+Starting subtotal & 2 items at \$30.00 + 1 item at \$40.00 = \$100.00 \\
+Ticket discount & 10\% of \$100.00 = \$10.00 \\
+Discounted subtotal & \$90.00 \\
+Tax-exclusive 16\% & \$14.40 \\
+Amount due & \$104.40 \\
+\bottomrule
+\end{longtable}
+
+\section{Checkout and split payment}
+\SaulFigure{\ShotPath{sales_checkout_split_payment_01.png}}{Screen: Checkout with split payment}{fig:sales-split}
+
+\begin{enumerate}
+  \item Enter amount for first method (for example cash).
+  \item Enter remaining amount for second method (for example card).
+  \item Verify cash change due.
+  \item Confirm payment and issue receipt.
+\end{enumerate}
+
+\section{Receipt, suspended ticket, cancellation, close}
+\SaulFigure{\ShotPath{sales_suspended_ticket_01.png}}{Screen: Suspended ticket}{fig:sales-suspended}
+\SaulFigure{\ShotPath{sales_shift_close_01.png}}{Screen: Shift close}{fig:sales-close}
+
+\begin{warningbox}
+Sale cancellation should always preserve reason and responsible user. If enabled by your administrator, supervisor approval may be required.
+\end{warningbox}
+
+\subsection{Sales troubleshooting}
+\begin{longtable}{p{0.34\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Issue} & \textbf{Recommended action}\\
+\midrule
+\endhead
+Unexpected total & Review discount order and tax mode (inclusive/exclusive).\\
+Receipt not printed & Verify printer connection and queue; see Chapter~\ref{ch:troubleshooting}.\\
+Barcode not recognized & Clean scanner, validate code format, and search by SKU.\\
+\bottomrule
+\end{longtable}
+
+\chapter{Returns, Refunds, and Exchanges}\label{ch:returns}
+\section{Return by receipt}
+\SaulFigure{\ShotPath{returns_by_receipt_01.png}}{Screen: Return by receipt}{fig:returns-receipt}
+
+\begin{enumerate}
+  \item Locate original sale by receipt number/date.
+  \item Select return items (full or partial).
+  \item Set restocking status.
+  \item Confirm refund method and amount.
+\end{enumerate}
+
+\section{No-receipt return, partial return, exchange}
+\SaulFigure{\ShotPath{returns_exchange_flow_01.png}}{Screen: Exchange workflow}{fig:returns-exchange}
+
+If no-receipt returns are enabled by your administrator, enforce thresholds and approval policy.
+
+\begin{warningbox}
+Never skip the audit trail: record operator, reason, timestamp, and reference to original sale when available.
+\end{warningbox}
+
+\chapter{Inventory Operations}\label{ch:inventory}
+\section{Stock adjustments}
+\SaulFigure{\ShotPath{inventory_stock_adjustment_01.png}}{Screen: Stock adjustment}{fig:inventory-adjustment}
+
+Use adjustments only for verified discrepancies, not as a substitute for receiving or sales transactions.
+
+\section{Receiving purchases}
+\SaulFigure{\ShotPath{inventory_purchase_receiving_01.png}}{Screen: Purchase receiving}{fig:inventory-receiving}
+
+\begin{enumerate}
+  \item Capture purchase reference.
+  \item Compare ordered vs received quantities.
+  \item Record shortages/overages.
+  \item Confirm inventory intake.
+\end{enumerate}
+
+\section{Stock counts and low-stock alerts}
+\SaulFigure{\ShotPath{inventory_cycle_count_01.png}}{Screen: Physical stock count}{fig:inventory-count}
+
+If low-stock alerts are enabled by your administrator, review critical items every day.
+
+\chapter{Reports and Analytics}\label{ch:reports}
+\section{Operational reports}
+\SaulFigure{\ShotPath{reports_sales_summary_01.png}}{Screen: Sales summary report}{fig:reports-sales}
+\SaulFigure{\ShotPath{reports_tax_01.png}}{Screen: Tax report}{fig:reports-tax}
+
+Daily reporting baseline:
+\begin{itemize}
+  \item Sales summary by period.
+  \item Top products.
+  \item Discounts report.
+  \item Tax report.
+  \item Cashier performance report.
+\end{itemize}
+
+\section{Exporting reports}
+If enabled by your administrator, export reports in standard formats (for example CSV or PDF) for audit and backup processes.
+
+\section{Recommended management KPIs}
+Use a weekly dashboard with simple, repeatable indicators:
+\begin{longtable}{p{0.32\textwidth}p{0.30\textwidth}p{0.32\textwidth}}
+\toprule
+\textbf{KPI} & \textbf{Base formula} & \textbf{Decision supported}\\
+\midrule
+\endhead
+Average ticket & Net sales / Number of tickets & Identify upsell opportunities.\\
+Estimated gross margin & (Net sales - Estimated cost) / Net sales & Monitor operating profitability.\\
+Discount rate & Total discounts / Gross sales & Enforce pricing discipline.\\
+Return rate & Returned amount / Net sales & Detect quality or fulfillment issues.\\
+\bottomrule
+\end{longtable}
+
+\begin{notebox}
+Do not compare KPIs across periods that used different tax or discount rules. Keep policy stable for historical analysis.
+\end{notebox}
+
+\chapter{Administration and Settings}\label{ch:administration}
+\section{Users and roles}
+\SaulFigure{\ShotPath{admin_users_roles_01.png}}{Screen: Users and role matrix}{fig:admin-users}
+
+Best practices:
+\begin{itemize}
+  \item Individual credentials per employee.
+  \item No shared accounts.
+  \item Monthly permission review.
+\end{itemize}
+
+\section{Store, tax, receipt, integration settings}
+\SaulFigure{\ShotPath{admin_store_settings_01.png}}{Screen: Store settings}{fig:admin-store}
+
+Configure currency, time zone, taxes, and receipt templates. Integrations are optional and depend on enabled modules.
+
+\chapter{Troubleshooting and FAQ}\label{ch:troubleshooting}
+\section{Frequent incidents}
+\SaulFigure{\ShotPath{faq_printer_diagnostics_01.png}}{Screen: Printer diagnostics}{fig:faq-printer}
+
+\begin{longtable}{p{0.34\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Problem} & \textbf{Quick response}\\
+\midrule
+\endhead
+Cannot log in & Check username/password, keyboard case, and local network status.\\
+Printer does not respond & Check power, cables, and default printer assignment.\\
+Barcode scan fails & Check label quality, barcode symbology, and scanner lens.\\
+Totals mismatch & Validate rounding policy, discount order, and tax setup.\\
+Refund blocked & Sale may be outside return window or user lacks permission.\\
+\bottomrule
+\end{longtable}
+
+\section{Backup and performance}
+\begin{tipbox}
+Schedule daily backups and test restore at least monthly.
+\end{tipbox}
+
+\begin{notebox}
+If performance degrades, reduce concurrent applications, verify local network stability, and narrow report date ranges.
+\end{notebox}
+
+\chapter{Role-Based Operations and Internal Controls}\label{ch:role-controls}
+\section{Cashier operating routine}
+Recommended shift routine:
+\begin{enumerate}
+  \item Confirm register opening and opening cash float.
+  \item Verify printer, scanner, and payment methods are available.
+  \item Process sales with individual credentials only.
+  \item Escalate exceptions (high discounts, no-receipt returns) to supervisor.
+  \item Run pre-close reconciliation before final shift close.
+\end{enumerate}
+
+\section{Supervisor approval matrix}
+\SaulFigure{\ShotPath{roles_approval_matrix_01.png}}{Screen: Supervisor approval matrix}{fig:roles-matrix}
+
+\begin{longtable}{p{0.34\textwidth}p{0.24\textwidth}p{0.36\textwidth}}
+\toprule
+\textbf{Event} & \textbf{Suggested level} & \textbf{Minimum control}\\
+\midrule
+\endhead
+Discount above normal threshold & Supervisor & Mandatory reason and authorizing user.\\
+Cancellation after payment & Supervisor or administrator & Receipt reference and audit trace.\\
+No-receipt return & Supervisor & Amount limit plus customer identification.\\
+High-impact inventory adjustment & Administrator & Dual validation and physical evidence.\\
+\bottomrule
+\end{longtable}
+
+\section{Catalog governance by administrators}
+To prevent large-scale pricing errors:
+\begin{itemize}
+  \item Define maintenance windows for price updates.
+  \item Freeze catalog edits during peak hours.
+  \item Validate in test environment when available.
+  \item Record date, owner, and reason for each mass change.
+\end{itemize}
+
+\section{Audit log review and traceability}
+\SaulFigure{\ShotPath{roles_audit_log_01.png}}{Screen: Audit log review}{fig:roles-audit}
+
+\begin{warningbox}
+Any transaction without traceability (missing user, reason, or reference) should be treated as an internal control incident.
+\end{warningbox}
+
+\chapter{Standard Operating Procedures (SOP)}\label{ch:sop}
+\section{SOP 01: Sale with customer queue}
+\begin{enumerate}
+  \item Keep one active sale per cashier.
+  \item Scan, confirm quantity, and announce subtotal before payment.
+  \item If the customer requests changes, stop payment and re-confirm final amount.
+  \item Deliver receipt before starting the next customer.
+\end{enumerate}
+
+\section{SOP 02: Price mismatch at checkout}
+\begin{enumerate}
+  \item Pause the transaction.
+  \item Verify catalog price and shelf evidence.
+  \item Apply active policy (displayed price vs system price per internal rule).
+  \item Save an operational note for catalog follow-up.
+\end{enumerate}
+
+\section{SOP 03: Network or service outage contingency}
+\SaulFigure{\ShotPath{sop_network_contingency_01.png}}{Screen: Network outage contingency workflow}{fig:sop-network}
+
+\begin{enumerate}
+  \item Determine whether the issue impacts one register or the full store.
+  \item Notify supervisor and activate local protocol.
+  \item If enabled by your administrator, continue in contingency mode.
+  \item Reconcile pending transactions after service recovery.
+\end{enumerate}
+
+\begin{warningbox}
+Never duplicate charges manually. Before retrying payment, verify final status of the original ticket.
+\end{warningbox}
+
+\section{SOP 04: Daily close with multiple registers}
+\begin{enumerate}
+  \item Run pre-close at each register.
+  \item Consolidate sales, discounts, returns, and cash withdrawals.
+  \item Document variances and responsible users.
+  \item Close each register, then execute store-level close.
+  \item Export key reports (sales, taxes, discounts, returns).
+\end{enumerate}
+
+\begin{tipbox}
+A short 10-minute end-of-day review helps teams fix recurring issues before the next shift.
+\end{tipbox}
+
+\chapter{Glossary}\label{ch:glossary}
+\begin{SaulGlossary}
+\GlossaryEntry{Audit trail}{Record of who did what, when, and why.}
+\GlossaryEntry{Barcode}{Machine-readable code used to identify products quickly.}
+\GlossaryEntry{Category}{Logical grouping of products for search and reporting.}
+\GlossaryEntry{Cost}{Internal acquisition/production value of an item.}
+\GlossaryEntry{Discount}{Price reduction applied at line or ticket level.}
+\GlossaryEntry{Exchange}{Replacement of returned item with another item.}
+\GlossaryEntry{Inventory adjustment}{Manual stock correction after discrepancy review.}
+\GlossaryEntry{Receipt}{Proof of sale provided to the customer.}
+\GlossaryEntry{SKU}{Unique internal product identifier.}
+\GlossaryEntry{Split payment}{Single sale paid with multiple payment methods.}
+\GlossaryEntry{Stock on hand}{Current sellable quantity in inventory.}
+\GlossaryEntry{Tax-inclusive price}{Displayed price already contains tax.}
+\GlossaryEntry{Tax-exclusive price}{Tax is added at checkout.}
+\GlossaryEntry{Top products}{Best-selling items by units or revenue.}
+\GlossaryEntry{Return window}{Configured period in which returns are allowed.}
+\end{SaulGlossary}
+
+\appendix
+\chapter{Screenshot Checklist}\label{app:screenshots}
+All screenshots should be stored under \texttt{manual/images/placeholders/en/} using the exact names below.
+
+\begin{longtable}{p{0.38\textwidth}p{0.44\textwidth}p{0.12\textwidth}}
+\toprule
+\textbf{File} & \textbf{What it should show} & \textbf{Priority}\\
+\midrule
+\endhead
+\ShotRef{introduction_main_dashboard_01.png} & Main system dashboard. & High\\
+\ShotRef{concepts_discount_line_01.png} & Line discount application. & High\\
+\ShotRef{getting_started_login_01.png} & Login form. & High\\
+\ShotRef{getting_started_setup_checklist_01.png} & Initial setup checklist. & Medium\\
+\ShotRef{catalog_new_product_01.png} & Product create/edit form. & High\\
+\ShotRef{catalog_categories_01.png} & Category/subcategory management. & Medium\\
+\ShotRef{customers_list_search_01.png} & Customer search/list. & High\\
+\ShotRef{customers_purchase_history_01.png} & Customer purchase history. & Medium\\
+\ShotRef{sales_register_open_01.png} & Register opening screen. & Medium\\
+\ShotRef{sales_new_sale_01.png} & Main new sale workflow. & High\\
+\ShotRef{sales_ticket_discount_01.png} & Ticket-level discount application. & High\\
+\ShotRef{sales_checkout_split_payment_01.png} & Split payment checkout. & High\\
+\ShotRef{sales_suspended_ticket_01.png} & Suspended ticket and resume flow. & Medium\\
+\ShotRef{sales_shift_close_01.png} & Shift close summary. & Medium\\
+\ShotRef{returns_by_receipt_01.png} & Return with receipt workflow. & High\\
+\ShotRef{returns_exchange_flow_01.png} & Exchange workflow. & Medium\\
+\ShotRef{inventory_stock_adjustment_01.png} & Stock adjustment screen. & High\\
+\ShotRef{inventory_purchase_receiving_01.png} & Purchase receiving workflow. & High\\
+\ShotRef{inventory_cycle_count_01.png} & Physical stock count. & Medium\\
+\ShotRef{reports_sales_summary_01.png} & Sales summary report. & High\\
+\ShotRef{reports_tax_01.png} & Tax report. & High\\
+\ShotRef{admin_users_roles_01.png} & Users and permissions matrix. & High\\
+\ShotRef{admin_store_settings_01.png} & Store settings. & High\\
+\ShotRef{faq_printer_diagnostics_01.png} & Printer troubleshooting panel. & Medium\\
+\ShotRef{roles_approval_matrix_01.png} & Supervisor exception and approval matrix. & High\\
+\ShotRef{roles_audit_log_01.png} & Audit log for critical transaction review. & High\\
+\ShotRef{sop_network_contingency_01.png} & Business continuity flow during outage. & Medium\\
+\ShotRef{support_contact_01.png} & Support/contact page. & Low\\
+\bottomrule
+\end{longtable}
+
+\chapter{Quick Reference}\label{app:quick-reference}
+\textbf{Start a sale in under 30 seconds}
+\begin{enumerate}
+  \item Log in and confirm active register.
+  \item Create a new sale.
+  \item Scan items.
+  \item Confirm amount due and collect payment.
+  \item Issue receipt.
+\end{enumerate}
+
+\textbf{Process a return with receipt}
+\begin{enumerate}
+  \item Locate original receipt.
+  \item Select items and return reason.
+  \item Confirm refund method.
+  \item Save transaction with audit data.
+\end{enumerate}
+
+\textbf{Daily close}
+\begin{enumerate}
+  \item Review daily sales.
+  \item Reconcile cash drawer.
+  \item Execute shift close.
+  \item Export key reports (sales, discounts, taxes).
+\end{enumerate}
+
+\chapter{Keyboard Shortcuts (optional)}\label{app:shortcuts}
+Shortcuts may differ by version/configuration.
+
+\begin{longtable}{p{0.24\textwidth}p{0.70\textwidth}}
+\toprule
+\textbf{Shortcut} & \textbf{Expected action}\\
+\midrule
+\endhead
+\texttt{F2} & Start new sale.\\
+\texttt{F4} & Search product.\\
+\texttt{F6} & Apply discount (if enabled and authorized).\\
+\texttt{F8} & Go to checkout.\\
+\texttt{Ctrl+P} & Reprint last receipt (if allowed).\\
+\bottomrule
+\end{longtable}
+
+\chapter{Support and Contact}\label{app:support}
+\SaulFigure{\ShotPath{support_contact_01.png}}{Screen: Support and contact}{fig:support-contact}
+
+Suggested organization-specific fields:
+\begin{itemize}
+  \item Support email: \texttt{[support@your-domain.com]}
+  \item Support phone: \texttt{[+00 0000 0000]}
+  \item Support hours: \texttt{[Mon-Fri 09:00-18:00]}
+  \item Target response time: \texttt{[for example 4 business hours]}
+\end{itemize}
+
+\begin{notebox}
+For critical incidents, record date/time, branch, register, user, reproduction steps, and evidence.
+\end{notebox}
+
+\end{document}

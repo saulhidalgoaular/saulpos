@@ -1,0 +1,64 @@
+% Shared style for SaulPOS manuals.
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\usepackage[a4paper,margin=2.5cm,headheight=15pt]{geometry}
+\usepackage{microtype}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{tabularx}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{tcolorbox}
+\tcbuselibrary{breakable}
+\usepackage{caption}
+\usepackage{etoolbox}
+\usepackage{float}
+\usepackage{multirow}
+\usepackage{makecell}
+\usepackage{lastpage}
+
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{Latin Modern Mono}
+
+\definecolor{SaulBlue}{HTML}{0B3A53}
+\definecolor{SaulTeal}{HTML}{0F766E}
+\definecolor{SaulNote}{HTML}{1D4ED8}
+\definecolor{SaulWarn}{HTML}{B45309}
+\definecolor{SaulTip}{HTML}{166534}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=SaulBlue,
+  urlcolor=SaulTeal,
+  citecolor=SaulBlue,
+  pdfauthor={Saul Technologies}
+}
+
+\setlist[itemize]{leftmargin=1.2cm,itemsep=0.3em,topsep=0.4em}
+\setlist[enumerate]{leftmargin=1.2cm,itemsep=0.3em,topsep=0.4em}
+
+\captionsetup{font=small,labelfont=bf}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\nouppercase{\leftmark}}
+\fancyhead[R]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\Huge\color{SaulBlue}}
+  {\filleft\Large\chaptername\ \thechapter}
+  {1ex}
+  {\filright}
+  [\vspace{1ex}\titlerule]
+
+\setlength{\parskip}{0.5em}
+\setlength{\parindent}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}

@@ -1,0 +1,88 @@
+% Shared macros for both manuals.
+\newcommand{\SaulLogo}[1][0.28\textwidth]{%
+  \IfFileExists{../images/logo/saul-technologies-logo.png}{%
+    \includegraphics[width=#1]{../images/logo/saul-technologies-logo.png}%
+  }{%
+    \fbox{\begin{minipage}[c][3.2cm][c]{0.60\textwidth}
+      \centering
+      Saul Technologies\\
+      Logo file missing:\\
+      \texttt{\detokenize{../images/logo/saul-technologies-logo.png}}
+    \end{minipage}}%
+  }%
+}
+
+\newcommand{\SaulCoverPage}[4]{%
+  \begin{titlepage}
+    \thispagestyle{empty}
+    \begin{center}
+      \vspace*{1.7cm}
+      \SaulLogo[0.30\textwidth]\\[1.3cm]
+      {\Huge\bfseries #1\par}
+      \vspace{0.4cm}
+      {\Large #2\par}
+      \vfill
+      {\large \CompanyName\par}
+      \vspace{0.2cm}
+      {\large #3\par}
+      {\large #4\par}
+    \end{center}
+  \end{titlepage}
+}
+
+\newtcolorbox{tipbox}{
+  breakable,
+  colback=SaulTip!8!white,
+  colframe=SaulTip!65!black,
+  title=\TipWord,
+  fonttitle=\bfseries
+}
+
+\newtcolorbox{warningbox}{
+  breakable,
+  colback=SaulWarn!8!white,
+  colframe=SaulWarn!70!black,
+  title=\WarningWord,
+  fonttitle=\bfseries
+}
+
+\newtcolorbox{notebox}{
+  breakable,
+  colback=SaulNote!6!white,
+  colframe=SaulNote!70!black,
+  title=\NoteWord,
+  fonttitle=\bfseries
+}
+
+\newcommand{\SaulFigure}[3]{%
+  \begin{figure}[H]
+    \centering
+    \IfFileExists{#1}{%
+      \includegraphics[width=0.92\linewidth]{#1}%
+    }{%
+      \fbox{\begin{minipage}[c][0.30\textheight][c]{0.88\linewidth}
+        \centering
+        \textbf{Screenshot Placeholder}\\[0.6em]
+        \texttt{\detokenize{#1}}
+      \end{minipage}}%
+    }
+    \caption{#2}
+    \label{#3}
+    \vspace{0.4em}
+
+    {\footnotesize\texttt{[FIGURE: \detokenize{#1} - "#2"]}}
+  \end{figure}
+}
+
+\newenvironment{SaulGlossary}{%
+  \begin{longtable}{p{0.30\textwidth}p{0.64\textwidth}}
+  \toprule
+  \textbf{\GlossaryTermHeader} & \textbf{\GlossaryDefinitionHeader}\\
+  \midrule
+  \endhead
+}{%
+  \bottomrule
+  \end{longtable}
+}
+
+\newcommand{\GlossaryEntry}[2]{\textbf{#1} & #2\\\addlinespace}

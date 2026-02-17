@@ -1,0 +1,612 @@
+\documentclass[11pt,oneside]{book}
+
+\input{../shared/style.tex}
+\setdefaultlanguage{spanish}
+\setotherlanguage{english}
+\input{../shared/terms-es.tex}
+\input{../shared/macros.tex}
+
+\newcommand{\ManualVersion}{1.0.0}
+\newcommand{\SoftwareVersion}{[Completar: versión de SaulPOS]}
+\newcommand{\ManualDate}{\today}
+\newcommand{\ShotPath}[1]{../images/placeholders/es/#1}
+\newcommand{\ShotRef}[1]{\texttt{\detokenize{es/#1}}}
+
+\begin{document}
+
+\frontmatter
+\SaulCoverPage{\ManualTitleText}{\ManualSubtitleText}{Versión del manual: \ManualVersion}{Fecha: \ManualDate}
+
+\thispagestyle{empty}
+\vspace*{3cm}
+{\Large \textbf{Derechos de autor}}\\[0.8em]
+\SaulPOS{} y su documentación son propiedad de \CompanyName.\\
+Todos los derechos reservados. Ninguna parte de este documento puede reproducirse sin autorización escrita, excepto para uso interno de capacitación en el negocio licenciatario.\\[1em]
+Primera edición interna.
+\clearpage
+
+\thispagestyle{empty}
+{\Large \textbf{Página de versión}}\\[1.0em]
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.36\textwidth}Y}
+Versión del manual & \ManualVersion \\
+Versión del software & \SoftwareVersion \\
+Fecha de publicación & \ManualDate \\
+Idioma & Español \\
+Audiencia & Cajeros, supervisores, administradores y dueños de negocio \\
+\end{tabularx}
+\clearpage
+
+\tableofcontents
+\listoffigures
+\clearpage
+
+\mainmatter
+
+\chapter{Introducción}\label{ch:intro}
+\section{¿Qué es \SaulPOS?}
+\SaulPOS{} es un sistema de punto de venta diseñado para registrar ventas, controlar inventario, gestionar clientes y producir reportes operativos diarios. Su enfoque es práctico: reducir errores en caja y dar trazabilidad a cada movimiento.
+
+\section{¿Para quién es este manual?}
+Este libro está orientado a:
+\begin{itemize}
+  \item Personas cajeras con conocimientos básicos de computadora.
+  \item Supervisores que validan descuentos, devoluciones y cierres.
+  \item Administradores responsables de catálogos, impuestos y usuarios.
+  \item Dueños de negocio que revisan indicadores y reglas de operación.
+\end{itemize}
+
+\section{Beneficios clave}
+\begin{itemize}
+  \item Flujo de venta repetible y auditable.
+  \item Reglas claras para descuentos, impuestos y devoluciones.
+  \item Reducción de pérdidas por diferencias de inventario.
+  \item Información consolidada para toma de decisiones.
+\end{itemize}
+
+\section{Visión general del sistema}
+\SaulFigure{\ShotPath{introduccion_panel_principal_01.png}}{Pantalla: Panel principal del sistema}{fig:intro-panel}
+
+\begin{notebox}
+Aunque las pantallas reales pueden variar por versión o configuración, los principios operativos de este manual se mantienen.
+\end{notebox}
+
+\chapter{Conceptos Fundamentales}\label{ch:conceptos}
+\section{Productos y servicios}
+Un \TermProduct{} es un artículo físico que afecta inventario. Un \TermService{} no descuenta stock, pero sí impacta ventas e impuestos si está gravado.
+
+\section{Categorías y subcategorías}
+Las categorías agrupan productos para facilitar búsqueda, promociones y reportes. Ejemplo: \emph{Bebidas} $\rightarrow$ \emph{Jugos}.
+
+\section{Clientes}
+El registro de clientes permite historial de compra, notas y campañas comerciales. Si el módulo de crédito está habilitado por el administrador, también permite cuentas por cobrar.
+
+\section{Precio, costo y margen}
+\begin{longtable}{p{0.28\textwidth}p{0.66\textwidth}}
+\toprule
+\textbf{\RulesWord} & \textbf{\DetailWord}\\
+\midrule
+\endhead
+Precio de venta & Monto cobrado al cliente antes o después de impuestos, según configuración.\\
+Costo & Valor interno usado para utilidad y valoración de inventario.\\
+Margen bruto & Relación entre precio y costo. No reemplaza la utilidad neta.\\
+\bottomrule
+\end{longtable}
+
+\section{Descuentos}
+\subsection{Porcentaje vs monto fijo}
+\begin{longtable}{p{0.30\textwidth}p{0.30\textwidth}p{0.34\textwidth}}
+\toprule
+\textbf{Tipo} & \textbf{\ExampleWord} & \textbf{\ResultWord}\\
+\midrule
+\endhead
+Porcentaje & 10\% sobre \$50.00 & Descuento \$5.00, nuevo subtotal \$45.00.\\
+Monto fijo & \$5.00 sobre \$50.00 & Nuevo subtotal \$45.00.\\
+\bottomrule
+\end{longtable}
+
+\subsection{Por artículo vs por ticket}
+\begin{itemize}
+  \item \textbf{Por artículo}: aplica solo a la línea seleccionada.
+  \item \textbf{Por ticket}: aplica al total de la venta.
+\end{itemize}
+
+\subsection{Reglas de acumulación y redondeo}
+\begin{warningbox}
+Regla recomendada por defecto: no acumular dos descuentos manuales sobre la misma línea. Si su operación requiere acumulación, valide el impacto con su supervisor.
+\end{warningbox}
+
+\begin{tipbox}
+Defina una única política de redondeo (por línea o al total) y úsela siempre. Cambiarla a mitad de mes complica conciliaciones.
+\end{tipbox}
+
+\SaulFigure{\ShotPath{conceptos_descuento_item_01.png}}{Pantalla: Aplicación de descuento por artículo}{fig:conceptos-descuento}
+
+\section{Impuestos}
+\begin{itemize}
+  \item \textbf{Incluido}: el precio visible ya contiene impuesto.
+  \item \textbf{Excluido}: el impuesto se agrega al final.
+  \item \textbf{Exenciones}: disponibles si están habilitadas por el administrador y justificadas por normativa local.
+\end{itemize}
+
+\section{Inventario}
+Conceptos base:
+\begin{itemize}
+  \item \textbf{Stock disponible}: unidades vendibles.
+  \item \textbf{Ajuste}: corrección por merma, conteo o error.
+  \item \textbf{Recepción}: ingreso desde compra a proveedor.
+  \item \textbf{Transferencia}: movimiento entre sucursales, si está habilitado.
+\end{itemize}
+
+\section{Métodos de pago}
+Caja, tarjeta y transferencia son métodos comunes. Si la configuración lo permite, puede dividir el cobro entre varios métodos.
+
+\section{Devoluciones y reembolsos}
+El plazo de devolución es configurable. Siempre documente motivo y referencia del comprobante.
+
+\section{Roles y permisos}
+\begin{itemize}
+  \item \TermCashier: vende y cobra.
+  \item \TermSupervisor: autoriza excepciones y revisa cierres.
+  \item \TermAdmin: configura catálogos, impuestos, usuarios y políticas.
+\end{itemize}
+
+\chapter{Primeros Pasos}\label{ch:inicio}
+\section{Acceso al sistema}
+\SaulFigure{\ShotPath{inicio_sesion_01.png}}{Pantalla: Inicio de sesión}{fig:inicio-login}
+
+\begin{enumerate}
+  \item Ingrese usuario y contraseña.
+  \item Verifique que la sucursal y caja sean correctas.
+  \item Confirme que la fecha/hora del equipo sea correcta.
+\end{enumerate}
+
+\section{Checklist de configuración inicial}
+\SaulFigure{\ShotPath{configuracion_inicial_01.png}}{Pantalla: Lista de configuración inicial}{fig:inicio-config}
+
+\begin{longtable}{p{0.35\textwidth}p{0.59\textwidth}}
+\toprule
+\textbf{Elemento} & \textbf{Objetivo}\\
+\midrule
+\endhead
+Moneda & Evitar diferencias de símbolos y decimales en tickets/reportes.\\
+Impuestos & Asegurar cálculo legal y consistencia contable.\\
+Pie de recibo & Incluir mensajes comerciales o fiscales requeridos.\\
+Métodos de pago & Limitar opciones a las realmente aceptadas.\\
+Usuarios y roles & Controlar qué puede hacer cada perfil.\\
+\bottomrule
+\end{longtable}
+
+\section{Perfil de negocio y ajustes opcionales}
+Si está habilitado por el administrador, complete datos fiscales del negocio, horarios y plantilla de recibo.
+
+\chapter{Gestión de Catálogo}\label{ch:catalogo}
+\section{Crear y editar productos}
+\SaulFigure{\ShotPath{catalogo_producto_nuevo_01.png}}{Pantalla: Alta de producto}{fig:catalogo-producto}
+
+Campos recomendados para cualquier producto:
+\begin{itemize}
+  \item Nombre claro.
+  \item SKU interno.
+  \item Código de barras.
+  \item Categoría.
+  \item Precio de venta y costo.
+  \item Estado (activo/inactivo).
+\end{itemize}
+
+\section{Variantes, códigos de barras y categorías}
+\SaulFigure{\ShotPath{catalogo_categorias_01.png}}{Pantalla: Gestión de categorías}{fig:catalogo-categorias}
+
+Si está habilitado por el administrador, utilice variantes para talla/color. Cada variante debe tener identificador único.
+
+\section{Listas de precios, promociones e importación}
+Opciones usuales según configuración:
+\begin{itemize}
+  \item Lista de precio por canal o tipo de cliente.
+  \item Promociones por periodo.
+  \item Importación/exportación por archivo para altas masivas.
+\end{itemize}
+
+\chapter{Gestión de Clientes}\label{ch:clientes}
+\section{Alta y búsqueda de clientes}
+\SaulFigure{\ShotPath{clientes_lista_01.png}}{Pantalla: Listado y búsqueda de clientes}{fig:clientes-lista}
+
+\begin{enumerate}
+  \item Registre nombre y dato de contacto mínimo.
+  \item Agregue identificación fiscal si aplica.
+  \item Guarde y valide que el cliente aparezca en la búsqueda.
+\end{enumerate}
+
+\section{Historial y crédito (opcional)}
+\SaulFigure{\ShotPath{clientes_historial_01.png}}{Pantalla: Historial de compras del cliente}{fig:clientes-historial}
+
+Si el crédito está habilitado por el administrador, defina límite y plazo. Revise antigüedad de saldos semanalmente.
+
+\chapter{Flujo de Ventas}\label{ch:ventas}
+\section{Apertura de caja o turno (opcional)}
+\SaulFigure{\ShotPath{ventas_abrir_caja_01.png}}{Pantalla: Apertura de caja}{fig:ventas-apertura}
+
+\begin{enumerate}
+  \item Registre fondo inicial.
+  \item Verifique impresora y escáner.
+  \item Confirme método para registrar gastos de caja.
+\end{enumerate}
+
+\section{Nueva venta: procedimiento completo}
+\SaulFigure{\ShotPath{ventas_nueva_venta_01.png}}{Pantalla: Nueva venta}{fig:ventas-nueva}
+
+\begin{enumerate}
+  \item Seleccione la opción para crear una nueva venta.
+  \item Agregue productos escaneando código o usando búsqueda.
+  \item Ajuste cantidades según solicitud del cliente.
+  \item Si corresponde, aplique descuento por línea o por ticket.
+  \item Verifique impuestos y subtotal antes de cobrar.
+  \item Agregue nota de operación cuando sea necesaria.
+\end{enumerate}
+
+\SaulFigure{\ShotPath{ventas_descuento_ticket_01.png}}{Pantalla: Descuento aplicado al ticket}{fig:ventas-descuento-ticket}
+
+\subsection{Ejemplo numérico completo}
+\begin{longtable}{p{0.40\textwidth}p{0.54\textwidth}}
+\toprule
+\textbf{Paso} & \textbf{Cálculo}\\
+\midrule
+\endhead
+Subtotal inicial & 2 artículos de \$30.00 + 1 artículo de \$40.00 = \$100.00 \\
+Descuento por ticket & 10\% de \$100.00 = \$10.00 \\
+Subtotal con descuento & \$90.00 \\
+Impuesto excluido 16\% & \$14.40 \\
+Total a pagar & \$104.40 \\
+\bottomrule
+\end{longtable}
+
+\section{Cobro y pagos divididos}
+\SaulFigure{\ShotPath{ventas_checkout_pago_dividido_01.png}}{Pantalla: Cobro con pago dividido}{fig:ventas-pago-dividido}
+
+\begin{enumerate}
+  \item Ingrese monto por primer método (ej. efectivo).
+  \item Ingrese monto restante por segundo método (ej. tarjeta).
+  \item Verifique cambio a entregar en efectivo.
+  \item Confirme y emita comprobante.
+\end{enumerate}
+
+\section{Recibo, ticket suspendido, cancelación y cierre}
+\SaulFigure{\ShotPath{ventas_ticket_suspendido_01.png}}{Pantalla: Ticket suspendido}{fig:ventas-suspendido}
+\SaulFigure{\ShotPath{ventas_cierre_turno_01.png}}{Pantalla: Cierre de turno}{fig:ventas-cierre}
+
+\begin{warningbox}
+La cancelación de venta debe conservar motivo y usuario responsable. Si está habilitado por el administrador, puede requerir autorización de supervisor.
+\end{warningbox}
+
+\subsection{Problemas frecuentes en venta}
+\begin{longtable}{p{0.34\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Situación} & \textbf{Acción recomendada}\\
+\midrule
+\endhead
+El total no coincide con expectativa & Revise orden de descuentos y modo de impuesto (incluido/excluido).\\
+No imprime ticket & Verifique conexión de impresora y cola de impresión; consulte Capítulo~\ref{ch:faq}.\\
+Escáner no lee código & Limpie lector, confirme formato y pruebe búsqueda manual por SKU.\\
+\bottomrule
+\end{longtable}
+
+\chapter{Devoluciones, Reembolsos y Cambios}\label{ch:devoluciones}
+\section{Devolución con comprobante}
+\SaulFigure{\ShotPath{devoluciones_por_recibo_01.png}}{Pantalla: Devolución por recibo}{fig:devoluciones-recibo}
+
+\begin{enumerate}
+  \item Busque la venta original por folio o fecha.
+  \item Seleccione artículos a devolver (total o parcial).
+  \item Defina estado del artículo devuelto (reintegrable/no reintegrable).
+  \item Confirme método de reembolso y monto.
+\end{enumerate}
+
+\section{Devolución sin comprobante, parcial y cambios}
+\SaulFigure{\ShotPath{devoluciones_cambio_01.png}}{Pantalla: Flujo de cambio de producto}{fig:devoluciones-cambio}
+
+Si la política de devolución sin comprobante está habilitada por el administrador, aplique límites de monto y autorización.
+
+\begin{warningbox}
+No omita el rastro de auditoría: cada devolución debe registrar usuario, motivo, fecha y referencia de ticket cuando exista.
+\end{warningbox}
+
+\chapter{Operaciones de Inventario}\label{ch:inventario}
+\section{Ajustes de stock}
+\SaulFigure{\ShotPath{inventario_ajuste_stock_01.png}}{Pantalla: Ajuste de inventario}{fig:inventario-ajuste}
+
+Use ajustes solo para corregir diferencias verificadas, no como reemplazo de recepciones o ventas.
+
+\section{Recepción de compras}
+\SaulFigure{\ShotPath{inventario_recepcion_compra_01.png}}{Pantalla: Recepción de compra}{fig:inventario-recepcion}
+
+\begin{enumerate}
+  \item Capture documento de compra.
+  \item Compare unidades recibidas vs ordenadas.
+  \item Registre faltantes/sobrantes.
+  \item Confirme ingreso a inventario.
+\end{enumerate}
+
+\section{Conteos físicos y alertas}
+\SaulFigure{\ShotPath{inventario_conteo_fisico_01.png}}{Pantalla: Conteo físico de inventario}{fig:inventario-conteo}
+
+Si las alertas de mínimo están habilitadas por el administrador, revise diariamente los productos críticos.
+
+\chapter{Reportes y Analítica}\label{ch:reportes}
+\section{Reportes operativos principales}
+\SaulFigure{\ShotPath{reportes_resumen_ventas_01.png}}{Pantalla: Resumen de ventas}{fig:reportes-resumen}
+\SaulFigure{\ShotPath{reportes_impuestos_01.png}}{Pantalla: Reporte de impuestos}{fig:reportes-impuestos}
+
+Reportes recomendados por cierre diario:
+\begin{itemize}
+  \item Resumen de ventas por periodo.
+  \item Productos más vendidos.
+  \item Reporte de descuentos.
+  \item Reporte de impuestos.
+  \item Desempeño por cajero.
+\end{itemize}
+
+\section{Exportación de reportes}
+Si la exportación está habilitada por el administrador, utilice formatos estándar (por ejemplo CSV o PDF) para auditoría y respaldo.
+
+\section{Indicadores recomendados para gestión}
+Use un tablero semanal con indicadores simples y repetibles:
+\begin{longtable}{p{0.32\textwidth}p{0.30\textwidth}p{0.32\textwidth}}
+\toprule
+\textbf{Indicador} & \textbf{Fórmula base} & \textbf{Decisión que soporta}\\
+\midrule
+\endhead
+Ticket promedio & Ventas netas / Número de tickets & Detectar oportunidades de venta sugerida.\\
+Margen bruto estimado & (Ventas netas - Costo estimado) / Ventas netas & Medir rentabilidad operativa.\\
+Descuento sobre venta & Total descuentos / Ventas brutas & Controlar disciplina comercial.\\
+Tasa de devolución & Monto devuelto / Ventas netas & Detectar problemas de calidad o despacho.\\
+\bottomrule
+\end{longtable}
+
+\begin{notebox}
+No compare indicadores entre periodos con políticas distintas de descuento o impuesto. Para análisis histórico, mantenga reglas estables.
+\end{notebox}
+
+\chapter{Administración y Configuración}\label{ch:admin}
+\section{Usuarios y roles}
+\SaulFigure{\ShotPath{admin_usuarios_roles_01.png}}{Pantalla: Usuarios y roles}{fig:admin-roles}
+
+Buenas prácticas:
+\begin{itemize}
+  \item Cada usuario con credenciales individuales.
+  \item Evitar cuentas compartidas.
+  \item Revisar permisos al menos una vez por mes.
+\end{itemize}
+
+\section{Tienda, impuestos, recibos e integraciones}
+\SaulFigure{\ShotPath{admin_configuracion_tienda_01.png}}{Pantalla: Configuración general de tienda}{fig:admin-tienda}
+
+Configure moneda, zona horaria, impuestos y plantillas de recibo. Las integraciones externas son opcionales y dependen de licenciamiento y configuración.
+
+\chapter{Solución de Problemas y FAQ}\label{ch:faq}
+\section{Incidencias frecuentes}
+\SaulFigure{\ShotPath{faq_diagnostico_impresora_01.png}}{Pantalla: Diagnóstico de impresora}{fig:faq-impresora}
+
+\begin{longtable}{p{0.34\textwidth}p{0.60\textwidth}}
+\toprule
+\textbf{Problema} & \textbf{Respuesta rápida}\\
+\midrule
+\endhead
+No puedo iniciar sesión & Verifique usuario/clave, mayúsculas y estado de red local.\\
+La impresora no responde & Revise energía, cableado y dispositivo predeterminado.\\
+No se lee el código de barras & Verifique etiqueta, simbología y limpieza del lector.\\
+Totales no coinciden & Revise redondeo, orden de descuento e impuestos configurados.\\
+No permite reembolso & Puede estar fuera de ventana de devolución o sin permiso de rol.\\
+\bottomrule
+\end{longtable}
+
+\section{Respaldo y desempeño}
+\begin{tipbox}
+Programe respaldos diarios y valide restauración al menos una vez al mes.
+\end{tipbox}
+
+\begin{notebox}
+Si el sistema se vuelve lento, revise cantidad de programas abiertos, estado de red local y periodo de reportes seleccionado.
+\end{notebox}
+
+\chapter{Operación por Roles y Control Interno}\label{ch:roles}
+\section{Rutina operativa del cajero}
+Propuesta de rutina por turno:
+\begin{enumerate}
+  \item Confirmar apertura correcta de caja y fondo inicial.
+  \item Validar que impresora, escáner y métodos de pago estén disponibles.
+  \item Registrar ventas evitando usuarios compartidos.
+  \item Escalar excepciones (descuentos altos, devoluciones sin ticket) al supervisor.
+  \item Ejecutar pre-cierre y conciliación antes del cierre final.
+\end{enumerate}
+
+\section{Matriz de aprobaciones del supervisor}
+\SaulFigure{\ShotPath{roles_matriz_aprobaciones_01.png}}{Pantalla: Matriz de aprobaciones del supervisor}{fig:roles-matriz}
+
+\begin{longtable}{p{0.34\textwidth}p{0.24\textwidth}p{0.36\textwidth}}
+\toprule
+\textbf{Evento} & \textbf{Nivel sugerido} & \textbf{Control mínimo}\\
+\midrule
+\endhead
+Descuento superior al límite normal & Supervisor & Motivo obligatorio y usuario autorizador.\\
+Cancelación posterior al cobro & Supervisor o administrador & Referencia al ticket y bitácora de cambios.\\
+Devolución sin comprobante & Supervisor & Límite de monto + identificación del cliente.\\
+Ajuste de inventario de alto impacto & Administrador & Doble validación y evidencia física.\\
+\bottomrule
+\end{longtable}
+
+\section{Gobierno de catálogos por administración}
+Recomendación para evitar errores masivos:
+\begin{itemize}
+  \item Definir horario de mantenimiento para cambios de precio.
+  \item Congelar cambios durante horas pico.
+  \item Validar en ambiente de prueba cuando exista.
+  \item Documentar fecha, responsable y motivo de cada ajuste masivo.
+\end{itemize}
+
+\section{Revisión de bitácora y trazabilidad}
+\SaulFigure{\ShotPath{roles_bitacora_auditoria_01.png}}{Pantalla: Bitácora de auditoría}{fig:roles-bitacora}
+
+\begin{warningbox}
+Una operación sin trazabilidad (sin usuario, motivo o referencia) debe tratarse como incidente de control interno.
+\end{warningbox}
+
+\chapter{Procedimientos Estándar (SOP)}\label{ch:sop}
+\section{SOP 01: Venta con fila de clientes}
+\begin{enumerate}
+  \item Mantenga una sola venta activa por cajero.
+  \item Escanee, confirme cantidad y anuncie subtotal antes de cobrar.
+  \item Si el cliente solicita cambios, detenga el cobro y confirme nuevamente el total.
+  \item Entregue ticket y agradezca antes de iniciar el siguiente cliente.
+\end{enumerate}
+
+\section{SOP 02: Diferencia de precio en caja}
+\begin{enumerate}
+  \item Detenga temporalmente la operación.
+  \item Verifique precio del catálogo y evidencia en anaquel.
+  \item Aplique política comercial vigente (precio exhibido o precio de sistema según norma interna).
+  \item Registre nota con motivo para seguimiento de catálogo.
+\end{enumerate}
+
+\section{SOP 03: Contingencia de red o servicios}
+\SaulFigure{\ShotPath{sop_contingencia_red_01.png}}{Pantalla: Procedimiento de contingencia por falla de red}{fig:sop-red}
+
+\begin{enumerate}
+  \item Identifique si la falla afecta solo una caja o toda la sucursal.
+  \item Notifique al supervisor y active protocolo local.
+  \item Si está habilitado por el administrador, continúe con modo contingencia.
+  \item Al restablecer servicio, reconcilie operaciones pendientes.
+\end{enumerate}
+
+\begin{warningbox}
+Nunca duplique manualmente cobros ya registrados. Antes de repetir una transacción, confirme estado final del ticket.
+\end{warningbox}
+
+\section{SOP 04: Cierre diario con múltiples cajas}
+\begin{enumerate}
+  \item Ejecute pre-cierre por caja.
+  \item Consolide ventas, descuentos, devoluciones y retiros.
+  \item Documente diferencias y responsables.
+  \item Cierre cada caja y luego cierre de sucursal.
+  \item Exportar reportes clave (ventas, impuestos, descuentos, devoluciones).
+\end{enumerate}
+
+\begin{tipbox}
+Una reunión breve de 10 minutos al final del día acelera correcciones para el siguiente turno.
+\end{tipbox}
+
+\chapter{Glosario}\label{ch:glosario}
+\begin{SaulGlossary}
+\GlossaryEntry{Ajuste de inventario}{Corrección manual de existencias por diferencia detectada.}
+\GlossaryEntry{Barcode / Código de barras}{Representación gráfica para identificar productos al escanear.}
+\GlossaryEntry{Categoría}{Agrupación lógica de productos para búsqueda y reportes.}
+\GlossaryEntry{Costo}{Valor interno de adquisición o producción del artículo.}
+\GlossaryEntry{Descuento}{Reducción del precio aplicada por línea o por ticket.}
+\GlossaryEntry{Impuesto incluido}{Modalidad donde el precio ya contiene impuesto.}
+\GlossaryEntry{Impuesto excluido}{Modalidad donde el impuesto se suma al final.}
+\GlossaryEntry{Margen}{Relación entre precio de venta y costo.}
+\GlossaryEntry{Pago dividido}{Cobro de una venta con más de un método de pago.}
+\GlossaryEntry{Recepción}{Ingreso de mercancía al inventario desde una compra.}
+\GlossaryEntry{Recibo / Ticket}{Comprobante de venta entregado al cliente.}
+\GlossaryEntry{SKU}{Identificador interno único de un producto.}
+\GlossaryEntry{Stock disponible}{Cantidad actual vendible de un producto.}
+\GlossaryEntry{Ticket suspendido}{Venta guardada temporalmente para continuar después.}
+\GlossaryEntry{Trazabilidad}{Capacidad de auditar quién hizo qué, cuándo y por qué.}
+\end{SaulGlossary}
+
+\appendix
+\chapter{Checklist de Capturas de Pantalla}\label{app:capturas}
+Todas las capturas deben guardarse dentro de \texttt{manual/images/placeholders/es/} con los nombres indicados.
+
+\begin{longtable}{p{0.38\textwidth}p{0.44\textwidth}p{0.12\textwidth}}
+\toprule
+\textbf{Archivo} & \textbf{Qué debe mostrar} & \textbf{Prioridad}\\
+\midrule
+\endhead
+\ShotRef{introduccion_panel_principal_01.png} & Panel principal del sistema. & Alta\\
+\ShotRef{conceptos_descuento_item_01.png} & Aplicación de descuento por línea. & Alta\\
+\ShotRef{inicio_sesion_01.png} & Formulario de acceso. & Alta\\
+\ShotRef{configuracion_inicial_01.png} & Lista de ajustes iniciales. & Media\\
+\ShotRef{catalogo_producto_nuevo_01.png} & Formulario alta/edición de producto. & Alta\\
+\ShotRef{catalogo_categorias_01.png} & Gestión de categorías y subcategorías. & Media\\
+\ShotRef{clientes_lista_01.png} & Búsqueda y listado de clientes. & Alta\\
+\ShotRef{clientes_historial_01.png} & Historial de compras del cliente. & Media\\
+\ShotRef{ventas_abrir_caja_01.png} & Apertura de caja o turno. & Media\\
+\ShotRef{ventas_nueva_venta_01.png} & Flujo principal de nueva venta. & Alta\\
+\ShotRef{ventas_descuento_ticket_01.png} & Aplicación de descuento al ticket. & Alta\\
+\ShotRef{ventas_checkout_pago_dividido_01.png} & Pantalla de cobro con split payment. & Alta\\
+\ShotRef{ventas_ticket_suspendido_01.png} & Ticket suspendido/reanudación. & Media\\
+\ShotRef{ventas_cierre_turno_01.png} & Cierre de caja. & Media\\
+\ShotRef{devoluciones_por_recibo_01.png} & Devolución con comprobante. & Alta\\
+\ShotRef{devoluciones_cambio_01.png} & Flujo de cambio de producto. & Media\\
+\ShotRef{inventario_ajuste_stock_01.png} & Ajuste de inventario. & Alta\\
+\ShotRef{inventario_recepcion_compra_01.png} & Recepción de compra. & Alta\\
+\ShotRef{inventario_conteo_fisico_01.png} & Conteo físico. & Media\\
+\ShotRef{reportes_resumen_ventas_01.png} & Dashboard/resumen de ventas. & Alta\\
+\ShotRef{reportes_impuestos_01.png} & Reporte de impuestos. & Alta\\
+\ShotRef{admin_usuarios_roles_01.png} & Matriz de usuarios y permisos. & Alta\\
+\ShotRef{admin_configuracion_tienda_01.png} & Parámetros generales de tienda. & Alta\\
+\ShotRef{faq_diagnostico_impresora_01.png} & Diagnóstico de impresora. & Media\\
+\ShotRef{roles_matriz_aprobaciones_01.png} & Matriz de aprobaciones y excepciones por rol. & Alta\\
+\ShotRef{roles_bitacora_auditoria_01.png} & Bitácora de auditoría de operaciones críticas. & Alta\\
+\ShotRef{sop_contingencia_red_01.png} & Protocolo de continuidad por caída de red. & Media\\
+\ShotRef{soporte_contacto_01.png} & Vista de ayuda o contacto de soporte. & Baja\\
+\bottomrule
+\end{longtable}
+
+\chapter{Referencia Rápida}\label{app:rapida}
+\textbf{Abrir una venta en menos de 30 segundos}
+\begin{enumerate}
+  \item Iniciar sesión y confirmar caja activa.
+  \item Crear nueva venta.
+  \item Escanear artículos.
+  \item Confirmar total y cobrar.
+  \item Emitir ticket.
+\end{enumerate}
+
+\textbf{Devolver un producto con recibo}
+\begin{enumerate}
+  \item Buscar ticket original.
+  \item Seleccionar artículo y motivo.
+  \item Confirmar método de reembolso.
+  \item Guardar operación con trazabilidad.
+\end{enumerate}
+
+\textbf{Cierre diario}
+\begin{enumerate}
+  \item Revisar ventas del día.
+  \item Conciliar efectivo vs sistema.
+  \item Ejecutar cierre de turno.
+  \item Exportar reportes clave (ventas, descuentos, impuestos).
+\end{enumerate}
+
+\chapter{Atajos de teclado (opcional)}\label{app:atajos}
+Estos atajos pueden variar según versión o configuración.
+
+\begin{longtable}{p{0.24\textwidth}p{0.70\textwidth}}
+\toprule
+\textbf{Atajo} & \textbf{Acción esperada}\\
+\midrule
+\endhead
+\texttt{F2} & Iniciar nueva venta.\\
+\texttt{F4} & Buscar producto.\\
+\texttt{F6} & Aplicar descuento (si está habilitado y autorizado).\\
+\texttt{F8} & Ir a cobro.\\
+\texttt{Ctrl+P} & Reimprimir último ticket (si está permitido).\\
+\bottomrule
+\end{longtable}
+
+\chapter{Soporte y Contacto}\label{app:soporte}
+\SaulFigure{\ShotPath{soporte_contacto_01.png}}{Pantalla: Soporte y contacto}{fig:soporte-contacto}
+
+Campos sugeridos para completar en su organización:
+\begin{itemize}
+  \item Correo de soporte: \texttt{[soporte@tu-dominio.com]}
+  \item Teléfono de soporte: \texttt{[+00 0000 0000]}
+  \item Horario de atención: \texttt{[L-V 09:00-18:00]}
+  \item Tiempo objetivo de respuesta: \texttt{[ej. 4 horas hábiles]}
+\end{itemize}
+
+\begin{notebox}
+Para incidentes críticos, registre: fecha, sucursal, caja, usuario, pasos para reproducir y evidencia (captura o folio).
+\end{notebox}
+
+\end{document}
