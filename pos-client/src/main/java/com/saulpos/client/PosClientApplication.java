@@ -13,7 +13,9 @@ import com.saulpos.client.state.ReportingCoordinator;
 import com.saulpos.client.state.ReturnsScreenCoordinator;
 import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
+import com.saulpos.client.ui.i18n.UiI18n;
 import com.saulpos.client.ui.layout.AppShell;
+import javafx.beans.binding.Bindings;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -38,10 +40,12 @@ public class PosClientApplication extends Application {
         BackofficeCoordinator backofficeCoordinator = new BackofficeCoordinator(apiClient);
         ReportingCoordinator reportingCoordinator = new ReportingCoordinator(apiClient);
         HardwareCoordinator hardwareCoordinator = new HardwareCoordinator(apiClient);
+        UiI18n i18n = new UiI18n();
         connectivityCoordinator.refresh();
 
         Scene scene = new Scene(
                 AppShell.createRoot(
+                        i18n,
                         appStateStore,
                         navigationState,
                         authSessionCoordinator,
@@ -59,7 +63,10 @@ public class PosClientApplication extends Application {
         String stylesheet = getClass().getResource("/ui/theme/saulpos-theme.css").toExternalForm();
         scene.getStylesheets().add(stylesheet);
 
-        stage.setTitle("SaulPOS v2 Client");
+        stage.titleProperty().bind(Bindings.createStringBinding(
+                () -> i18n.translate("SaulPOS v2 Client"),
+                i18n.languageProperty()
+        ));
         stage.setMinWidth(980);
         stage.setMinHeight(640);
         stage.setScene(scene);
