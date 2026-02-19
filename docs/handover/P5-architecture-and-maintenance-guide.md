@@ -44,7 +44,14 @@ Audience: Platform and Maintenance Engineers
 - Validate secret/config hardening checklist before releases.
 - Audit sensitive actions (discount overrides, returns, reprints, drawer opens).
 
-## 6. Handover Acceptance
+## 6. Local Bootstrap Data
+
+- `ops/scripts/bootstrap-local.sql` creates one development user:
+  - `admin` / `Pass123!` (username/password).
+- The script also assigns this user the `MANAGER` role and links it to the `DEMO` merchant, `DEMO-STORE` location, and `POS-01` terminal.
+- Use only in local/dev environments where `bootstrap-local.sql` is intentionally run.
+
+## 7. Handover Acceptance
 
 - [x] New operator can execute daily workflows from docs.
 - [x] New engineer can run test suites and extend a card with migration + API + tests.
