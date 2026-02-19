@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+BOOTSTRAP_SQL_FILE="${ROOT_DIR}/ops/scripts/bootstrap-local.sql"
 
 DB_HOST="${SAULPOS_DB_HOST:-saulpos-postgres}"
 DB_PORT="${SAULPOS_DB_PORT:-5432}"
@@ -9,6 +10,8 @@ DB_NAME="${SAULPOS_DB_NAME:-saulpos_dev}"
 DB_USER="${SAULPOS_DB_USERNAME:-saulpos_dev}"
 DB_PASSWORD="${SAULPOS_DB_PASSWORD:-saulpos_dev}"
 RESET_DB="${SAULPOS_RESET_DB:-true}"
+RUN_BOOTSTRAP="${SAULPOS_RUN_BOOTSTRAP:-true}"
+SERVER_WAIT_SECONDS="${SAULPOS_SERVER_WAIT_SECONDS:-120}"
 
 SERVER_PROFILE="${SPRING_PROFILES_ACTIVE:-dev}"
 SERVER_LOG_DIR="${ROOT_DIR}/tmp"
@@ -21,6 +24,11 @@ fi
 
 if ! command -v psql >/dev/null 2>&1; then
   echo "Missing requirement: psql"
+  exit 1
+fi
+
+if [[ "${RUN_BOOTSTRAP}" == "true" ]] && [[ ! -f "${BOOTSTRAP_SQL_FILE}" ]]; then
+  echo "Missing bootstrap SQL: ${BOOTSTRAP_SQL_FILE}"
   exit 1
 fi
 
@@ -61,6 +69,74 @@ trap cleanup EXIT INT TERM
 
 echo "Server PID: ${SERVER_PID}"
 echo "Server log: ${SERVER_LOG_FILE}"
+
+echo "Waiting for Flyway table creation..."
+BOOTSTRAP_READY="false"
+for ((i = 1; i <= SERVER_WAIT_SECONDS; i++)); do
+  if ! ps -p "${SERVER_PID}" >/dev/null 2>&1; then
+    echo "Server stopped before initialization completed."
+    echo "Check log: ${SERVER_LOG_FILE}"
+    exit 1
+  fi
+
+  READY_CHECK="$(PGPASSWORD="${DB_PASSWORD}" psql \
+    -h "${DB_HOST}" \
+    -p "${DB_PORT}" \
+    -U "${DB_USER}" \
+    -d "${DB_NAME}" \
+    -tA \
+    -v ON_ERROR_STOP=1 \
+    -c "SELECT CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'app_role') AND EXISTS (SELECT 1 FROM app_role WHERE code = 'MANAGER') THEN 'true' ELSE 'false' END;" 2>/dev/null || true)"
+
+  if [[ "${READY_CHECK}" == "true" ]]; then
+    BOOTSTRAP_READY="true"
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "${BOOTSTRAP_READY}" != "true" ]]; then
+  echo "Timed out waiting for Flyway migrations/security seed data."
+  echo "Check log: ${SERVER_LOG_FILE}"
+  exit 1
+fi
+
+if [[ "${RUN_BOOTSTRAP}" == "true" ]]; then
+  echo "Running bootstrap SQL..."
+  PGPASSWORD="${DB_PASSWORD}" psql \
+    -h "${DB_HOST}" \
+    -p "${DB_PORT}" \
+    -U "${DB_USER}" \
+    -d "${DB_NAME}" \
+    -v ON_ERROR_STOP=1 \
+    -f "${BOOTSTRAP_SQL_FILE}"
+fi
+
+echo "Waiting for server HTTP startup..."
+SERVER_HTTP_READY="false"
+for ((i = 1; i <= SERVER_WAIT_SECONDS; i++)); do
+  if ! ps -p "${SERVER_PID}" >/dev/null 2>&1; then
+    echo "Server stopped before HTTP startup completed."
+    echo "Check log: ${SERVER_LOG_FILE}"
+    exit 1
+  fi
+
+  if grep -q "Tomcat started on port" "${SERVER_LOG_FILE}" \
+    && grep -q "Started PosServerApplication" "${SERVER_LOG_FILE}"; then
+    SERVER_HTTP_READY="true"
+    break
+  fi
+
+  sleep 1
+done
+
+if [[ "${SERVER_HTTP_READY}" != "true" ]]; then
+  echo "Timed out waiting for server HTTP startup."
+  echo "Check log: ${SERVER_LOG_FILE}"
+  exit 1
+fi
+
 echo "Starting SaulPOS client..."
 cd "${ROOT_DIR}/pos-client"
 mvn javafx:run
