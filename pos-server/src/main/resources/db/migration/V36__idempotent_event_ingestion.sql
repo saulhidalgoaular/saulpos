@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS idempotency_key_event (
     endpoint_key VARCHAR(160) NOT NULL,
     idempotency_key VARCHAR(120) NOT NULL,
     request_hash VARCHAR(64) NOT NULL,
-    response_payload CLOB NOT NULL,
+    response_payload TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT uk_idempotency_key_event_endpoint_key UNIQUE (endpoint_key, idempotency_key)
