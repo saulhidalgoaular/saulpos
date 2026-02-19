@@ -247,20 +247,20 @@ public final class AppShell {
         return root;
     }
 
-    private static void updateContent(UiI18n i18n,
-                                      NavigationTarget target,
-                                      Label title,
-                                      Label description,
-                                      VBox screenBody,
-                                      AuthSessionCoordinator authSessionCoordinator,
-                                      ShiftControlCoordinator shiftControlCoordinator,
-                                      SellScreenCoordinator sellScreenCoordinator,
-                                      ReturnsScreenCoordinator returnsScreenCoordinator,
-                                      BackofficeCoordinator backofficeCoordinator,
-                                      ReportingCoordinator reportingCoordinator,
-                                      HardwareCoordinator hardwareCoordinator,
-                                      AppStateStore appStateStore,
-                                      NavigationState navigationState) {
+    static void updateContent(UiI18n i18n,
+                              NavigationTarget target,
+                              Label title,
+                              Label description,
+                              VBox screenBody,
+                              AuthSessionCoordinator authSessionCoordinator,
+                              ShiftControlCoordinator shiftControlCoordinator,
+                              SellScreenCoordinator sellScreenCoordinator,
+                              ReturnsScreenCoordinator returnsScreenCoordinator,
+                              BackofficeCoordinator backofficeCoordinator,
+                              ReportingCoordinator reportingCoordinator,
+                              HardwareCoordinator hardwareCoordinator,
+                              AppStateStore appStateStore,
+                              NavigationState navigationState) {
         ScreenDefinition screen = ScreenRegistry.byTarget(target)
                 .orElseThrow(() -> new IllegalStateException("Screen not found: " + target));
         title.setText(i18n.translate(screen.title()));

@@ -15,12 +15,15 @@ import com.saulpos.client.state.SellScreenCoordinator;
 import com.saulpos.client.state.ShiftControlCoordinator;
 import com.saulpos.client.ui.i18n.UiI18n;
 import com.saulpos.client.ui.layout.AppShell;
+import com.saulpos.client.ui.layout.AppShellModern;
 import javafx.beans.binding.Bindings;
 import javafx.application.Application;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 import java.net.URI;
+import java.util.Locale;
 
 public class PosClientApplication extends Application {
 
@@ -43,8 +46,11 @@ public class PosClientApplication extends Application {
         UiI18n i18n = new UiI18n();
         connectivityCoordinator.refresh();
 
-        Scene scene = new Scene(
-                AppShell.createRoot(
+        String requestedUi = System.getProperty("saulpos.ui", "modern").toLowerCase(Locale.ROOT).trim();
+        boolean useClassicUi = "classic".equals(requestedUi);
+
+        Parent root = useClassicUi
+                ? AppShell.createRoot(
                         i18n,
                         appStateStore,
                         navigationState,
@@ -56,11 +62,24 @@ public class PosClientApplication extends Application {
                         reportingCoordinator,
                         hardwareCoordinator,
                         connectivityCoordinator
-                ),
-                1180,
-                760
-        );
-        String stylesheet = getClass().getResource("/ui/theme/saulpos-theme.css").toExternalForm();
+                )
+                : AppShellModern.createRoot(
+                        i18n,
+                        appStateStore,
+                        navigationState,
+                        authSessionCoordinator,
+                        shiftControlCoordinator,
+                        sellScreenCoordinator,
+                        returnsScreenCoordinator,
+                        backofficeCoordinator,
+                        reportingCoordinator,
+                        hardwareCoordinator,
+                        connectivityCoordinator
+                );
+
+        Scene scene = new Scene(root, 1180, 760);
+        String stylesheetPath = useClassicUi ? "/ui/theme/saulpos-theme.css" : "/ui/theme/saulpos-modern.css";
+        String stylesheet = getClass().getResource(stylesheetPath).toExternalForm();
         scene.getStylesheets().add(stylesheet);
 
         stage.titleProperty().bind(Bindings.createStringBinding(

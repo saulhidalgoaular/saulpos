@@ -1,0 +1,212 @@
+.root {
+    -pos2-font-family: "Segoe UI", "Helvetica Neue", sans-serif;
+    -pos2-bg: #F3F5F7;
+    -pos2-surface: #FFFFFF;
+    -pos2-surface-muted: #EEF1F5;
+    -pos2-border: #D7DEE6;
+    -pos2-text: #1B2530;
+    -pos2-text-muted: #5B6A7A;
+    -pos2-brand: #0F4C81;
+    -pos2-accent: #0EA5A4;
+    -pos2-danger: #CC3A3A;
+    -fx-font-family: -pos2-font-family;
+    -fx-background-color: -pos2-bg;
+    -fx-text-fill: -pos2-text;
+}
+
+.pos2-shell {
+    -fx-background-color: linear-gradient(to bottom right, #F7F9FB, #EFF3F7);
+}
+
+.pos2-nav {
+    -fx-padding: 14 10 14 10;
+    -fx-spacing: 8;
+    -fx-background-color: #121C2B;
+    -fx-border-color: #1F2D43;
+    -fx-border-width: 0 1 0 0;
+}
+
+.pos2-nav-brand {
+    -fx-font-size: 16px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #E7EDF5;
+    -fx-alignment: center;
+    -fx-max-width: Infinity;
+    -fx-padding: 8 0 10 0;
+}
+
+.pos2-nav-btn {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-text-fill: #C7D2DE;
+    -fx-padding: 8 4;
+    -fx-cursor: hand;
+}
+
+.pos2-nav-btn:hover {
+    -fx-background-color: #26384F;
+}
+
+.pos2-nav-btn:disabled {
+    -fx-opacity: 0.4;
+}
+
+.pos2-nav-btn-active {
+    -fx-background-color: #2F5E92;
+}
+
+.pos2-nav-icon {
+    -fx-font-size: 13px;
+    -fx-font-weight: 700;
+    -fx-text-fill: #F6F9FC;
+}
+
+.pos2-nav-caption {
+    -fx-font-size: 9px;
+    -fx-font-weight: 600;
+    -fx-text-fill: #C7D2DE;
+}
+
+.pos2-topbar {
+    -fx-padding: 12 18 12 18;
+    -fx-spacing: 12;
+    -fx-background-color: rgba(255, 255, 255, 0.88);
+    -fx-border-color: transparent transparent -pos2-border transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
+.pos2-brand {
+    -fx-font-size: 18px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -pos2-brand;
+}
+
+.pos2-branch {
+    -fx-font-size: 11px;
+    -fx-text-fill: -pos2-text-muted;
+}
+
+.pos2-feedback {
+    -fx-font-size: 12px;
+    -fx-text-fill: -pos2-text-muted;
+}
+
+.pos2-card {
+    -fx-background-color: -pos2-surface;
+    -fx-background-radius: 18;
+    -fx-border-color: -pos2-border;
+    -fx-border-radius: 18;
+    -fx-border-width: 1;
+    -fx-padding: 16;
+    -fx-effect: dropshadow(gaussian, rgba(25, 38, 53, 0.12), 22, 0.1, 0, 8);
+}
+
+.pos2-title {
+    -fx-font-size: 25px;
+    -fx-font-weight: 800;
+    -fx-text-fill: -pos2-text;
+}
+
+.pos2-description {
+    -fx-font-size: 13px;
+    -fx-text-fill: -pos2-text-muted;
+}
+
+.pos2-search {
+    -fx-background-color: -pos2-surface;
+    -fx-border-color: -pos2-border;
+    -fx-border-radius: 12;
+    -fx-background-radius: 12;
+    -fx-padding: 8 12;
+}
+
+.pos2-search:focused {
+    -fx-border-color: -pos2-brand;
+    -fx-effect: dropshadow(gaussian, rgba(15, 76, 129, 0.2), 10, 0.12, 0, 0);
+}
+
+.pos2-pill {
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-padding: 5 12;
+    -fx-font-size: 11px;
+    -fx-font-weight: 700;
+    -fx-border-width: 1;
+}
+
+.pos2-pill-online {
+    -fx-background-color: #E6F6EF;
+    -fx-border-color: #9ED7BD;
+    -fx-text-fill: #0F6D45;
+}
+
+.pos2-pill-offline {
+    -fx-background-color: #FDEDEE;
+    -fx-border-color: #F2B5BA;
+    -fx-text-fill: #B62635;
+}
+
+.pos2-user-badge {
+    -fx-background-color: #EEF2F7;
+    -fx-border-color: #CCD7E4;
+    -fx-text-fill: #324355;
+}
+
+.pos2-kbd {
+    -fx-background-color: -pos2-surface-muted;
+    -fx-border-color: -pos2-border;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-padding: 5 8;
+    -fx-font-size: 11px;
+    -fx-text-fill: -pos2-text-muted;
+}
+
+.pos2-content-scroll {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.pos2-content-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
+.pos-button {
+    -fx-background-color: -pos2-brand;
+    -fx-text-fill: white;
+    -fx-font-weight: 700;
+    -fx-background-radius: 10;
+    -fx-padding: 8 14;
+    -fx-cursor: hand;
+}
+
+.pos-button-accent {
+    -fx-background-color: -pos2-accent;
+}
+
+.pos-button:disabled {
+    -fx-opacity: 0.6;
+}
+
+.pos-input {
+    -fx-background-color: white;
+    -fx-border-color: -pos2-border;
+    -fx-border-radius: 10;
+    -fx-background-radius: 10;
+    -fx-padding: 8 10;
+}
+
+.pos-input:focused {
+    -fx-border-color: -pos2-brand;
+}
+
+.list-view,
+.combo-box,
+.password-field,
+.text-field,
+.check-box {
+    -fx-font-size: 13px;
+}
