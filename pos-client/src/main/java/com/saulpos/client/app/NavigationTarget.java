@@ -7,6 +7,7 @@ public enum NavigationTarget {
     CHECKOUT("/checkout"),
     RETURNS("/returns"),
     BACKOFFICE("/backoffice"),
+    ADMIN("/admin"),
     REPORTING("/reporting"),
     HARDWARE("/hardware");
 

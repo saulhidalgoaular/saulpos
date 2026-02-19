@@ -21,9 +21,11 @@ public final class ScreenRegistry {
                     "Return/refund workflows with approval context"),
             new ScreenDefinition(NavigationTarget.BACKOFFICE, "Backoffice", true, 6,
                     "Catalog, pricing, customer, and supplier maintenance"),
-            new ScreenDefinition(NavigationTarget.REPORTING, "Reporting", true, 7,
+            new ScreenDefinition(NavigationTarget.ADMIN, "Admin", true, 7,
+                    "Identity and security administration (roles, permissions, and assignments)"),
+            new ScreenDefinition(NavigationTarget.REPORTING, "Reporting", true, 8,
                     "Operational reports and CSV exports"),
-            new ScreenDefinition(NavigationTarget.HARDWARE, "Hardware", true, 8,
+            new ScreenDefinition(NavigationTarget.HARDWARE, "Hardware", true, 9,
                     "Receipt print/reprint and drawer controls")
     );
 

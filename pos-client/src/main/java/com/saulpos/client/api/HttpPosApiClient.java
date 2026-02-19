@@ -11,6 +11,14 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.identity.MerchantRequest;
+import com.saulpos.api.identity.MerchantResponse;
+import com.saulpos.api.identity.StoreLocationRequest;
+import com.saulpos.api.identity.StoreLocationResponse;
+import com.saulpos.api.identity.StoreUserAssignmentRequest;
+import com.saulpos.api.identity.StoreUserAssignmentResponse;
+import com.saulpos.api.identity.TerminalDeviceRequest;
+import com.saulpos.api.identity.TerminalDeviceResponse;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
 import com.saulpos.api.inventory.SupplierReturnApproveRequest;
 import com.saulpos.api.inventory.SupplierReturnCreateRequest;
@@ -45,6 +53,10 @@ import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.security.CurrentUserPermissionsResponse;
+import com.saulpos.api.security.PermissionResponse;
+import com.saulpos.api.security.RolePermissionsUpdateRequest;
+import com.saulpos.api.security.RoleRequest;
+import com.saulpos.api.security.RoleResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -445,6 +457,145 @@ public final class HttpPosApiClient implements PosApiClient {
     }
 
     @Override
+    public CompletableFuture<List<MerchantResponse>> listMerchants() {
+        HttpRequest request = baseRequest("/api/identity/merchants")
+                .GET()
+                .build();
+        return sendList(request, MerchantResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<MerchantResponse> createMerchant(MerchantRequest request) {
+        return postJson("/api/identity/merchants", request, MerchantResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<MerchantResponse> updateMerchant(Long merchantId, MerchantRequest request) {
+        return putJson("/api/identity/merchants/" + merchantId, request, MerchantResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<MerchantResponse> activateMerchant(Long merchantId) {
+        return postEmpty("/api/identity/merchants/" + merchantId + "/activate", MerchantResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<MerchantResponse> deactivateMerchant(Long merchantId) {
+        return postEmpty("/api/identity/merchants/" + merchantId + "/deactivate", MerchantResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<StoreLocationResponse>> listStoreLocations() {
+        HttpRequest request = baseRequest("/api/identity/stores")
+                .GET()
+                .build();
+        return sendList(request, StoreLocationResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreLocationResponse> createStoreLocation(StoreLocationRequest request) {
+        return postJson("/api/identity/stores", request, StoreLocationResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreLocationResponse> updateStoreLocation(Long storeLocationId, StoreLocationRequest request) {
+        return putJson("/api/identity/stores/" + storeLocationId, request, StoreLocationResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreLocationResponse> activateStoreLocation(Long storeLocationId) {
+        return postEmpty("/api/identity/stores/" + storeLocationId + "/activate", StoreLocationResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreLocationResponse> deactivateStoreLocation(Long storeLocationId) {
+        return postEmpty("/api/identity/stores/" + storeLocationId + "/deactivate", StoreLocationResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<TerminalDeviceResponse>> listTerminalDevices() {
+        HttpRequest request = baseRequest("/api/identity/terminals")
+                .GET()
+                .build();
+        return sendList(request, TerminalDeviceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<TerminalDeviceResponse> createTerminalDevice(TerminalDeviceRequest request) {
+        return postJson("/api/identity/terminals", request, TerminalDeviceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<TerminalDeviceResponse> updateTerminalDevice(Long terminalDeviceId, TerminalDeviceRequest request) {
+        return putJson("/api/identity/terminals/" + terminalDeviceId, request, TerminalDeviceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<TerminalDeviceResponse> activateTerminalDevice(Long terminalDeviceId) {
+        return postEmpty("/api/identity/terminals/" + terminalDeviceId + "/activate", TerminalDeviceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<TerminalDeviceResponse> deactivateTerminalDevice(Long terminalDeviceId) {
+        return postEmpty("/api/identity/terminals/" + terminalDeviceId + "/deactivate", TerminalDeviceResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<StoreUserAssignmentResponse>> listStoreUserAssignments() {
+        HttpRequest request = baseRequest("/api/identity/store-user-assignments")
+                .GET()
+                .build();
+        return sendList(request, StoreUserAssignmentResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreUserAssignmentResponse> createStoreUserAssignment(StoreUserAssignmentRequest request) {
+        return postJson("/api/identity/store-user-assignments", request, StoreUserAssignmentResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreUserAssignmentResponse> updateStoreUserAssignment(Long assignmentId,
+                                                                                     StoreUserAssignmentRequest request) {
+        return putJson("/api/identity/store-user-assignments/" + assignmentId, request, StoreUserAssignmentResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreUserAssignmentResponse> activateStoreUserAssignment(Long assignmentId) {
+        return postEmpty("/api/identity/store-user-assignments/" + assignmentId + "/activate", StoreUserAssignmentResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<StoreUserAssignmentResponse> deactivateStoreUserAssignment(Long assignmentId) {
+        return postEmpty("/api/identity/store-user-assignments/" + assignmentId + "/deactivate", StoreUserAssignmentResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<RoleResponse>> listRoles() {
+        HttpRequest request = baseRequest("/api/security/roles")
+                .GET()
+                .build();
+        return sendList(request, RoleResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<RoleResponse> createRole(RoleRequest request) {
+        return postJson("/api/security/roles", request, RoleResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<RoleResponse> updateRolePermissions(Long roleId, RolePermissionsUpdateRequest request) {
+        return putJson("/api/security/roles/" + roleId + "/permissions", request, RoleResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<PermissionResponse>> permissionCatalog() {
+        HttpRequest request = baseRequest("/api/security/permissions/catalog")
+                .GET()
+                .build();
+        return sendList(request, PermissionResponse.class);
+    }
+
+    @Override
     public CompletableFuture<CurrentUserPermissionsResponse> currentUserPermissions() {
         HttpRequest request = baseRequest("/api/security/permissions/current")
                 .GET()
@@ -774,6 +925,29 @@ public final class HttpPosApiClient implements PosApiClient {
         HttpRequest request = baseRequest(path)
                 .header("Content-Type", "application/json")
                 .POST(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(request, responseType);
+    }
+
+    private <T> CompletableFuture<T> putJson(String path, Object requestBody, Class<T> responseType) {
+        final String body;
+        try {
+            body = objectMapper.writeValueAsString(requestBody);
+        } catch (IOException ex) {
+            return CompletableFuture.failedFuture(ex);
+        }
+
+        HttpRequest request = baseRequest(path)
+                .header("Content-Type", "application/json")
+                .PUT(HttpRequest.BodyPublishers.ofString(body, StandardCharsets.UTF_8))
+                .build();
+        return send(request, responseType);
+    }
+
+    private <T> CompletableFuture<T> postEmpty(String path, Class<T> responseType) {
+        HttpRequest request = baseRequest(path)
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody())
                 .build();
         return send(request, responseType);
     }

@@ -6,6 +6,10 @@ import com.saulpos.api.catalog.PriceResolutionResponse;
 import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.identity.MerchantResponse;
+import com.saulpos.api.identity.StoreLocationResponse;
+import com.saulpos.api.identity.StoreUserAssignmentResponse;
+import com.saulpos.api.identity.TerminalDeviceResponse;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
 import com.saulpos.api.inventory.SupplierReturnResponse;
 import com.saulpos.api.report.ExceptionReportEventType;
@@ -17,6 +21,8 @@ import com.saulpos.api.sale.SaleCartLineResponse;
 import com.saulpos.api.sale.SaleCartResponse;
 import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutResponse;
+import com.saulpos.api.security.PermissionResponse;
+import com.saulpos.api.security.RoleResponse;
 import com.saulpos.api.refund.SaleReturnLookupLineResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
@@ -25,6 +31,7 @@ import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
 import com.saulpos.client.app.ScreenRegistry;
+import com.saulpos.client.state.AdminCoordinator;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
@@ -60,6 +67,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 public final class AppShell {
 
@@ -77,6 +85,7 @@ public final class AppShell {
                                     SellScreenCoordinator sellScreenCoordinator,
                                     ReturnsScreenCoordinator returnsScreenCoordinator,
                                     BackofficeCoordinator backofficeCoordinator,
+                                    AdminCoordinator adminCoordinator,
                                     ReportingCoordinator reportingCoordinator,
                                     HardwareCoordinator hardwareCoordinator,
                                     ConnectivityCoordinator connectivityCoordinator) {
@@ -126,6 +135,7 @@ public final class AppShell {
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
                 backofficeCoordinator,
+                adminCoordinator,
                 reportingCoordinator,
                 hardwareCoordinator,
                 stateStore,
@@ -144,6 +154,7 @@ public final class AppShell {
                     sellScreenCoordinator,
                     returnsScreenCoordinator,
                     backofficeCoordinator,
+                    adminCoordinator,
                     reportingCoordinator,
                     hardwareCoordinator,
                     stateStore,
@@ -161,6 +172,7 @@ public final class AppShell {
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
                 backofficeCoordinator,
+                adminCoordinator,
                 reportingCoordinator,
                 hardwareCoordinator,
                 stateStore,
@@ -257,6 +269,7 @@ public final class AppShell {
                               SellScreenCoordinator sellScreenCoordinator,
                               ReturnsScreenCoordinator returnsScreenCoordinator,
                               BackofficeCoordinator backofficeCoordinator,
+                              AdminCoordinator adminCoordinator,
                               ReportingCoordinator reportingCoordinator,
                               HardwareCoordinator hardwareCoordinator,
                               AppStateStore appStateStore,
@@ -294,6 +307,11 @@ public final class AppShell {
 
         if (target == NavigationTarget.BACKOFFICE) {
             renderBackoffice(i18n, screenBody, backofficeCoordinator);
+            return;
+        }
+
+        if (target == NavigationTarget.ADMIN) {
+            renderAdmin(i18n, screenBody, adminCoordinator);
             return;
         }
 
@@ -1261,6 +1279,296 @@ public final class AppShell {
                 supplierReturnNote,
                 new HBox(8, createSupplierReturn, loadSupplierReturn, approveSupplierReturn, postSupplierReturn),
                 supplierReturnSummary
+        );
+    }
+
+    private static void renderAdmin(UiI18n i18n, VBox screenBody, AdminCoordinator adminCoordinator) {
+        if (!adminCoordinator.busyProperty().get()
+                && adminCoordinator.rolesProperty().get().isEmpty()
+                && adminCoordinator.merchantsProperty().get().isEmpty()) {
+            adminCoordinator.refreshAll();
+        }
+
+        Label feedback = new Label();
+        feedback.textProperty().bind(i18n.bindTranslated(adminCoordinator.adminMessageProperty()));
+
+        PosButton refreshAll = primary(i18n, "Refresh Admin Data");
+        PosButton refreshIdentity = accent(i18n, "Refresh Identity");
+        PosButton refreshSecurity = accent(i18n, "Refresh Security");
+        refreshAll.disableProperty().bind(adminCoordinator.busyProperty());
+        refreshIdentity.disableProperty().bind(adminCoordinator.busyProperty());
+        refreshSecurity.disableProperty().bind(adminCoordinator.busyProperty());
+        refreshAll.setOnAction(event -> adminCoordinator.refreshAll());
+        refreshIdentity.setOnAction(event -> adminCoordinator.refreshIdentity());
+        refreshSecurity.setOnAction(event -> adminCoordinator.refreshSecurity());
+
+        Label userNotice = label(i18n,
+                "User account creation is not available because the backend currently has no public API endpoint for it.");
+
+        ListView<MerchantResponse> merchantList = new ListView<>();
+        merchantList.setPrefHeight(130);
+        adminCoordinator.merchantsProperty().addListener((obs, oldValue, newValue) ->
+                merchantList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        merchantList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(MerchantResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("merchant#" + item.id()
+                        + " | " + item.code()
+                        + " | " + item.name()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE")));
+            }
+        });
+
+        PosTextField merchantId = input(i18n, "Merchant ID (for update/toggle)");
+        PosTextField merchantCode = input(i18n, "Merchant code");
+        PosTextField merchantName = input(i18n, "Merchant name");
+        PosButton createMerchant = primary(i18n, "Create Merchant");
+        PosButton updateMerchant = accent(i18n, "Update Merchant");
+        PosButton activateMerchant = accent(i18n, "Activate Merchant");
+        PosButton deactivateMerchant = accent(i18n, "Deactivate Merchant");
+        createMerchant.disableProperty().bind(adminCoordinator.busyProperty());
+        updateMerchant.disableProperty().bind(adminCoordinator.busyProperty());
+        activateMerchant.disableProperty().bind(adminCoordinator.busyProperty());
+        deactivateMerchant.disableProperty().bind(adminCoordinator.busyProperty());
+        createMerchant.setOnAction(event -> adminCoordinator.saveMerchant(null, merchantCode.getText(), merchantName.getText()));
+        updateMerchant.setOnAction(event -> adminCoordinator.saveMerchant(
+                parseLong(merchantId.getText()),
+                merchantCode.getText(),
+                merchantName.getText()
+        ));
+        activateMerchant.setOnAction(event -> adminCoordinator.setMerchantActive(parseLong(merchantId.getText()), true));
+        deactivateMerchant.setOnAction(event -> adminCoordinator.setMerchantActive(parseLong(merchantId.getText()), false));
+
+        ListView<StoreLocationResponse> storeList = new ListView<>();
+        storeList.setPrefHeight(130);
+        adminCoordinator.storesProperty().addListener((obs, oldValue, newValue) ->
+                storeList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        storeList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StoreLocationResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("store#" + item.id()
+                        + " | merchant=" + item.merchantId()
+                        + " | " + item.code()
+                        + " | " + item.name()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE")));
+            }
+        });
+
+        PosTextField storeId = input(i18n, "Store ID (for update/toggle)");
+        PosTextField storeMerchantId = input(i18n, "Store merchant ID");
+        PosTextField storeCode = input(i18n, "Store code");
+        PosTextField storeName = input(i18n, "Store name");
+        PosButton createStore = primary(i18n, "Create Store");
+        PosButton updateStore = accent(i18n, "Update Store");
+        PosButton activateStore = accent(i18n, "Activate Store");
+        PosButton deactivateStore = accent(i18n, "Deactivate Store");
+        createStore.disableProperty().bind(adminCoordinator.busyProperty());
+        updateStore.disableProperty().bind(adminCoordinator.busyProperty());
+        activateStore.disableProperty().bind(adminCoordinator.busyProperty());
+        deactivateStore.disableProperty().bind(adminCoordinator.busyProperty());
+        createStore.setOnAction(event -> adminCoordinator.saveStore(
+                null,
+                parseLong(storeMerchantId.getText()),
+                storeCode.getText(),
+                storeName.getText()
+        ));
+        updateStore.setOnAction(event -> adminCoordinator.saveStore(
+                parseLong(storeId.getText()),
+                parseLong(storeMerchantId.getText()),
+                storeCode.getText(),
+                storeName.getText()
+        ));
+        activateStore.setOnAction(event -> adminCoordinator.setStoreActive(parseLong(storeId.getText()), true));
+        deactivateStore.setOnAction(event -> adminCoordinator.setStoreActive(parseLong(storeId.getText()), false));
+
+        ListView<TerminalDeviceResponse> terminalList = new ListView<>();
+        terminalList.setPrefHeight(130);
+        adminCoordinator.terminalsProperty().addListener((obs, oldValue, newValue) ->
+                terminalList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        terminalList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(TerminalDeviceResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("terminal#" + item.id()
+                        + " | store=" + item.storeLocationId()
+                        + " | " + item.code()
+                        + " | " + item.name()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE")));
+            }
+        });
+
+        PosTextField terminalId = input(i18n, "Terminal ID (for update/toggle)");
+        PosTextField terminalStoreId = input(i18n, "Terminal store ID");
+        PosTextField terminalCode = input(i18n, "Terminal code");
+        PosTextField terminalName = input(i18n, "Terminal name");
+        PosButton createTerminal = primary(i18n, "Create Terminal");
+        PosButton updateTerminal = accent(i18n, "Update Terminal");
+        PosButton activateTerminal = accent(i18n, "Activate Terminal");
+        PosButton deactivateTerminal = accent(i18n, "Deactivate Terminal");
+        createTerminal.disableProperty().bind(adminCoordinator.busyProperty());
+        updateTerminal.disableProperty().bind(adminCoordinator.busyProperty());
+        activateTerminal.disableProperty().bind(adminCoordinator.busyProperty());
+        deactivateTerminal.disableProperty().bind(adminCoordinator.busyProperty());
+        createTerminal.setOnAction(event -> adminCoordinator.saveTerminal(
+                null,
+                parseLong(terminalStoreId.getText()),
+                terminalCode.getText(),
+                terminalName.getText()
+        ));
+        updateTerminal.setOnAction(event -> adminCoordinator.saveTerminal(
+                parseLong(terminalId.getText()),
+                parseLong(terminalStoreId.getText()),
+                terminalCode.getText(),
+                terminalName.getText()
+        ));
+        activateTerminal.setOnAction(event -> adminCoordinator.setTerminalActive(parseLong(terminalId.getText()), true));
+        deactivateTerminal.setOnAction(event -> adminCoordinator.setTerminalActive(parseLong(terminalId.getText()), false));
+
+        ListView<StoreUserAssignmentResponse> assignmentList = new ListView<>();
+        assignmentList.setPrefHeight(130);
+        adminCoordinator.assignmentsProperty().addListener((obs, oldValue, newValue) ->
+                assignmentList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        assignmentList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(StoreUserAssignmentResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("assignment#" + item.id()
+                        + " | user=" + item.userId()
+                        + " | store=" + item.storeLocationId()
+                        + " | role=" + item.roleId()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE")));
+            }
+        });
+
+        PosTextField assignmentId = input(i18n, "Assignment ID (for update/toggle)");
+        PosTextField assignmentUserId = input(i18n, "Assignment user ID");
+        PosTextField assignmentStoreId = input(i18n, "Assignment store ID");
+        PosTextField assignmentRoleId = input(i18n, "Assignment role ID");
+        PosButton createAssignment = primary(i18n, "Create Assignment");
+        PosButton updateAssignment = accent(i18n, "Update Assignment");
+        PosButton activateAssignment = accent(i18n, "Activate Assignment");
+        PosButton deactivateAssignment = accent(i18n, "Deactivate Assignment");
+        createAssignment.disableProperty().bind(adminCoordinator.busyProperty());
+        updateAssignment.disableProperty().bind(adminCoordinator.busyProperty());
+        activateAssignment.disableProperty().bind(adminCoordinator.busyProperty());
+        deactivateAssignment.disableProperty().bind(adminCoordinator.busyProperty());
+        createAssignment.setOnAction(event -> adminCoordinator.saveStoreUserAssignment(
+                null,
+                parseLong(assignmentUserId.getText()),
+                parseLong(assignmentStoreId.getText()),
+                parseLong(assignmentRoleId.getText())
+        ));
+        updateAssignment.setOnAction(event -> adminCoordinator.saveStoreUserAssignment(
+                parseLong(assignmentId.getText()),
+                parseLong(assignmentUserId.getText()),
+                parseLong(assignmentStoreId.getText()),
+                parseLong(assignmentRoleId.getText())
+        ));
+        activateAssignment.setOnAction(event ->
+                adminCoordinator.setStoreUserAssignmentActive(parseLong(assignmentId.getText()), true));
+        deactivateAssignment.setOnAction(event ->
+                adminCoordinator.setStoreUserAssignmentActive(parseLong(assignmentId.getText()), false));
+
+        ListView<RoleResponse> roleList = new ListView<>();
+        roleList.setPrefHeight(130);
+        adminCoordinator.rolesProperty().addListener((obs, oldValue, newValue) ->
+                roleList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        roleList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(RoleResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("role#" + item.id()
+                        + " | " + item.code()
+                        + " | permissions=" + (item.permissionCodes() == null ? "[]" : item.permissionCodes())));
+            }
+        });
+
+        ListView<PermissionResponse> permissionList = new ListView<>();
+        permissionList.setPrefHeight(130);
+        adminCoordinator.permissionsProperty().addListener((obs, oldValue, newValue) ->
+                permissionList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        permissionList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(PermissionResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("permission#" + item.id()
+                        + " | " + item.code()
+                        + " | " + defaultText(item.description())));
+            }
+        });
+
+        PosTextField roleId = input(i18n, "Role ID (for permission update)");
+        PosTextField roleCode = input(i18n, "Role code");
+        PosTextField roleDescription = input(i18n, "Role description (optional)");
+        PosTextField permissionCodes = input(i18n, "Permission codes (comma-separated)");
+        PosButton createRole = primary(i18n, "Create Role");
+        PosButton updateRolePermissions = accent(i18n, "Update Role Permissions");
+        createRole.disableProperty().bind(adminCoordinator.busyProperty());
+        updateRolePermissions.disableProperty().bind(adminCoordinator.busyProperty());
+        createRole.setOnAction(event -> adminCoordinator.createRole(
+                roleCode.getText(),
+                roleDescription.getText(),
+                permissionCodes.getText()
+        ));
+        updateRolePermissions.setOnAction(event -> adminCoordinator.updateRolePermissions(
+                parseLong(roleId.getText()),
+                permissionCodes.getText()
+        ));
+
+        screenBody.getChildren().addAll(
+                label(i18n, "Administration workspace: identity entities, role permissions, and store-user assignments"),
+                feedback,
+                userNotice,
+                new HBox(8, refreshAll, refreshIdentity, refreshSecurity),
+                label(i18n, "Merchants"),
+                merchantList,
+                merchantId,
+                merchantCode,
+                merchantName,
+                new HBox(8, createMerchant, updateMerchant, activateMerchant, deactivateMerchant),
+                label(i18n, "Stores"),
+                storeList,
+                storeId,
+                storeMerchantId,
+                storeCode,
+                storeName,
+                new HBox(8, createStore, updateStore, activateStore, deactivateStore),
+                label(i18n, "Terminals"),
+                terminalList,
+                terminalId,
+                terminalStoreId,
+                terminalCode,
+                terminalName,
+                new HBox(8, createTerminal, updateTerminal, activateTerminal, deactivateTerminal),
+                label(i18n, "Store User Assignments"),
+                assignmentList,
+                assignmentId,
+                assignmentUserId,
+                assignmentStoreId,
+                assignmentRoleId,
+                new HBox(8, createAssignment, updateAssignment, activateAssignment, deactivateAssignment),
+                label(i18n, "Roles and Permissions"),
+                roleList,
+                permissionList,
+                roleId,
+                roleCode,
+                roleDescription,
+                permissionCodes,
+                new HBox(8, createRole, updateRolePermissions)
         );
     }
 

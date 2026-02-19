@@ -4,6 +4,7 @@ import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.app.NavigationTarget;
 import com.saulpos.client.app.ScreenDefinition;
 import com.saulpos.client.app.ScreenRegistry;
+import com.saulpos.client.state.AdminCoordinator;
 import com.saulpos.client.state.AppStateStore;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.AuthSessionState;
@@ -48,6 +49,7 @@ public final class AppShellModern {
             NavigationTarget.CHECKOUT, "CO",
             NavigationTarget.RETURNS, "RT",
             NavigationTarget.BACKOFFICE, "BO",
+            NavigationTarget.ADMIN, "AD",
             NavigationTarget.REPORTING, "RP",
             NavigationTarget.HARDWARE, "HW"
     );
@@ -63,6 +65,7 @@ public final class AppShellModern {
                                     SellScreenCoordinator sellScreenCoordinator,
                                     ReturnsScreenCoordinator returnsScreenCoordinator,
                                     BackofficeCoordinator backofficeCoordinator,
+                                    AdminCoordinator adminCoordinator,
                                     ReportingCoordinator reportingCoordinator,
                                     HardwareCoordinator hardwareCoordinator,
                                     ConnectivityCoordinator connectivityCoordinator) {
@@ -108,6 +111,7 @@ public final class AppShellModern {
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
                 backofficeCoordinator,
+                adminCoordinator,
                 reportingCoordinator,
                 hardwareCoordinator,
                 stateStore,
@@ -130,6 +134,7 @@ public final class AppShellModern {
                     sellScreenCoordinator,
                     returnsScreenCoordinator,
                     backofficeCoordinator,
+                    adminCoordinator,
                     reportingCoordinator,
                     hardwareCoordinator,
                     stateStore,
@@ -149,6 +154,7 @@ public final class AppShellModern {
                 sellScreenCoordinator,
                 returnsScreenCoordinator,
                 backofficeCoordinator,
+                adminCoordinator,
                 reportingCoordinator,
                 hardwareCoordinator,
                 stateStore,

@@ -59,6 +59,7 @@ public final class UiI18n {
         EXACT_ES.put("Checkout", "Cobro");
         EXACT_ES.put("Returns", "Devoluciones");
         EXACT_ES.put("Backoffice", "Backoffice");
+        EXACT_ES.put("Admin", "Admin");
         EXACT_ES.put("Reporting", "Reportes");
         EXACT_ES.put("Hardware", "Hardware");
 
@@ -68,6 +69,8 @@ public final class UiI18n {
         EXACT_ES.put("Tender allocation, rounding visibility, and sale commit", "Asignacion de pagos, visibilidad de redondeo y cierre de venta");
         EXACT_ES.put("Return/refund workflows with approval context", "Flujos de devolucion/reembolso con contexto de aprobacion");
         EXACT_ES.put("Catalog, pricing, customer, and supplier maintenance", "Mantenimiento de catalogo, precios, clientes y proveedores");
+        EXACT_ES.put("Identity and security administration (roles, permissions, and assignments)",
+                "Administracion de identidad y seguridad (roles, permisos y asignaciones)");
         EXACT_ES.put("Operational reports and CSV exports", "Reportes operativos y exportaciones CSV");
         EXACT_ES.put("Receipt print/reprint and drawer controls", "Impresion/reimpresion de recibos y control de caja");
 

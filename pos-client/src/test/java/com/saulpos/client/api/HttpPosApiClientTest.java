@@ -11,6 +11,10 @@ import com.saulpos.api.customer.CustomerContactRequest;
 import com.saulpos.api.customer.CustomerContactType;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerTaxIdentityRequest;
+import com.saulpos.api.identity.MerchantRequest;
+import com.saulpos.api.identity.StoreLocationRequest;
+import com.saulpos.api.identity.StoreUserAssignmentRequest;
+import com.saulpos.api.identity.TerminalDeviceRequest;
 import com.saulpos.api.inventory.SupplierReturnApproveRequest;
 import com.saulpos.api.inventory.SupplierReturnCreateLineRequest;
 import com.saulpos.api.inventory.SupplierReturnCreateRequest;
@@ -34,6 +38,8 @@ import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementType;
 import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
+import com.saulpos.api.security.RolePermissionsUpdateRequest;
+import com.saulpos.api.security.RoleRequest;
 import com.saulpos.api.system.OfflineMode;
 import com.saulpos.api.tax.TenderType;
 import org.junit.jupiter.api.Test;
@@ -868,6 +874,250 @@ class HttpPosApiClientTest {
         assertEquals("Bearer access-123", journalByNumberRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", journalBySaleRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", drawerRequest.headers().firstValue("Authorization").orElseThrow());
+    }
+
+    @Test
+    void adminContracts_shouldUseIdentityAndSecurityEndpoints() {
+        List<HttpRequest> requests = new ArrayList<>();
+        HttpPosApiClient client = new HttpPosApiClient(
+                URI.create("http://localhost:8080"),
+                new ObjectMapper().registerModule(new JavaTimeModule()),
+                request -> {
+                    requests.add(request);
+                    String path = request.uri().getPath();
+                    if ("/api/auth/login".equals(path)) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"accessToken\":\"access-123\",\"refreshToken\":\"refresh-123\","
+                                        + "\"accessTokenExpiresAt\":\"2026-02-10T12:15:00Z\","
+                                        + "\"refreshTokenExpiresAt\":\"2026-02-10T18:15:00Z\","
+                                        + "\"roles\":[\"MANAGER\"]}"
+                        ));
+                    }
+                    if ("/api/identity/merchants".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":1,\"code\":\"MAIN\",\"name\":\"Main Merchant\",\"active\":true}]"
+                        ));
+                    }
+                    if ("/api/identity/merchants".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":2,\"code\":\"NEWM\",\"name\":\"New Merchant\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/merchants/2".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":2,\"code\":\"NEWM\",\"name\":\"New Merchant Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/merchants/2/activate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":2,\"code\":\"NEWM\",\"name\":\"New Merchant Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/merchants/2/deactivate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":2,\"code\":\"NEWM\",\"name\":\"New Merchant Updated\",\"active\":false}"
+                        ));
+                    }
+                    if ("/api/identity/stores".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":10,\"merchantId\":1,\"code\":\"STORE-1\",\"name\":\"Store 1\",\"active\":true}]"
+                        ));
+                    }
+                    if ("/api/identity/stores".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":11,\"merchantId\":1,\"code\":\"STORE-2\",\"name\":\"Store 2\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/stores/11".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":11,\"merchantId\":1,\"code\":\"STORE-2\",\"name\":\"Store 2 Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/stores/11/activate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":11,\"merchantId\":1,\"code\":\"STORE-2\",\"name\":\"Store 2 Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/stores/11/deactivate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":11,\"merchantId\":1,\"code\":\"STORE-2\",\"name\":\"Store 2 Updated\",\"active\":false}"
+                        ));
+                    }
+                    if ("/api/identity/terminals".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":20,\"storeLocationId\":10,\"code\":\"TERM-1\",\"name\":\"Terminal 1\",\"active\":true}]"
+                        ));
+                    }
+                    if ("/api/identity/terminals".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":21,\"storeLocationId\":10,\"code\":\"TERM-2\",\"name\":\"Terminal 2\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/terminals/21".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":21,\"storeLocationId\":10,\"code\":\"TERM-2\",\"name\":\"Terminal 2 Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/terminals/21/activate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":21,\"storeLocationId\":10,\"code\":\"TERM-2\",\"name\":\"Terminal 2 Updated\",\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/terminals/21/deactivate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":21,\"storeLocationId\":10,\"code\":\"TERM-2\",\"name\":\"Terminal 2 Updated\",\"active\":false}"
+                        ));
+                    }
+                    if ("/api/identity/store-user-assignments".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":30,\"userId\":7,\"storeLocationId\":10,\"roleId\":5,\"active\":true}]"
+                        ));
+                    }
+                    if ("/api/identity/store-user-assignments".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":31,\"userId\":8,\"storeLocationId\":10,\"roleId\":5,\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/store-user-assignments/31".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":31,\"userId\":8,\"storeLocationId\":11,\"roleId\":5,\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/store-user-assignments/31/activate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":31,\"userId\":8,\"storeLocationId\":11,\"roleId\":5,\"active\":true}"
+                        ));
+                    }
+                    if ("/api/identity/store-user-assignments/31/deactivate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":31,\"userId\":8,\"storeLocationId\":11,\"roleId\":5,\"active\":false}"
+                        ));
+                    }
+                    if ("/api/security/roles".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":5,\"code\":\"MANAGER\",\"description\":\"Manager\",\"permissionCodes\":[\"SALES_PROCESS\",\"CONFIGURATION_MANAGE\"]}]"
+                        ));
+                    }
+                    if ("/api/security/roles".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":6,\"code\":\"SUPERVISOR\",\"description\":\"Supervisor\",\"permissionCodes\":[\"SALES_PROCESS\"]}"
+                        ));
+                    }
+                    if ("/api/security/roles/6/permissions".equals(path) && "PUT".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":6,\"code\":\"SUPERVISOR\",\"description\":\"Supervisor\",\"permissionCodes\":[\"SALES_PROCESS\",\"REPORT_VIEW\"]}"
+                        ));
+                    }
+                    if ("/api/security/permissions/catalog".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":1,\"code\":\"SALES_PROCESS\",\"description\":\"Sales\"},"
+                                        + "{\"id\":2,\"code\":\"REPORT_VIEW\",\"description\":\"Reports\"}]"
+                        ));
+                    }
+                    return CompletableFuture.completedFuture(response(request, 404, ""));
+                }
+        );
+
+        client.login("manager", "secret").join();
+
+        assertEquals(1, client.listMerchants().join().size());
+        assertEquals("NEWM", client.createMerchant(new MerchantRequest("NEWM", "New Merchant")).join().code());
+        assertEquals("New Merchant Updated", client.updateMerchant(2L, new MerchantRequest("NEWM", "New Merchant Updated")).join().name());
+        assertEquals(true, client.activateMerchant(2L).join().active());
+        assertEquals(false, client.deactivateMerchant(2L).join().active());
+
+        assertEquals(1, client.listStoreLocations().join().size());
+        assertEquals("STORE-2", client.createStoreLocation(new StoreLocationRequest(1L, "STORE-2", "Store 2")).join().code());
+        assertEquals("Store 2 Updated", client.updateStoreLocation(11L, new StoreLocationRequest(1L, "STORE-2", "Store 2 Updated")).join().name());
+        assertEquals(true, client.activateStoreLocation(11L).join().active());
+        assertEquals(false, client.deactivateStoreLocation(11L).join().active());
+
+        assertEquals(1, client.listTerminalDevices().join().size());
+        assertEquals("TERM-2", client.createTerminalDevice(new TerminalDeviceRequest(10L, "TERM-2", "Terminal 2")).join().code());
+        assertEquals("Terminal 2 Updated", client.updateTerminalDevice(21L, new TerminalDeviceRequest(10L, "TERM-2", "Terminal 2 Updated")).join().name());
+        assertEquals(true, client.activateTerminalDevice(21L).join().active());
+        assertEquals(false, client.deactivateTerminalDevice(21L).join().active());
+
+        assertEquals(1, client.listStoreUserAssignments().join().size());
+        assertEquals(31L, client.createStoreUserAssignment(new StoreUserAssignmentRequest(8L, 10L, 5L)).join().id());
+        assertEquals(11L, client.updateStoreUserAssignment(31L, new StoreUserAssignmentRequest(8L, 11L, 5L)).join().storeLocationId());
+        assertEquals(true, client.activateStoreUserAssignment(31L).join().active());
+        assertEquals(false, client.deactivateStoreUserAssignment(31L).join().active());
+
+        assertEquals(1, client.listRoles().join().size());
+        assertEquals("SUPERVISOR", client.createRole(new RoleRequest("SUPERVISOR", "Supervisor", Set.of("SALES_PROCESS"))).join().code());
+        assertTrue(client.updateRolePermissions(6L, new RolePermissionsUpdateRequest(Set.of("SALES_PROCESS", "REPORT_VIEW")))
+                .join()
+                .permissionCodes()
+                .contains("REPORT_VIEW"));
+        assertEquals(2, client.permissionCatalog().join().size());
+
+        HttpRequest listRolesRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/security/roles") && req.method().equals("GET"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest createRoleRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/security/roles") && req.method().equals("POST"))
+                .findFirst()
+                .orElseThrow();
+        HttpRequest assignmentDeactivateRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/identity/store-user-assignments/31/deactivate"))
+                .findFirst()
+                .orElseThrow();
+
+        assertEquals("Bearer access-123", listRolesRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", createRoleRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", assignmentDeactivateRequest.headers().firstValue("Authorization").orElseThrow());
     }
 
     private static String cartJson() {

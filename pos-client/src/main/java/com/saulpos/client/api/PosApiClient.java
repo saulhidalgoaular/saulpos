@@ -9,6 +9,14 @@ import com.saulpos.api.catalog.ProductResponse;
 import com.saulpos.api.catalog.ProductSearchResponse;
 import com.saulpos.api.customer.CustomerRequest;
 import com.saulpos.api.customer.CustomerResponse;
+import com.saulpos.api.identity.MerchantRequest;
+import com.saulpos.api.identity.MerchantResponse;
+import com.saulpos.api.identity.StoreLocationRequest;
+import com.saulpos.api.identity.StoreLocationResponse;
+import com.saulpos.api.identity.StoreUserAssignmentRequest;
+import com.saulpos.api.identity.StoreUserAssignmentResponse;
+import com.saulpos.api.identity.TerminalDeviceRequest;
+import com.saulpos.api.identity.TerminalDeviceResponse;
 import com.saulpos.api.inventory.InventoryStockBalanceResponse;
 import com.saulpos.api.inventory.SupplierReturnApproveRequest;
 import com.saulpos.api.inventory.SupplierReturnCreateRequest;
@@ -43,6 +51,10 @@ import com.saulpos.api.sale.SaleCartVoidLineRequest;
 import com.saulpos.api.sale.SaleCheckoutRequest;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.security.CurrentUserPermissionsResponse;
+import com.saulpos.api.security.PermissionResponse;
+import com.saulpos.api.security.RolePermissionsUpdateRequest;
+import com.saulpos.api.security.RoleRequest;
+import com.saulpos.api.security.RoleResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -141,6 +153,103 @@ public interface PosApiClient {
     CompletableFuture<CustomerResponse> createCustomer(CustomerRequest request);
 
     CompletableFuture<CustomerResponse> updateCustomer(Long customerId, CustomerRequest request);
+
+    default CompletableFuture<List<MerchantResponse>> listMerchants() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<MerchantResponse> createMerchant(MerchantRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<MerchantResponse> updateMerchant(Long merchantId, MerchantRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<MerchantResponse> activateMerchant(Long merchantId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<MerchantResponse> deactivateMerchant(Long merchantId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<StoreLocationResponse>> listStoreLocations() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreLocationResponse> createStoreLocation(StoreLocationRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreLocationResponse> updateStoreLocation(Long storeLocationId, StoreLocationRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreLocationResponse> activateStoreLocation(Long storeLocationId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreLocationResponse> deactivateStoreLocation(Long storeLocationId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<TerminalDeviceResponse>> listTerminalDevices() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<TerminalDeviceResponse> createTerminalDevice(TerminalDeviceRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<TerminalDeviceResponse> updateTerminalDevice(Long terminalDeviceId, TerminalDeviceRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<TerminalDeviceResponse> activateTerminalDevice(Long terminalDeviceId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<TerminalDeviceResponse> deactivateTerminalDevice(Long terminalDeviceId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<StoreUserAssignmentResponse>> listStoreUserAssignments() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreUserAssignmentResponse> createStoreUserAssignment(StoreUserAssignmentRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreUserAssignmentResponse> updateStoreUserAssignment(Long assignmentId,
+                                                                                      StoreUserAssignmentRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreUserAssignmentResponse> activateStoreUserAssignment(Long assignmentId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<StoreUserAssignmentResponse> deactivateStoreUserAssignment(Long assignmentId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<RoleResponse>> listRoles() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<RoleResponse> createRole(RoleRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<RoleResponse> updateRolePermissions(Long roleId, RolePermissionsUpdateRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<PermissionResponse>> permissionCatalog() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
 
     default CompletableFuture<CurrentUserPermissionsResponse> currentUserPermissions() {
         return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));

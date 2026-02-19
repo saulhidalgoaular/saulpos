@@ -5,6 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.saulpos.client.api.HttpPosApiClient;
 import com.saulpos.client.app.NavigationState;
 import com.saulpos.client.state.AppStateStore;
+import com.saulpos.client.state.AdminCoordinator;
 import com.saulpos.client.state.AuthSessionCoordinator;
 import com.saulpos.client.state.BackofficeCoordinator;
 import com.saulpos.client.state.ConnectivityCoordinator;
@@ -41,6 +42,7 @@ public class PosClientApplication extends Application {
         SellScreenCoordinator sellScreenCoordinator = new SellScreenCoordinator(apiClient, connectivityCoordinator);
         ReturnsScreenCoordinator returnsScreenCoordinator = new ReturnsScreenCoordinator(apiClient);
         BackofficeCoordinator backofficeCoordinator = new BackofficeCoordinator(apiClient);
+        AdminCoordinator adminCoordinator = new AdminCoordinator(apiClient);
         ReportingCoordinator reportingCoordinator = new ReportingCoordinator(apiClient);
         HardwareCoordinator hardwareCoordinator = new HardwareCoordinator(apiClient);
         UiI18n i18n = new UiI18n();
@@ -59,6 +61,7 @@ public class PosClientApplication extends Application {
                         sellScreenCoordinator,
                         returnsScreenCoordinator,
                         backofficeCoordinator,
+                        adminCoordinator,
                         reportingCoordinator,
                         hardwareCoordinator,
                         connectivityCoordinator
@@ -72,6 +75,7 @@ public class PosClientApplication extends Application {
                         sellScreenCoordinator,
                         returnsScreenCoordinator,
                         backofficeCoordinator,
+                        adminCoordinator,
                         reportingCoordinator,
                         hardwareCoordinator,
                         connectivityCoordinator

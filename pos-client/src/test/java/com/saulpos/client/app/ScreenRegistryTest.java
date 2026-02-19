@@ -18,7 +18,7 @@ class ScreenRegistryTest {
         assertEquals(NavigationTarget.LOGIN, screens.get(0).target());
         assertEquals(NavigationTarget.SHIFT_CONTROL, screens.get(1).target());
         assertEquals(NavigationTarget.SELL, screens.get(2).target());
-        assertEquals(8, screens.size());
+        assertEquals(9, screens.size());
 
         Set<NavigationTarget> uniqueTargets = new HashSet<>();
         for (ScreenDefinition screen : screens) {
@@ -31,5 +31,6 @@ class ScreenRegistryTest {
     void protectedScreens_shouldRequireAuthenticatedSession() {
         assertTrue(ScreenRegistry.byTarget(NavigationTarget.CHECKOUT).orElseThrow().requiresAuthenticatedSession());
         assertTrue(ScreenRegistry.byTarget(NavigationTarget.REPORTING).orElseThrow().requiresAuthenticatedSession());
+        assertTrue(ScreenRegistry.byTarget(NavigationTarget.ADMIN).orElseThrow().requiresAuthenticatedSession());
     }
 }
