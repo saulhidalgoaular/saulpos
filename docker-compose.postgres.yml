@@ -1,0 +1,22 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: saulpos-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ${SAULPOS_DB_NAME:-saulpos_dev}
+      POSTGRES_USER: ${SAULPOS_DB_USERNAME:-saulpos_dev}
+      POSTGRES_PASSWORD: ${SAULPOS_DB_PASSWORD:-saulpos_dev}
+    volumes:
+      - saulpos-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SAULPOS_DB_USERNAME:-saulpos_dev} -d ${SAULPOS_DB_NAME:-saulpos_dev}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+volumes:
+  saulpos-postgres-data:
