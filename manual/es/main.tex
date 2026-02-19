@@ -70,6 +70,75 @@ Este libro está orientado a:
 Aunque las pantallas reales pueden variar por versión o configuración, los principios operativos de este manual se mantienen.
 \end{notebox}
 
+\chapter{Instalación}\label{ch:instalacion}
+\section{Requisitos}
+\begin{itemize}
+  \item Java 21
+  \item Maven 3.9 o superior
+  \item PostgreSQL ejecutándose en local
+\end{itemize}
+
+\section{Instalación local limpia}
+\begin{enumerate}
+  \item Cree base de datos y usuario locales:
+\begin{verbatim}
+psql -U postgres <<'SQL'
+CREATE USER saulpos_dev WITH PASSWORD 'saulpos_dev';
+CREATE DATABASE saulpos_dev OWNER saulpos_dev;
+GRANT ALL PRIVILEGES ON DATABASE saulpos_dev TO saulpos_dev;
+SQL
+\end{verbatim}
+
+  \item Inicie backend con perfil dev (esto aplica migraciones Flyway automáticamente):
+\begin{verbatim}
+cd pos-server
+SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
+\end{verbatim}
+
+  \item Valide estado del servidor y metadatos de migración:
+\begin{verbatim}
+curl -sSf http://localhost:8080/actuator/health
+psql -U saulpos_dev -d saulpos_dev -c \
+"SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"
+\end{verbatim}
+
+  \item Cargue usuario inicial y datos operativos base:
+\begin{verbatim}
+psql -U saulpos_dev -d saulpos_dev -f ops/scripts/bootstrap-local.sql
+\end{verbatim}
+
+  \item Inicie cliente:
+\begin{verbatim}
+cd pos-client
+mvn javafx:run
+\end{verbatim}
+Si su API no está en \texttt{\detokenize{http://localhost:8080}}, use:
+\begin{verbatim}
+mvn javafx:run -Dsaulpos.api.base-url=http://localhost:9090
+\end{verbatim}
+\end{enumerate}
+
+\section{Valores iniciales del bootstrap}
+Después de ejecutar \texttt{\detokenize{ops/scripts/bootstrap-local.sql}}:
+\begin{itemize}
+  \item Usuario de acceso: \texttt{admin}
+  \item Contraseña de acceso: \texttt{Pass123!}
+  \item Comercio/sucursal/terminal demo: \texttt{DEMO}, \texttt{DEMO-STORE}, \texttt{POS-01}
+\end{itemize}
+
+\section{Qué siembran las migraciones por defecto}
+\begin{itemize}
+  \item Sembrado por la cadena de migraciones: roles base, permisos y algunos catálogos de motivos.
+  \item No sembrado por la cadena de migraciones: usuarios de acceso, jerarquía comercio/sucursal/terminal, catálogo de productos.
+\end{itemize}
+
+\section{Cómo se hacen las actualizaciones de migración}
+\begin{enumerate}
+  \item Agregue un archivo nuevo en \texttt{\detokenize{pos-server/src/main/resources/db/migration}} con el siguiente formato de versión: \texttt{\detokenize{V43__descripcion.sql}}.
+  \item No edite migraciones ya aplicadas.
+  \item Reinicie backend; Flyway aplica solo versiones pendientes y las registra en \texttt{flyway\_schema\_history}.
+\end{enumerate}
+
 \chapter{Conceptos Fundamentales}\label{ch:conceptos}
 \section{Productos y servicios}
 Un \TermProduct{} es un artículo físico que afecta inventario. Un \TermService{} no descuenta stock, pero sí impacta ventas e impuestos si está gravado.

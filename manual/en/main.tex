@@ -70,6 +70,75 @@ This manual is intended for:
 Actual screens may differ by software version or enabled modules. Procedures in this manual remain valid.
 \end{notebox}
 
+\chapter{Installation}\label{ch:installation}
+\section{Prerequisites}
+\begin{itemize}
+  \item Java 21
+  \item Maven 3.9 or newer
+  \item PostgreSQL running locally
+\end{itemize}
+
+\section{Clean local installation}
+\begin{enumerate}
+  \item Create local database and user:
+\begin{verbatim}
+psql -U postgres <<'SQL'
+CREATE USER saulpos_dev WITH PASSWORD 'saulpos_dev';
+CREATE DATABASE saulpos_dev OWNER saulpos_dev;
+GRANT ALL PRIVILEGES ON DATABASE saulpos_dev TO saulpos_dev;
+SQL
+\end{verbatim}
+
+  \item Start backend with the dev profile (this applies Flyway migrations automatically):
+\begin{verbatim}
+cd pos-server
+SPRING_PROFILES_ACTIVE=dev mvn spring-boot:run
+\end{verbatim}
+
+  \item Validate server status and migration metadata:
+\begin{verbatim}
+curl -sSf http://localhost:8080/actuator/health
+psql -U saulpos_dev -d saulpos_dev -c \
+"SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"
+\end{verbatim}
+
+  \item Bootstrap first login and base operational data:
+\begin{verbatim}
+psql -U saulpos_dev -d saulpos_dev -f ops/scripts/bootstrap-local.sql
+\end{verbatim}
+
+  \item Start client:
+\begin{verbatim}
+cd pos-client
+mvn javafx:run
+\end{verbatim}
+If your API is not on \texttt{\detokenize{http://localhost:8080}}, set:
+\begin{verbatim}
+mvn javafx:run -Dsaulpos.api.base-url=http://localhost:9090
+\end{verbatim}
+\end{enumerate}
+
+\section{Initial bootstrap defaults}
+After running \texttt{\detokenize{ops/scripts/bootstrap-local.sql}}:
+\begin{itemize}
+  \item Login user: \texttt{admin}
+  \item Login password: \texttt{Pass123!}
+  \item Demo merchant/store/terminal: \texttt{DEMO}, \texttt{DEMO-STORE}, \texttt{POS-01}
+\end{itemize}
+
+\section{What migrations seed by default}
+\begin{itemize}
+  \item Seeded by migration chain: core roles, permissions, and selected reason-code catalogs.
+  \item Not seeded by migration chain: login users, merchant/store/terminal hierarchy, product catalog.
+\end{itemize}
+
+\section{How migration updates are done}
+\begin{enumerate}
+  \item Add a new file in \texttt{\detokenize{pos-server/src/main/resources/db/migration}} using the next version format: \texttt{\detokenize{V43__description.sql}}.
+  \item Never edit already-applied migration files.
+  \item Restart backend; Flyway applies only pending versions and records them in \texttt{flyway\_schema\_history}.
+\end{enumerate}
+
 \chapter{Core Concepts}\label{ch:concepts}
 \section{Products and services}
 A \TermProduct{} is a physical item and impacts stock. A \TermService{} usually does not change stock, but it can still affect taxes and reports.
