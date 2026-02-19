@@ -14,12 +14,28 @@ fi
 
 repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 release_dir="${repo_root}/dist/${release_version}"
-artifact="${repo_root}/pos-server/target/pos-server-2.0.0-SNAPSHOT.jar"
+target_dir="${repo_root}/pos-server/target"
 
 mkdir -p "$release_dir"
 
-mvn -q -DskipTests -pl pos-server -am clean package
-cp "$artifact" "${release_dir}/saulpos-server-${release_version}.jar"
+mvn -q -ntp -DskipTests -pl pos-server -am clean package
+
+artifact=""
+for candidate in "${target_dir}"/pos-server-*.jar; do
+  [[ -f "${candidate}" ]] || continue
+  [[ "${candidate}" == *.original ]] && continue
+  [[ "${candidate}" == *-sources.jar ]] && continue
+  [[ "${candidate}" == *-javadoc.jar ]] && continue
+  artifact="${candidate}"
+  break
+done
+
+if [[ -z "${artifact}" ]]; then
+  echo "Unable to locate packaged server JAR in ${target_dir}" >&2
+  exit 1
+fi
+
+cp "${artifact}" "${release_dir}/saulpos-server-${release_version}.jar"
 
 cat > "${release_dir}/manifest.txt" <<MANIFEST
 release.version=${release_version}

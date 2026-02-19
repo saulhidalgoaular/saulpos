@@ -3,11 +3,20 @@ name: Java CI with Maven
 on:
   push:
     branches:
+      - main
       - master
   pull_request:
     branches:
+      - main
       - master
   workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: maven-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -25,4 +34,14 @@ jobs:
           cache: "maven"
 
       - name: Build and test with Maven
-        run: mvn -B clean verify
+        run: mvn -B -ntp clean verify
+
+      - name: Upload surefire reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: |
+            **/target/surefire-reports/**
+            **/target/failsafe-reports/**
+          if-no-files-found: ignore
