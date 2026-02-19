@@ -9,6 +9,13 @@
     <packaging>pom</packaging>
     <name>saulpos-v2</name>
     <description>Modern POS System V2 (Local-First Architecture)</description>
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License v3.0 or later</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.html</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
 
     <modules>
         <module>pos-core</module>
