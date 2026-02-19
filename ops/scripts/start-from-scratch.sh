@@ -3,6 +3,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 BOOTSTRAP_SQL_FILE="${ROOT_DIR}/ops/scripts/bootstrap-local.sql"
+MIGRATIONS_DIR="${ROOT_DIR}/pos-server/src/main/resources/db/migration"
 
 DB_HOST="${SAULPOS_DB_HOST:-saulpos-postgres}"
 DB_PORT="${SAULPOS_DB_PORT:-5432}"
@@ -29,6 +30,24 @@ fi
 
 if [[ "${RUN_BOOTSTRAP}" == "true" ]] && [[ ! -f "${BOOTSTRAP_SQL_FILE}" ]]; then
   echo "Missing bootstrap SQL: ${BOOTSTRAP_SQL_FILE}"
+  exit 1
+fi
+
+LATEST_FLYWAY_VERSION=""
+for migration_file in "${MIGRATIONS_DIR}"/V*__*.sql; do
+  [[ -e "${migration_file}" ]] || continue
+  migration_name="$(basename "${migration_file}")"
+  migration_version="${migration_name%%__*}"
+  migration_version="${migration_version#V}"
+  if [[ "${migration_version}" =~ ^[0-9]+$ ]]; then
+    if [[ -z "${LATEST_FLYWAY_VERSION}" ]] || (( migration_version > LATEST_FLYWAY_VERSION )); then
+      LATEST_FLYWAY_VERSION="${migration_version}"
+    fi
+  fi
+done
+
+if [[ -z "${LATEST_FLYWAY_VERSION}" ]]; then
+  echo "Unable to determine latest Flyway migration from ${MIGRATIONS_DIR}"
   exit 1
 fi
 
@@ -70,7 +89,7 @@ trap cleanup EXIT INT TERM
 echo "Server PID: ${SERVER_PID}"
 echo "Server log: ${SERVER_LOG_FILE}"
 
-echo "Waiting for Flyway table creation..."
+echo "Waiting for Flyway migrations/security seed data (target version: ${LATEST_FLYWAY_VERSION})..."
 BOOTSTRAP_READY="false"
 for ((i = 1; i <= SERVER_WAIT_SECONDS; i++)); do
   if ! ps -p "${SERVER_PID}" >/dev/null 2>&1; then
@@ -86,7 +105,7 @@ for ((i = 1; i <= SERVER_WAIT_SECONDS; i++)); do
     -d "${DB_NAME}" \
     -tA \
     -v ON_ERROR_STOP=1 \
-    -c "SELECT CASE WHEN EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = 'public' AND table_name = 'app_role') AND EXISTS (SELECT 1 FROM app_role WHERE code = 'MANAGER') THEN 'true' ELSE 'false' END;" 2>/dev/null || true)"
+    -c "SELECT CASE WHEN EXISTS (SELECT 1 FROM flyway_schema_history WHERE version = '${LATEST_FLYWAY_VERSION}' AND success = TRUE) AND EXISTS (SELECT 1 FROM app_role WHERE code = 'MANAGER') THEN 'true' ELSE 'false' END;" 2>/dev/null || true)"
 
   if [[ "${READY_CHECK}" == "true" ]]; then
     BOOTSTRAP_READY="true"
@@ -97,7 +116,7 @@ for ((i = 1; i <= SERVER_WAIT_SECONDS; i++)); do
 done
 
 if [[ "${BOOTSTRAP_READY}" != "true" ]]; then
-  echo "Timed out waiting for Flyway migrations/security seed data."
+  echo "Timed out waiting for Flyway version ${LATEST_FLYWAY_VERSION} and security seed data."
   echo "Check log: ${SERVER_LOG_FILE}"
   exit 1
 fi
