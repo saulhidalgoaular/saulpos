@@ -1119,6 +1119,6 @@ The original monolithic version is preserved in the `legacy-v1` branch.
 
 This project is licensed under the GNU Affero General Public License v3.0 or later (`AGPL-3.0-or-later`). See `LICENSE`.
 
-The copyright holder may also offer separate commercial/proprietary licenses (dual licensing). See `LICENSE-OWNER.md`.
+The copyright holder may also offer separate commercial/proprietary licenses (dual licensing). See `OWNER-LICENSING.md`.
 
 Contribution terms are documented in `CONTRIBUTING.md`.

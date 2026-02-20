@@ -33,4 +33,4 @@ If you do not agree with these terms, do not submit a contribution.
 
 ## Security Reports
 
-Do not open public issues for sensitive security vulnerabilities. Report privately to `saulhidalgoaular@gmail.com`.
+Do not open public issues for sensitive security vulnerabilities. Report privately to `saul@saultechnologiesmk.com`.
