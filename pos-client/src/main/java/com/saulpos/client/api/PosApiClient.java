@@ -55,6 +55,9 @@ import com.saulpos.api.security.PermissionResponse;
 import com.saulpos.api.security.RolePermissionsUpdateRequest;
 import com.saulpos.api.security.RoleRequest;
 import com.saulpos.api.security.RoleResponse;
+import com.saulpos.api.security.UserAccountCreateRequest;
+import com.saulpos.api.security.UserAccountPasswordResetRequest;
+import com.saulpos.api.security.UserAccountResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -236,6 +239,27 @@ public interface PosApiClient {
     }
 
     default CompletableFuture<List<RoleResponse>> listRoles() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<List<UserAccountResponse>> listUserAccounts() {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<UserAccountResponse> createUserAccount(UserAccountCreateRequest request) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<UserAccountResponse> activateUserAccount(Long userId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<UserAccountResponse> deactivateUserAccount(Long userId) {
+        return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
+    }
+
+    default CompletableFuture<UserAccountResponse> resetUserAccountPassword(Long userId,
+                                                                            UserAccountPasswordResetRequest request) {
         return CompletableFuture.failedFuture(new UnsupportedOperationException("Not implemented"));
     }
 

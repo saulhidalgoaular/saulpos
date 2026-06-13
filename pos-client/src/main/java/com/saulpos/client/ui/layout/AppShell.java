@@ -23,6 +23,7 @@ import com.saulpos.api.sale.SaleCartStatus;
 import com.saulpos.api.sale.SaleCheckoutResponse;
 import com.saulpos.api.security.PermissionResponse;
 import com.saulpos.api.security.RoleResponse;
+import com.saulpos.api.security.UserAccountResponse;
 import com.saulpos.api.refund.SaleReturnLookupLineResponse;
 import com.saulpos.api.refund.SaleReturnLookupResponse;
 import com.saulpos.api.refund.SaleReturnResponse;
@@ -113,6 +114,16 @@ public final class AppShell {
             button.setOnAction(event -> navigationState.navigate(screen.target()));
             nav.getChildren().add(button);
         }
+
+        Region navSpacer = new Region();
+        VBox.setVgrow(navSpacer, Priority.ALWAYS);
+        nav.getChildren().add(navSpacer);
+
+        Label attribution = new Label("Developed by Saul Technologies Skopje DOOEL");
+        attribution.getStyleClass().add("pos-nav-credit");
+        attribution.setWrapText(true);
+        attribution.setMaxWidth(Double.MAX_VALUE);
+        nav.getChildren().add(attribution);
 
         VBox content = new VBox(12);
         content.getStyleClass().add("pos-content-card");
@@ -1285,6 +1296,7 @@ public final class AppShell {
     private static void renderAdmin(UiI18n i18n, VBox screenBody, AdminCoordinator adminCoordinator) {
         if (!adminCoordinator.busyProperty().get()
                 && adminCoordinator.rolesProperty().get().isEmpty()
+                && adminCoordinator.usersProperty().get().isEmpty()
                 && adminCoordinator.merchantsProperty().get().isEmpty()) {
             adminCoordinator.refreshAll();
         }
@@ -1295,15 +1307,51 @@ public final class AppShell {
         PosButton refreshAll = primary(i18n, "Refresh Admin Data");
         PosButton refreshIdentity = accent(i18n, "Refresh Identity");
         PosButton refreshSecurity = accent(i18n, "Refresh Security");
+        PosButton refreshUsers = accent(i18n, "Refresh Users");
         refreshAll.disableProperty().bind(adminCoordinator.busyProperty());
         refreshIdentity.disableProperty().bind(adminCoordinator.busyProperty());
         refreshSecurity.disableProperty().bind(adminCoordinator.busyProperty());
+        refreshUsers.disableProperty().bind(adminCoordinator.busyProperty());
         refreshAll.setOnAction(event -> adminCoordinator.refreshAll());
         refreshIdentity.setOnAction(event -> adminCoordinator.refreshIdentity());
         refreshSecurity.setOnAction(event -> adminCoordinator.refreshSecurity());
+        refreshUsers.setOnAction(event -> adminCoordinator.refreshUsers());
 
-        Label userNotice = label(i18n,
-                "User account creation is not available because the backend currently has no public API endpoint for it.");
+        ListView<UserAccountResponse> userList = new ListView<>();
+        userList.setPrefHeight(130);
+        adminCoordinator.usersProperty().addListener((obs, oldValue, newValue) ->
+                userList.setItems(FXCollections.observableArrayList(newValue == null ? List.of() : newValue)));
+        userList.setCellFactory(listView -> new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(UserAccountResponse item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty || item == null
+                        ? null
+                        : i18n.translate("user#" + item.id()
+                        + " | " + item.username()
+                        + " | " + (item.active() ? "ACTIVE" : "INACTIVE")
+                        + " | failedAttempts=" + item.failedAttempts()
+                        + " | lockedUntil=" + (item.lockedUntil() == null ? "-" : item.lockedUntil())));
+            }
+        });
+
+        PosTextField userId = input(i18n, "User ID (for activate/deactivate/password reset)");
+        PosTextField username = input(i18n, "Username");
+        PasswordField userPassword = new PasswordField();
+        userPassword.setPromptText(i18n.translate("Password"));
+        userPassword.getStyleClass().add("pos-input");
+        PosButton createUser = primary(i18n, "Create User");
+        PosButton activateUser = accent(i18n, "Activate User");
+        PosButton deactivateUser = accent(i18n, "Deactivate User");
+        PosButton resetPassword = accent(i18n, "Reset Password");
+        createUser.disableProperty().bind(adminCoordinator.busyProperty());
+        activateUser.disableProperty().bind(adminCoordinator.busyProperty());
+        deactivateUser.disableProperty().bind(adminCoordinator.busyProperty());
+        resetPassword.disableProperty().bind(adminCoordinator.busyProperty());
+        createUser.setOnAction(event -> adminCoordinator.createUserAccount(username.getText(), userPassword.getText()));
+        activateUser.setOnAction(event -> adminCoordinator.setUserActive(parseLong(userId.getText()), true));
+        deactivateUser.setOnAction(event -> adminCoordinator.setUserActive(parseLong(userId.getText()), false));
+        resetPassword.setOnAction(event -> adminCoordinator.resetUserPassword(parseLong(userId.getText()), userPassword.getText()));
 
         ListView<MerchantResponse> merchantList = new ListView<>();
         merchantList.setPrefHeight(130);
@@ -1530,10 +1578,15 @@ public final class AppShell {
         ));
 
         screenBody.getChildren().addAll(
-                label(i18n, "Administration workspace: identity entities, role permissions, and store-user assignments"),
+                label(i18n, "Administration workspace: users, identity entities, role permissions, and store-user assignments"),
                 feedback,
-                userNotice,
-                new HBox(8, refreshAll, refreshIdentity, refreshSecurity),
+                new HBox(8, refreshAll, refreshIdentity, refreshSecurity, refreshUsers),
+                label(i18n, "Users"),
+                userList,
+                userId,
+                username,
+                userPassword,
+                new HBox(8, createUser, activateUser, deactivateUser, resetPassword),
                 label(i18n, "Merchants"),
                 merchantList,
                 merchantId,

@@ -69,6 +69,14 @@
     -fx-text-fill: #C7D2DE;
 }
 
+.pos2-nav-credit {
+    -fx-font-size: 9px;
+    -fx-text-fill: #9DB0C4;
+    -fx-padding: 8 2 0 2;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
 .pos2-topbar {
     -fx-padding: 12 18 12 18;
     -fx-spacing: 12;

@@ -57,6 +57,9 @@ import com.saulpos.api.security.PermissionResponse;
 import com.saulpos.api.security.RolePermissionsUpdateRequest;
 import com.saulpos.api.security.RoleRequest;
 import com.saulpos.api.security.RoleResponse;
+import com.saulpos.api.security.UserAccountCreateRequest;
+import com.saulpos.api.security.UserAccountPasswordResetRequest;
+import com.saulpos.api.security.UserAccountResponse;
 import com.saulpos.api.shift.CashMovementRequest;
 import com.saulpos.api.shift.CashMovementResponse;
 import com.saulpos.api.shift.CashShiftCloseRequest;
@@ -575,6 +578,35 @@ public final class HttpPosApiClient implements PosApiClient {
                 .GET()
                 .build();
         return sendList(request, RoleResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<List<UserAccountResponse>> listUserAccounts() {
+        HttpRequest request = baseRequest("/api/security/users")
+                .GET()
+                .build();
+        return sendList(request, UserAccountResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<UserAccountResponse> createUserAccount(UserAccountCreateRequest request) {
+        return postJson("/api/security/users", request, UserAccountResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<UserAccountResponse> activateUserAccount(Long userId) {
+        return postEmpty("/api/security/users/" + userId + "/activate", UserAccountResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<UserAccountResponse> deactivateUserAccount(Long userId) {
+        return postEmpty("/api/security/users/" + userId + "/deactivate", UserAccountResponse.class);
+    }
+
+    @Override
+    public CompletableFuture<UserAccountResponse> resetUserAccountPassword(Long userId,
+                                                                           UserAccountPasswordResetRequest request) {
+        return postJson("/api/security/users/" + userId + "/password-reset", request, UserAccountResponse.class);
     }
 
     @Override

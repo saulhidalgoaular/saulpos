@@ -12,6 +12,9 @@ import com.saulpos.api.security.PermissionResponse;
 import com.saulpos.api.security.RolePermissionsUpdateRequest;
 import com.saulpos.api.security.RoleRequest;
 import com.saulpos.api.security.RoleResponse;
+import com.saulpos.api.security.UserAccountCreateRequest;
+import com.saulpos.api.security.UserAccountPasswordResetRequest;
+import com.saulpos.api.security.UserAccountResponse;
 import com.saulpos.client.api.ApiProblemException;
 import com.saulpos.client.api.PosApiClient;
 import javafx.application.Platform;
@@ -40,9 +43,10 @@ public final class AdminCoordinator {
     private final ObjectProperty<List<TerminalDeviceResponse>> terminals = new SimpleObjectProperty<>(List.of());
     private final ObjectProperty<List<StoreUserAssignmentResponse>> assignments = new SimpleObjectProperty<>(List.of());
     private final ObjectProperty<List<RoleResponse>> roles = new SimpleObjectProperty<>(List.of());
+    private final ObjectProperty<List<UserAccountResponse>> users = new SimpleObjectProperty<>(List.of());
     private final ObjectProperty<List<PermissionResponse>> permissions = new SimpleObjectProperty<>(List.of());
     private final StringProperty adminMessage = new SimpleStringProperty(
-            "Administration ready: manage roles, permissions, stores, terminals, and assignments.");
+            "Administration ready: manage users, roles, permissions, stores, terminals, and assignments.");
     private final BooleanProperty busy = new SimpleBooleanProperty(false);
 
     public AdminCoordinator(PosApiClient apiClient) {
@@ -74,6 +78,10 @@ public final class AdminCoordinator {
         return roles;
     }
 
+    public ObjectProperty<List<UserAccountResponse>> usersProperty() {
+        return users;
+    }
+
     public ObjectProperty<List<PermissionResponse>> permissionsProperty() {
         return permissions;
     }
@@ -93,6 +101,7 @@ public final class AdminCoordinator {
         CompletableFuture<List<TerminalDeviceResponse>> terminalsFuture = apiClient.listTerminalDevices();
         CompletableFuture<List<StoreUserAssignmentResponse>> assignmentsFuture = apiClient.listStoreUserAssignments();
         CompletableFuture<List<RoleResponse>> rolesFuture = apiClient.listRoles();
+        CompletableFuture<List<UserAccountResponse>> usersFuture = apiClient.listUserAccounts();
         CompletableFuture<List<PermissionResponse>> permissionsFuture = apiClient.permissionCatalog();
 
         return CompletableFuture.allOf(
@@ -101,6 +110,7 @@ public final class AdminCoordinator {
                         terminalsFuture,
                         assignmentsFuture,
                         rolesFuture,
+                        usersFuture,
                         permissionsFuture
                 )
                 .thenRun(() -> dispatch(() -> {
@@ -109,6 +119,7 @@ public final class AdminCoordinator {
                     terminals.set(terminalsFuture.join());
                     assignments.set(assignmentsFuture.join());
                     roles.set(rolesFuture.join());
+                    users.set(usersFuture.join());
                     permissions.set(permissionsFuture.join());
                     adminMessage.set("Administration data refreshed.");
                 }))
@@ -136,13 +147,69 @@ public final class AdminCoordinator {
     public CompletableFuture<Void> refreshSecurity() {
         dispatch(() -> busy.set(true));
         CompletableFuture<List<RoleResponse>> rolesFuture = apiClient.listRoles();
+        CompletableFuture<List<UserAccountResponse>> usersFuture = apiClient.listUserAccounts();
         CompletableFuture<List<PermissionResponse>> permissionsFuture = apiClient.permissionCatalog();
-        return CompletableFuture.allOf(rolesFuture, permissionsFuture)
+        return CompletableFuture.allOf(rolesFuture, usersFuture, permissionsFuture)
                 .thenRun(() -> dispatch(() -> {
                     roles.set(rolesFuture.join());
+                    users.set(usersFuture.join());
                     permissions.set(permissionsFuture.join());
                     adminMessage.set("Security catalog refreshed.");
                 }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> refreshUsers() {
+        dispatch(() -> busy.set(true));
+        return apiClient.listUserAccounts()
+                .thenAccept(records -> dispatch(() -> {
+                    users.set(records);
+                    adminMessage.set("User catalog refreshed.");
+                }))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> createUserAccount(String username, String password) {
+        if (isBlank(username) || isBlank(password)) {
+            dispatch(() -> adminMessage.set("Username and password are required."));
+            return CompletableFuture.completedFuture(null);
+        }
+        UserAccountCreateRequest request = new UserAccountCreateRequest(normalize(username), password);
+        dispatch(() -> busy.set(true));
+        return apiClient.createUserAccount(request)
+                .thenCompose(saved -> apiClient.listUserAccounts()
+                        .thenAccept(records -> dispatch(() -> {
+                            users.set(records);
+                            adminMessage.set("User created: " + saved.username() + ".");
+                        })))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> setUserActive(Long userId, boolean active) {
+        if (userId == null) {
+            dispatch(() -> adminMessage.set("User ID is required."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        CompletableFuture<UserAccountResponse> call = active
+                ? apiClient.activateUserAccount(userId)
+                : apiClient.deactivateUserAccount(userId);
+        return call.thenCompose(saved -> apiClient.listUserAccounts()
+                        .thenAccept(records -> dispatch(() -> {
+                            users.set(records);
+                            adminMessage.set("User " + saved.username() + " is now " + (saved.active() ? "ACTIVE" : "INACTIVE") + ".");
+                        })))
+                .whenComplete((ignored, throwable) -> finish(throwable));
+    }
+
+    public CompletableFuture<Void> resetUserPassword(Long userId, String newPassword) {
+        if (userId == null || isBlank(newPassword)) {
+            dispatch(() -> adminMessage.set("User ID and new password are required."));
+            return CompletableFuture.completedFuture(null);
+        }
+        dispatch(() -> busy.set(true));
+        return apiClient.resetUserAccountPassword(userId, new UserAccountPasswordResetRequest(newPassword))
+                .thenAccept(saved -> dispatch(() -> adminMessage.set("Password reset for user " + saved.username() + ".")))
                 .whenComplete((ignored, throwable) -> finish(throwable));
     }
 

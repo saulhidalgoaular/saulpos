@@ -217,6 +217,12 @@ public final class AppShellModern {
         VBox.setVgrow(pushDown, Priority.ALWAYS);
         nav.getChildren().add(pushDown);
 
+        Label attribution = new Label("Developed by Saul Technologies Skopje DOOEL");
+        attribution.getStyleClass().add("pos2-nav-credit");
+        attribution.setWrapText(true);
+        attribution.setMaxWidth(Double.MAX_VALUE);
+        nav.getChildren().add(attribution);
+
         return nav;
     }
 

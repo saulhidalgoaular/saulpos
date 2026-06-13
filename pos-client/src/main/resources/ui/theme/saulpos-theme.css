@@ -38,6 +38,14 @@
     -fx-padding: 18;
 }
 
+.pos-nav-credit {
+    -fx-font-size: 10px;
+    -fx-text-fill: -pos-text-muted;
+    -fx-padding: 8 4 0 4;
+    -fx-text-alignment: center;
+    -fx-alignment: center;
+}
+
 .pos-button {
     -fx-background-color: -pos-action-primary;
     -fx-text-fill: white;

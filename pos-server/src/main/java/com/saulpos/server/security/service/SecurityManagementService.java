@@ -5,16 +5,23 @@ import com.saulpos.api.security.PermissionResponse;
 import com.saulpos.api.security.RolePermissionsUpdateRequest;
 import com.saulpos.api.security.RoleRequest;
 import com.saulpos.api.security.RoleResponse;
+import com.saulpos.api.security.UserAccountCreateRequest;
+import com.saulpos.api.security.UserAccountPasswordResetRequest;
+import com.saulpos.api.security.UserAccountResponse;
 import com.saulpos.server.error.BaseException;
 import com.saulpos.server.error.ErrorCode;
 import com.saulpos.server.security.authorization.SecurityAuthority;
 import com.saulpos.server.security.model.PermissionEntity;
 import com.saulpos.server.security.model.RoleEntity;
 import com.saulpos.server.security.model.RolePermissionEntity;
+import com.saulpos.server.security.model.UserAccountEntity;
 import com.saulpos.server.security.repository.PermissionRepository;
 import com.saulpos.server.security.repository.RolePermissionRepository;
 import com.saulpos.server.security.repository.RoleRepository;
+import com.saulpos.server.security.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +42,8 @@ public class SecurityManagementService {
     private final PermissionRepository permissionRepository;
     private final RoleRepository roleRepository;
     private final RolePermissionRepository rolePermissionRepository;
+    private final UserAccountRepository userAccountRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional(readOnly = true)
     public CurrentUserPermissionsResponse currentUserPermissions() {
@@ -61,6 +70,50 @@ public class SecurityManagementService {
         return roleRepository.findAllByOrderByCodeAsc().stream()
                 .map(this::toRoleResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserAccountResponse> listUsers() {
+        return userAccountRepository.findAllByOrderByUsernameAsc().stream()
+                .map(this::toUserAccountResponse)
+                .toList();
+    }
+
+    @Transactional
+    public UserAccountResponse createUser(UserAccountCreateRequest request) {
+        String username = normalizeUsername(request.username());
+        userAccountRepository.findByUsernameIgnoreCase(username).ifPresent(existing -> {
+            throw usernameConflict(username);
+        });
+
+        UserAccountEntity user = new UserAccountEntity();
+        user.setUsername(username);
+        user.setPasswordHash(passwordEncoder.encode(request.password()));
+        user.setActive(true);
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+
+        try {
+            return toUserAccountResponse(userAccountRepository.save(user));
+        } catch (DataIntegrityViolationException ex) {
+            throw usernameConflict(username);
+        }
+    }
+
+    @Transactional
+    public UserAccountResponse setUserActive(Long userId, boolean active) {
+        UserAccountEntity user = requireUser(userId);
+        user.setActive(active);
+        return toUserAccountResponse(userAccountRepository.save(user));
+    }
+
+    @Transactional
+    public UserAccountResponse resetUserPassword(Long userId, UserAccountPasswordResetRequest request) {
+        UserAccountEntity user = requireUser(userId);
+        user.setPasswordHash(passwordEncoder.encode(request.newPassword()));
+        user.setFailedAttempts(0);
+        user.setLockedUntil(null);
+        return toUserAccountResponse(userAccountRepository.save(user));
     }
 
     @Transactional
@@ -97,6 +150,17 @@ public class SecurityManagementService {
                 permissionCodes);
     }
 
+    private UserAccountResponse toUserAccountResponse(UserAccountEntity user) {
+        return new UserAccountResponse(
+                user.getId(),
+                user.getUsername(),
+                user.isActive(),
+                user.getFailedAttempts(),
+                user.getLockedUntil(),
+                user.getCreatedAt(),
+                user.getUpdatedAt());
+    }
+
     private void upsertRolePermissions(RoleEntity role, Set<String> requestedPermissionCodes) {
         rolePermissionRepository.deleteByRoleId(role.getId());
         if (requestedPermissionCodes == null || requestedPermissionCodes.isEmpty()) {
@@ -124,8 +188,21 @@ public class SecurityManagementService {
         }
     }
 
+    private UserAccountEntity requireUser(Long userId) {
+        return userAccountRepository.findById(userId)
+                .orElseThrow(() -> new BaseException(ErrorCode.RESOURCE_NOT_FOUND, "user not found: " + userId));
+    }
+
+    private BaseException usernameConflict(String username) {
+        return new BaseException(ErrorCode.CONFLICT, "username already exists: " + username);
+    }
+
     private String normalizeCode(String code) {
         return SecurityAuthority.normalize(code);
+    }
+
+    private String normalizeUsername(String username) {
+        return username.trim();
     }
 
     private String normalizeDescription(String description) {

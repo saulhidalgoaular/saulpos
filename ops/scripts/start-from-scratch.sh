@@ -69,6 +69,8 @@ mkdir -p "${SERVER_LOG_DIR}"
 
 echo "Starting SaulPOS server..."
 (
+  cd "${ROOT_DIR}"
+  mvn -pl pos-api -am -DskipTests install
   cd "${ROOT_DIR}/pos-server"
   SPRING_PROFILES_ACTIVE="${SERVER_PROFILE}" \
   SPRING_JPA_HIBERNATE_DDL_AUTO=none \

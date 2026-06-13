@@ -40,6 +40,8 @@ import com.saulpos.api.shift.CashShiftCloseRequest;
 import com.saulpos.api.shift.CashShiftOpenRequest;
 import com.saulpos.api.security.RolePermissionsUpdateRequest;
 import com.saulpos.api.security.RoleRequest;
+import com.saulpos.api.security.UserAccountCreateRequest;
+import com.saulpos.api.security.UserAccountPasswordResetRequest;
 import com.saulpos.api.system.OfflineMode;
 import com.saulpos.api.tax.TenderType;
 import org.junit.jupiter.api.Test;
@@ -1042,6 +1044,46 @@ class HttpPosApiClientTest {
                                 "[{\"id\":5,\"code\":\"MANAGER\",\"description\":\"Manager\",\"permissionCodes\":[\"SALES_PROCESS\",\"CONFIGURATION_MANAGE\"]}]"
                         ));
                     }
+                    if ("/api/security/users".equals(path) && "GET".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "[{\"id\":32,\"username\":\"cashier1\",\"active\":true,\"failedAttempts\":0,"
+                                        + "\"lockedUntil\":null,\"createdAt\":\"2026-02-10T10:00:00Z\",\"updatedAt\":\"2026-02-10T10:00:00Z\"}]"
+                        ));
+                    }
+                    if ("/api/security/users".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                201,
+                                "{\"id\":33,\"username\":\"cashier2\",\"active\":true,\"failedAttempts\":0,"
+                                        + "\"lockedUntil\":null,\"createdAt\":\"2026-02-10T10:05:00Z\",\"updatedAt\":\"2026-02-10T10:05:00Z\"}"
+                        ));
+                    }
+                    if ("/api/security/users/32/activate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":32,\"username\":\"cashier1\",\"active\":true,\"failedAttempts\":0,"
+                                        + "\"lockedUntil\":null,\"createdAt\":\"2026-02-10T10:00:00Z\",\"updatedAt\":\"2026-02-10T10:10:00Z\"}"
+                        ));
+                    }
+                    if ("/api/security/users/32/deactivate".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":32,\"username\":\"cashier1\",\"active\":false,\"failedAttempts\":0,"
+                                        + "\"lockedUntil\":null,\"createdAt\":\"2026-02-10T10:00:00Z\",\"updatedAt\":\"2026-02-10T10:15:00Z\"}"
+                        ));
+                    }
+                    if ("/api/security/users/32/password-reset".equals(path) && "POST".equals(request.method())) {
+                        return CompletableFuture.completedFuture(response(
+                                request,
+                                200,
+                                "{\"id\":32,\"username\":\"cashier1\",\"active\":false,\"failedAttempts\":0,"
+                                        + "\"lockedUntil\":null,\"createdAt\":\"2026-02-10T10:00:00Z\",\"updatedAt\":\"2026-02-10T10:20:00Z\"}"
+                        ));
+                    }
                     if ("/api/security/roles".equals(path) && "POST".equals(request.method())) {
                         return CompletableFuture.completedFuture(response(
                                 request,
@@ -1095,6 +1137,13 @@ class HttpPosApiClientTest {
         assertEquals(false, client.deactivateStoreUserAssignment(31L).join().active());
 
         assertEquals(1, client.listRoles().join().size());
+        assertEquals(1, client.listUserAccounts().join().size());
+        assertEquals("cashier2", client.createUserAccount(new UserAccountCreateRequest("cashier2", "Pass!123")).join().username());
+        assertEquals(true, client.activateUserAccount(32L).join().active());
+        assertEquals(false, client.deactivateUserAccount(32L).join().active());
+        assertEquals("cashier1", client.resetUserAccountPassword(32L, new UserAccountPasswordResetRequest("Reset!234"))
+                .join()
+                .username());
         assertEquals("SUPERVISOR", client.createRole(new RoleRequest("SUPERVISOR", "Supervisor", Set.of("SALES_PROCESS"))).join().code());
         assertTrue(client.updateRolePermissions(6L, new RolePermissionsUpdateRequest(Set.of("SALES_PROCESS", "REPORT_VIEW")))
                 .join()
@@ -1110,6 +1159,10 @@ class HttpPosApiClientTest {
                 .filter(req -> req.uri().getPath().equals("/api/security/roles") && req.method().equals("POST"))
                 .findFirst()
                 .orElseThrow();
+        HttpRequest usersDeactivateRequest = requests.stream()
+                .filter(req -> req.uri().getPath().equals("/api/security/users/32/deactivate"))
+                .findFirst()
+                .orElseThrow();
         HttpRequest assignmentDeactivateRequest = requests.stream()
                 .filter(req -> req.uri().getPath().equals("/api/identity/store-user-assignments/31/deactivate"))
                 .findFirst()
@@ -1117,6 +1170,7 @@ class HttpPosApiClientTest {
 
         assertEquals("Bearer access-123", listRolesRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", createRoleRequest.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("Bearer access-123", usersDeactivateRequest.headers().firstValue("Authorization").orElseThrow());
         assertEquals("Bearer access-123", assignmentDeactivateRequest.headers().firstValue("Authorization").orElseThrow());
     }
 

@@ -42,6 +42,9 @@ public final class UiI18n {
     private static final Pattern CASH_EXPORT_READY_PATTERN = Pattern.compile("^Cash shift CSV export ready: (\\d+) chars\\.$");
     private static final Pattern EXCEPTION_EXPORT_READY_PATTERN = Pattern.compile("^Exception CSV export ready: (\\d+) chars\\.$");
     private static final Pattern REQUEST_FAILED_PATTERN = Pattern.compile("^Request failed: (.+)$");
+    private static final Pattern USER_CREATED_PATTERN = Pattern.compile("^User created: (.+)\\.$");
+    private static final Pattern USER_STATUS_PATTERN = Pattern.compile("^User (.+) is now (ACTIVE|INACTIVE)\\.$");
+    private static final Pattern USER_PASSWORD_RESET_PATTERN = Pattern.compile("^Password reset for user (.+)\\.$");
 
     private static final Map<String, String> EXACT_ES = new LinkedHashMap<>();
     private static final Map<String, String> TOKEN_ES = new LinkedHashMap<>();
@@ -228,6 +231,29 @@ public final class UiI18n {
         EXACT_ES.put("Pricing", "Precios");
         EXACT_ES.put("Lot/Expiry inventory", "Inventario por lote/vencimiento");
         EXACT_ES.put("Supplier returns", "Devoluciones a proveedor");
+        EXACT_ES.put("Administration workspace: users, identity entities, role permissions, and store-user assignments",
+                "Espacio de administracion: usuarios, entidades de identidad, permisos de rol y asignaciones usuario-sucursal");
+        EXACT_ES.put("Refresh Admin Data", "Actualizar datos admin");
+        EXACT_ES.put("Refresh Identity", "Actualizar identidad");
+        EXACT_ES.put("Refresh Security", "Actualizar seguridad");
+        EXACT_ES.put("Refresh Users", "Actualizar usuarios");
+        EXACT_ES.put("Users", "Usuarios");
+        EXACT_ES.put("User ID (for activate/deactivate/password reset)", "ID de usuario (activar/desactivar/reiniciar clave)");
+        EXACT_ES.put("Create User", "Crear usuario");
+        EXACT_ES.put("Activate User", "Activar usuario");
+        EXACT_ES.put("Deactivate User", "Desactivar usuario");
+        EXACT_ES.put("Reset Password", "Reiniciar contrasena");
+        EXACT_ES.put("Administration ready: manage users, roles, permissions, stores, terminals, and assignments.",
+                "Administracion lista: gestione usuarios, roles, permisos, tiendas, terminales y asignaciones.");
+        EXACT_ES.put("Administration data refreshed.", "Datos de administracion actualizados.");
+        EXACT_ES.put("Identity data refreshed.", "Datos de identidad actualizados.");
+        EXACT_ES.put("Security catalog refreshed.", "Catalogo de seguridad actualizado.");
+        EXACT_ES.put("User catalog refreshed.", "Catalogo de usuarios actualizado.");
+        EXACT_ES.put("Username and password are required.", "Se requieren usuario y contrasena.");
+        EXACT_ES.put("User ID is required.", "Se requiere ID de usuario.");
+        EXACT_ES.put("User ID and new password are required.", "Se requieren ID de usuario y nueva contrasena.");
+        EXACT_ES.put("Administration operation failed. Verify inputs and permissions.",
+                "Fallo la operacion de administracion. Verifique datos y permisos.");
 
         EXACT_ES.put("From (ISO-8601, optional)", "Desde (ISO-8601, opcional)");
         EXACT_ES.put("To (ISO-8601, optional)", "Hasta (ISO-8601, opcional)");
@@ -402,6 +428,9 @@ public final class UiI18n {
         TOKEN_ES.put(" | lot=", " | lote=");
         TOKEN_ES.put(" | expiry=", " | vencimiento=");
         TOKEN_ES.put(" | state=", " | estado=");
+        TOKEN_ES.put("user#", "usuario#");
+        TOKEN_ES.put(" | failedAttempts=", " | intentosFallidos=");
+        TOKEN_ES.put(" | lockedUntil=", " | bloqueoHasta=");
         TOKEN_ES.put("ACTIVE", "ACTIVO");
         TOKEN_ES.put("INACTIVE", "INACTIVO");
         TOKEN_ES.put(" enabled", " habilitado");
@@ -588,6 +617,21 @@ public final class UiI18n {
             return "Solicitud fallida: " + matcher.group(1);
         }
 
+        matcher = USER_CREATED_PATTERN.matcher(source);
+        if (matcher.matches()) {
+            return "Usuario creado: " + matcher.group(1) + ".";
+        }
+
+        matcher = USER_STATUS_PATTERN.matcher(source);
+        if (matcher.matches()) {
+            return "Usuario " + matcher.group(1) + " ahora esta " + ("ACTIVE".equals(matcher.group(2)) ? "ACTIVO" : "INACTIVO") + ".";
+        }
+
+        matcher = USER_PASSWORD_RESET_PATTERN.matcher(source);
+        if (matcher.matches()) {
+            return "Contrasena reiniciada para el usuario " + matcher.group(1) + ".";
+        }
+
         String translated = source;
         for (Map.Entry<String, String> entry : TOKEN_ES.entrySet()) {
             translated = translated.replace(entry.getKey(), entry.getValue());
@@ -613,6 +657,9 @@ public final class UiI18n {
         }
         if ("BACKOFFICE".equals(name)) {
             return "Backoffice";
+        }
+        if ("ADMIN".equals(name)) {
+            return "Admin";
         }
         if ("REPORTING".equals(name)) {
             return "Reportes";
